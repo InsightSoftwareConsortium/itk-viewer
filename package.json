@@ -1,6 +1,6 @@
 {
   "name": "itk-viewer-icons",
-  "version": "11.10.0",
+  "version": "11.10.1",
   "description": "UI icons for itk-viewer",
   "module": "dist/index.js",
   "scripts": {
@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/Kitware/itk-vtk-viewer#readme",
   "devDependencies": {
+    "glob": "^7.1.7",
     "mini-svg-data-uri": "^1.3.3"
   },
   "dependencies": {}
