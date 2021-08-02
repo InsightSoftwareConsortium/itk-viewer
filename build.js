@@ -21,7 +21,7 @@ svgFiles.forEach(svgFile => {
 export default optimizedSVGDataUri
 `
   const basename = path.basename(svgFile, '.svg')
-  icons.set(`${basename}IconDataUri`, { modulePath: `./${basename}.svg.uri.js`, optimizedSVGDataURI })
+  icons.set(`${basename}IconDataUri`, { modulePath: `./${basename}.svg.uri.js`, svgFile })
   fs.writeFileSync(path.join('dist', `${basename}.svg.uri.js`), moduleContents)
 })
 
@@ -41,7 +41,7 @@ const readmeFD = fs.openSync(path.join(__dirname, 'README.md'), 'w')
 fs.writeSync(readmeFD, readmeContents)
 
 fs.writeSync(readmeFD, '<table>\n')
-for (const [varName, { optimizedSVGDataURI }] of icons) {
+for (const [varName, { svgFile }] of icons) {
   fs.writeSync(readmeFD, '  <tr>\n')
   fs.writeSync(
     readmeFD,
@@ -49,7 +49,7 @@ for (const [varName, { optimizedSVGDataURI }] of icons) {
   )
   fs.writeSync(
     readmeFD,
-    `    <th><img src="${optimizedSVGDataURI}" width="40" alt="${varName}"/></th>\n`
+    `    <th><img src="${svgFile}" width="40" alt="${varName}"/></th>\n`
   )
   fs.writeSync(readmeFD, '  </tr>\n')
 }
