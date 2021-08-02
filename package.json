@@ -1,6 +1,6 @@
 {
   "name": "itk-viewer-icons",
-  "version": "11.10.1",
+  "version": "11.10.2",
   "description": "UI icons for itk-viewer",
   "module": "dist/index.js",
   "scripts": {
@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kitware/itk-vtk-viewer.git"
+    "url": "git+https://github.com/InsightSoftwareConsortium/itk-viewer-icons.git"
   },
   "keywords": [
     "icons",
@@ -19,9 +19,9 @@
   "author": "Matt McCormick",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/Kitware/itk-vtk-viewer/issues"
+    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer-icons/issues"
   },
-  "homepage": "https://github.com/Kitware/itk-vtk-viewer#readme",
+  "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer-icons#readme",
   "devDependencies": {
     "glob": "^7.1.7",
     "mini-svg-data-uri": "^1.3.3"
