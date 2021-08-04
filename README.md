@@ -56,6 +56,10 @@ revision `f6b4fa13c8`, before they were extracted.
     <th><img src="src/gradient.svg" width="40" alt="gradientIconDataUri"/></th>
   </tr>
   <tr>
+    <th>greenPlaneIconDataUri</th>
+    <th><img src="src/greenPlane.svg" width="40" alt="greenPlaneIconDataUri"/></th>
+  </tr>
+  <tr>
     <th>imageIconDataUri</th>
     <th><img src="src/image.svg" width="40" alt="imageIconDataUri"/></th>
   </tr>
@@ -90,6 +94,10 @@ revision `f6b4fa13c8`, before they were extracted.
   <tr>
     <th>pointSetIconDataUri</th>
     <th><img src="src/pointSet.svg" width="40" alt="pointSetIconDataUri"/></th>
+  </tr>
+  <tr>
+    <th>redPlaneIconDataUri</th>
+    <th><img src="src/redPlane.svg" width="40" alt="redPlaneIconDataUri"/></th>
   </tr>
   <tr>
     <th>removeIconDataUri</th>
@@ -140,15 +148,7 @@ revision `f6b4fa13c8`, before they were extracted.
     <th><img src="src/volume.svg" width="40" alt="volumeIconDataUri"/></th>
   </tr>
   <tr>
-    <th>xPlaneIconDataUri</th>
-    <th><img src="src/xPlane.svg" width="40" alt="xPlaneIconDataUri"/></th>
-  </tr>
-  <tr>
-    <th>yPlaneIconDataUri</th>
-    <th><img src="src/yPlane.svg" width="40" alt="yPlaneIconDataUri"/></th>
-  </tr>
-  <tr>
-    <th>zPlaneIconDataUri</th>
-    <th><img src="src/zPlane.svg" width="40" alt="zPlaneIconDataUri"/></th>
+    <th>yellowPlaneIconDataUri</th>
+    <th><img src="src/yellowPlane.svg" width="40" alt="yellowPlaneIconDataUri"/></th>
   </tr>
 </table>
