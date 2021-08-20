@@ -1,5 +1,7 @@
 # itk-viewer-icons
 
+[![npm version](https://badge.fury.io/js/itk-viewer-icons.svg)](https://badge.fury.io/js/itk-viewer-icons)
+
 Icons for `itk-viewer` user interfaces.
 
 ## Installation
