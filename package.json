@@ -1,0 +1,26 @@
+{
+  "name": "itk-viewer-transfer-function-editor",
+  "version": "0.0.1",
+  "description": "Interface to interactively edit opacity transfer functions, etc",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor.git"
+  },
+  "keywords": [
+    "visualization",
+    "3D",
+    "rendering",
+    "opacity",
+    "histogram"
+  ],
+  "author": "Insight Software Consortium",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor/issues"
+  },
+  "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor#readme"
+}
