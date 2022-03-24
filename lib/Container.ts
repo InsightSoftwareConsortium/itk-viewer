@@ -1,12 +1,48 @@
+
 const makeSvg = () => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-  svg.setAttribute('style', 'boxSizing: border-box; border: 3px solid black; width: 100%; height: 100%')
+  svg.setAttribute('style', 'box-sizing: border-box; width: 100%; height: 100%')
   return svg
 }
 
-export const Container = (domElement: HTMLElement) => {
-  const svg = makeSvg()
-  domElement.appendChild(svg)
+const getSize = (svg: SVGSVGElement) => {
+  const { bottom, top, left, right } = svg.getBoundingClientRect()
+  return { x: right - left, y: bottom - top }
+}
 
-  return { svg }
+export interface iContainer {
+  add: (element: SVGGraphicsElement, point: number[]) => void
+  toNormalized: (x: number, y: number) => number[]
+  positionShape: (shape: SVGGraphicsElement, point: number[]) => void
+}
+
+export const Container = (mount: HTMLElement) => {
+  const svg = makeSvg()
+  mount.appendChild(svg)
+
+  const positionShape = (shape: SVGGraphicsElement, point: number[]) => {
+    const { x: sizeX, y: sizeY } = getSize(svg)
+    const [x, y] = point
+    const xSvg = x * sizeX
+    const ySvg = (1 - y) * sizeY
+
+    shape.setAttribute('cx', String(xSvg))
+    shape.setAttribute('cy', String(ySvg))
+  }
+
+  const add = (shape: SVGGraphicsElement, point: number[]) => {
+    svg.appendChild(shape)
+    positionShape(shape, point)
+  }
+
+  const toNormalized = (x: number, y: number) => {
+    const { top, left } = svg.getBoundingClientRect()
+    const { x: sizeX, y: sizeY } = getSize(svg)
+    return [
+      (x - left) / sizeX,
+      1 - (y - top) / sizeY
+    ]
+  }
+
+  return { add, positionShape, toNormalized }
 }
