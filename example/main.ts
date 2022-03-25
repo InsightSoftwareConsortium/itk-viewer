@@ -8,4 +8,6 @@ app.innerHTML = `
 `
 
 const editorHome = document.querySelector<HTMLDivElement>('#editorHome')
-if (editorHome) { TfEditor(editorHome) }
+if (editorHome) {
+  TfEditor(editorHome)
+}

@@ -13,7 +13,9 @@ test('Starts with 2 points', () => {
 test('Initial points are represented', () => {
   const root = document.createElement('div')
   TfEditor(root)
-  const svgElement = Array.from(root.children).find(element => element.nodeName === 'SVG')
+  const svgElement = Array.from(root.children).find(
+    (element) => element.nodeName === 'SVG'
+  )
   const pointElements = svgElement.querySelectorAll('.controlPoint')
   expect(pointElements.length).toBe(2)
 })
@@ -21,7 +23,9 @@ test('Initial points are represented', () => {
 test('Initial points are in lower left and upper right', () => {
   const root = document.createElement('div')
   TfEditor(root)
-  const svgElement = Array.from(root.children).find(element => element.nodeName === 'SVG')
+  const svgElement = Array.from(root.children).find(
+    (element) => element.nodeName === 'SVG'
+  )
   const [first] = svgElement.querySelectorAll('.controlPoint')
   expect(first.getAttribute('cx')).toBe('0')
 

@@ -5,7 +5,7 @@ export default defineConfig({
     lib: {
       entry: 'lib/TfEditor.ts',
       name: 'TfEditor',
-      fileName: (format) => `TfEditor.${format}.js`
-    }
-  }
+      fileName: (format) => `TfEditor.${format}.js`,
+    },
+  },
 })

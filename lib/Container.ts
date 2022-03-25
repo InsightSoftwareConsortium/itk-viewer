@@ -1,4 +1,3 @@
-
 const makeSvg = () => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svg.setAttribute('style', 'box-sizing: border-box; width: 100%; height: 100%')
@@ -38,10 +37,7 @@ export const Container = (mount: HTMLElement) => {
   const toNormalized = (x: number, y: number) => {
     const { top, left } = svg.getBoundingClientRect()
     const { x: sizeX, y: sizeY } = getSize(svg)
-    return [
-      (x - left) / sizeX,
-      1 - (y - top) / sizeY
-    ]
+    return [(x - left) / sizeX, 1 - (y - top) / sizeY]
   }
 
   return { add, positionShape, toNormalized }
