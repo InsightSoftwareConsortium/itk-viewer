@@ -7,7 +7,8 @@
   margin-top: 60px;
 }
 
-#lutHome {
-  height: 10rem;
-  background-color: aqua;
+#editorHome {
+  background-color: #00ffff;
+  height: 100px;
+  box-sizing: 'border-box';
 }
