@@ -14,25 +14,50 @@ const makeCircle = () => {
   return circle
 }
 
-export const ControlPoint = (container: iContainer, point: number[]) => {
-  const shape = makeCircle()
-  container.add(shape, point)
+export class ControlPoint {
+  shape: SVGCircleElement
+  container: iContainer
+  point: number[]
 
-  const movePoint = (e: PointerEvent) => {
-    const [x, y] = container.toNormalized(e.clientX, e.clientY)
-    point[0] = x
-    point[1] = y
+  constructor(container: iContainer, point: number[]) {
+    this.shape = makeCircle()
+    this.point = point
+    this.container = container
 
-    container.positionShape(shape, point)
+    container.addSizeObserver(() => {
+      this.positionShape()
+    })
+
+    // drag control point around
+    this.shape.addEventListener('pointerdown', () => {
+      const onPointerMove = (e: PointerEvent) => this.movePoint(e)
+      document.addEventListener('pointermove', onPointerMove)
+      const removeListeners = () => {
+        document.removeEventListener('pointermove', onPointerMove)
+        document.removeEventListener('pointerup', removeListeners)
+      }
+      document.addEventListener('pointerup', removeListeners)
+    })
+
+    container.add(this.shape)
+    this.positionShape()
   }
 
-  // drag control point around
-  shape.addEventListener('pointerdown', () => {
-    document.addEventListener('pointermove', movePoint)
-    const removeListeners = () => {
-      document.removeEventListener('pointermove', movePoint)
-      document.removeEventListener('pointerup', removeListeners)
-    }
-    document.addEventListener('pointerup', removeListeners)
-  })
+  positionShape() {
+    const { x: sizeX, y: sizeY } = this.container.getSize()
+    const [x, y] = this.point
+    const xSvg = x * sizeX
+    const ySvg = (1 - y) * sizeY
+
+    this.shape.setAttribute('cx', String(xSvg))
+    this.shape.setAttribute('cy', String(ySvg))
+  }
+
+  movePoint(e: PointerEvent) {
+    const [x, y] = this.container.toNormalized(e.clientX, e.clientY)
+    this.point[0] = x
+    this.point[1] = y
+
+    this.positionShape()
+  }
 }

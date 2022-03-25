@@ -4,41 +4,57 @@ const makeSvg = () => {
   return svg
 }
 
-const getSize = (svg: SVGSVGElement) => {
+interface Size {
+  x: number
+  y: number
+}
+
+const computeSize = (svg: SVGSVGElement): Size => {
   const { bottom, top, left, right } = svg.getBoundingClientRect()
   return { x: right - left, y: bottom - top }
 }
 
+type SvgInHtml = HTMLElement & SVGSVGElement
+
 export interface iContainer {
-  add: (element: SVGGraphicsElement, point: number[]) => void
+  add: (element: SVGGraphicsElement) => void
   toNormalized: (x: number, y: number) => number[]
-  positionShape: (shape: SVGGraphicsElement, point: number[]) => void
+  addSizeObserver: (func: () => void) => void
+  getSize: () => Size
+  domElement: SvgInHtml
 }
 
-export const Container = (mount: HTMLElement) => {
+export const Container = (mount: HTMLElement): iContainer => {
   const svg = makeSvg()
   mount.appendChild(svg)
 
-  const positionShape = (shape: SVGGraphicsElement, point: number[]) => {
-    const { x: sizeX, y: sizeY } = getSize(svg)
-    const [x, y] = point
-    const xSvg = x * sizeX
-    const ySvg = (1 - y) * sizeY
-
-    shape.setAttribute('cx', String(xSvg))
-    shape.setAttribute('cy', String(ySvg))
-  }
-
-  const add = (shape: SVGGraphicsElement, point: number[]) => {
+  const add = (shape: SVGGraphicsElement) => {
     svg.appendChild(shape)
-    positionShape(shape, point)
   }
 
   const toNormalized = (x: number, y: number) => {
     const { top, left } = svg.getBoundingClientRect()
-    const { x: sizeX, y: sizeY } = getSize(svg)
+    const { x: sizeX, y: sizeY } = computeSize(svg)
     return [(x - left) / sizeX, 1 - (y - top) / sizeY]
   }
 
-  return { add, positionShape, toNormalized }
+  const sizeEmitter = new EventTarget()
+  const addSizeObserver = (cb: () => void) => {
+    sizeEmitter.addEventListener('sizeupdated', cb)
+  }
+
+  const resizeObserver = new ResizeObserver(() => {
+    sizeEmitter.dispatchEvent(new Event('sizeupdated'))
+  })
+  resizeObserver.observe(mount)
+
+  const getSize = () => computeSize(svg)
+
+  return {
+    add,
+    toNormalized,
+    addSizeObserver,
+    getSize,
+    domElement: svg as SvgInHtml,
+  }
 }

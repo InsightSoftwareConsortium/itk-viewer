@@ -9,5 +9,6 @@ app.innerHTML = `
 
 const editorHome = document.querySelector<HTMLDivElement>('#editorHome')
 if (editorHome) {
-  TfEditor(editorHome)
+  const editor = new TfEditor(editorHome)
+  console.log(editor.getPoints())
 }

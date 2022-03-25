@@ -1,18 +1,28 @@
-import { Container } from './Container'
-import { ControlPoint } from './ControlPoint'
+import { Container, iContainer } from './Container'
+import { PointController } from './PointController'
+import { Points } from './Points'
 
-export const TfEditor = (mount: HTMLElement) => {
-  const container = Container(mount)
+export class TfEditor {
+  points: Points
 
-  const points = [
-    [0, 0],
-    [1, 1],
-  ]
-  points.forEach((point) => {
-    ControlPoint(container, point)
-  })
+  pointController: PointController
+  container: iContainer
 
-  return {
-    points,
+  constructor(mount: HTMLElement) {
+    this.container = Container(mount)
+
+    this.points = new Points()
+    const startPoints = [
+      [0, 0],
+      [1, 1],
+    ]
+    startPoints.forEach((point) => this.points.addPoint(point))
+
+    // eslint-disable-next-line no-unused-vars
+    this.pointController = new PointController(this.container, this.points)
+  }
+
+  getPoints() {
+    return this.points.getPoints()
   }
 }
