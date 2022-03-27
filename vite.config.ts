@@ -1,3 +1,5 @@
+/// <reference types="vitest" />
+
 import { defineConfig } from 'vite'
 
 export default defineConfig({
@@ -7,5 +9,8 @@ export default defineConfig({
       name: 'TfEditor',
       fileName: (format) => `TfEditor.${format}.js`,
     },
+  },
+  test: {
+    environment: 'happy-dom',
   },
 })

@@ -1,5 +1,6 @@
 export class Points {
   points: number[][] = []
+  pointUpdatedEmitter = new EventTarget()
 
   // deep copy
   getPoints() {
@@ -9,7 +10,6 @@ export class Points {
     )
   }
 
-  pointUpdatedEmitter = new EventTarget()
   addObserver(cb: () => void) {
     this.pointUpdatedEmitter.addEventListener('updated', cb)
   }
@@ -17,6 +17,7 @@ export class Points {
   // in normalized coordinates
   addPoint(point: number[]) {
     this.points = [...this.points, point]
-    this.pointUpdatedEmitter.dispatchEvent(new Event('updated'))
+    const e = new Event('updated')
+    this.pointUpdatedEmitter.dispatchEvent(e)
   }
 }

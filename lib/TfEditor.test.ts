@@ -1,5 +1,3 @@
-// @vitest-environment happy-dom
-
 import { expect, test } from 'vitest'
 import { TfEditor } from './TfEditor'
 

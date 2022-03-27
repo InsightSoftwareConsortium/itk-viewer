@@ -10,5 +10,5 @@ app.innerHTML = `
 const editorHome = document.querySelector<HTMLDivElement>('#editorHome')
 if (editorHome) {
   const editor = new TfEditor(editorHome)
-  console.log(editor.getPoints())
+  console.log('Control points', editor.getPoints())
 }

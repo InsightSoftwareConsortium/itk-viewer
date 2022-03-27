@@ -1,5 +1,3 @@
-// @vitest-environment happy-dom
-
 import { expect, test } from 'vitest'
 import { makeTestableContainer } from './Container.test'
 import { Points } from './Points'
