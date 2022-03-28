@@ -9,7 +9,7 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "format": "prettier --write .",
-    "lint": "eslint . --ext .ts"
+    "lint": "prettier . --check && eslint . --ext .ts"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.16.0",
