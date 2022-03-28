@@ -1,5 +1,6 @@
 const makeSvg = () => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('id', 'tf-editor-container')
   svg.setAttribute('style', 'box-sizing: border-box; width: 100%; height: 100%')
   return svg
 }
@@ -17,18 +18,19 @@ const computeSize = (svg: SVGSVGElement): Size => {
 type SvgInHtml = HTMLElement & SVGSVGElement
 
 export interface iContainer {
-  add: (element: SVGGraphicsElement) => void
+  appendChild: (element: SVGGraphicsElement) => void
   toNormalized: (x: number, y: number) => number[]
   addSizeObserver: (func: () => void) => void
   getSize: () => Size
   domElement: SvgInHtml
+  remove: () => void
 }
 
 export const Container = (mount: HTMLElement): iContainer => {
   const svg = makeSvg()
   mount.appendChild(svg)
 
-  const add = (shape: SVGGraphicsElement) => {
+  const appendChild = (shape: SVGGraphicsElement) => {
     svg.appendChild(shape)
   }
 
@@ -50,11 +52,14 @@ export const Container = (mount: HTMLElement): iContainer => {
 
   const getSize = () => computeSize(svg)
 
+  const remove = () => mount.removeChild(svg)
+
   return {
-    add,
+    appendChild,
     toNormalized,
     addSizeObserver,
     getSize,
     domElement: svg as SvgInHtml,
+    remove,
   }
 }

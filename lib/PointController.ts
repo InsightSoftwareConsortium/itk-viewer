@@ -2,6 +2,7 @@ import { iContainer } from './Container'
 import { ControlPoint } from './ControlPoint'
 import { Points } from './Points'
 
+// Adds new Points to model and creates view of the points
 export class PointController {
   container: iContainer
   points: Points

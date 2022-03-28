@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { Container } from './Container'
 
@@ -6,11 +6,22 @@ export const makeTestableContainer = () => {
   const root = document.createElement('div')
   return { container: Container(root), root }
 }
+describe('Container', async() => {
+  let root: HTMLDivElement, container
 
-test('SVG element added to root', () => {
-  const { root } = makeTestableContainer()
-  const svgElement = Array.from(root.children).find(
-    (element) => element.nodeName === 'SVG'
-  )
-  expect(svgElement).toBeTruthy()
+  beforeEach(async() => {
+    ;({ root, container } = makeTestableContainer())
+  })
+
+  it('SVG element added to root', () => {
+    const svgElement = Array.from(root.children).find(
+      (element) => element.nodeName === 'SVG'
+    )
+    expect(svgElement).toBeTruthy()
+  })
+
+  it('Remove unmounts svg', () => {
+    container.remove()
+    expect(root.children.length).toBe(0)
+  })
 })

@@ -39,11 +39,11 @@ export class ControlPoint {
       document.addEventListener('pointerup', removeListeners)
     })
 
-    container.add(this.shape)
+    container.appendChild(this.shape)
     this.positionShape()
   }
 
-  positionShape() {
+  private positionShape() {
     const { x: sizeX, y: sizeY } = this.container.getSize()
     const [x, y] = this.point
     const xSvg = x * sizeX

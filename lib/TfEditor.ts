@@ -22,6 +22,10 @@ export class TfEditor {
     this.pointController = new PointController(this.container, this.points)
   }
 
+  remove() {
+    this.container.remove()
+  }
+
   getPoints() {
     return this.points.getPoints()
   }
