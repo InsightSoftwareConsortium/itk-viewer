@@ -6,10 +6,10 @@ export const makeTestableContainer = () => {
   const root = document.createElement('div')
   return { container: Container(root), root }
 }
-describe('Container', async() => {
+describe('Container', () => {
   let root: HTMLDivElement, container
 
-  beforeEach(async() => {
+  beforeEach(() => {
     ;({ root, container } = makeTestableContainer())
   })
 

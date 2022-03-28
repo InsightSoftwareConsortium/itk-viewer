@@ -1,5 +1,7 @@
 import { iContainer } from './Container'
 
+export const CONTROL_POINT_CLASS = 'controlPoint'
+
 const makeCircle = () => {
   const circle = document.createElementNS(
     'http://www.w3.org/2000/svg',
@@ -9,7 +11,7 @@ const makeCircle = () => {
   circle.setAttribute('fill', 'white')
   circle.setAttribute('stroke', 'red')
   circle.setAttribute('stroke-width', '2')
-  circle.setAttribute('class', 'controlPoint')
+  circle.setAttribute('class', CONTROL_POINT_CLASS)
 
   return circle
 }

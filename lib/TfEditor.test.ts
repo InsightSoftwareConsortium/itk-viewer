@@ -7,10 +7,10 @@ const makeEditor = () => {
   return { root, editor }
 }
 
-describe('TfEditor', async() => {
+describe('TfEditor', () => {
   let root: HTMLDivElement, editor: TfEditor
 
-  beforeEach(async() => {
+  beforeEach(() => {
     ;({ root, editor } = makeEditor())
   })
 

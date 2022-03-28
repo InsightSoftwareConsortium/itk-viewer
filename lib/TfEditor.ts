@@ -1,11 +1,11 @@
 import { Container, iContainer } from './Container'
-import { PointController } from './PointController'
+import { PointsController } from './PointsController'
 import { Points } from './Points'
 
 export class TfEditor {
   points: Points
 
-  pointController: PointController
+  pointController: PointsController
   container: iContainer
 
   constructor(mount: HTMLElement) {
@@ -19,7 +19,7 @@ export class TfEditor {
     startPoints.forEach((point) => this.points.addPoint(point))
 
     // eslint-disable-next-line no-unused-vars
-    this.pointController = new PointController(this.container, this.points)
+    this.pointController = new PointsController(this.container, this.points)
   }
 
   remove() {
@@ -27,6 +27,6 @@ export class TfEditor {
   }
 
   getPoints() {
-    return this.points.getPoints()
+    return this.points.points
   }
 }

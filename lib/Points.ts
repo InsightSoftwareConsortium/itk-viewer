@@ -1,11 +1,11 @@
 export class Points {
-  points: number[][] = []
-  pointUpdatedEmitter = new EventTarget()
+  private _points: number[][] = []
+  private pointUpdatedEmitter = new EventTarget()
 
-  // deep copy
-  getPoints() {
-    return this.points.reduce(
-      (line, point) => [...line, [...point]],
+  // shallow copy
+  get points() {
+    return this._points.reduce(
+      (line, point) => [...line, point],
       [] as number[][]
     )
   }
@@ -14,9 +14,13 @@ export class Points {
     this.pointUpdatedEmitter.addEventListener('updated', cb)
   }
 
+  removeObserver(cb: () => void) {
+    this.pointUpdatedEmitter.removeEventListener('updated', cb)
+  }
+
   // in normalized coordinates
   addPoint(point: number[]) {
-    this.points = [...this.points, point]
+    this._points = [...this._points, point]
     const e = new Event('updated')
     this.pointUpdatedEmitter.dispatchEvent(e)
   }
