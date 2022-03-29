@@ -4,7 +4,7 @@ import { CONTROL_POINT_CLASS } from './ControlPoint'
 import { Points } from './Points'
 import { PointsController } from './PointsController'
 
-describe('PointsController', async () => {
+describe('PointsController', () => {
   let controller, container, points
 
   const expectPointCount = (count: number) => {
@@ -17,7 +17,7 @@ describe('PointsController', async () => {
     expect(domElementCount).toBe(count)
   }
 
-  beforeEach(async () => {
+  beforeEach(() => {
     ;({ container } = makeTestableContainer())
     points = new Points()
     controller = new PointsController(container, points)

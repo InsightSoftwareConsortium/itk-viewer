@@ -2,10 +2,10 @@ import { describe, expect, beforeEach, it } from 'vitest'
 import { makeTestableContainer } from './Container.test'
 import { ControlPoint } from './ControlPoint'
 
-describe('ControlPoint', async () => {
+describe('ControlPoint', () => {
   let controlPoint, point
 
-  beforeEach(async () => {
+  beforeEach(() => {
     const { container } = makeTestableContainer()
     point = [0, 0]
     controlPoint = new ControlPoint(container, point)
