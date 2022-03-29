@@ -1,13 +1,14 @@
 import { describe, expect, beforeEach, it } from 'vitest'
 import { makeTestableContainer } from './Container.test'
 import { ControlPoint } from './ControlPoint'
+import { Point } from './Point'
 
 describe('ControlPoint', () => {
   let controlPoint, point
 
   beforeEach(() => {
     const { container } = makeTestableContainer()
-    point = [0, 0]
+    point = new Point(0, 0)
     controlPoint = new ControlPoint(container, point)
   })
 

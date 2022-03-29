@@ -1,31 +1,18 @@
+import { Point } from './Point'
 export class Points {
-  private _points: number[][] = []
+  points: Point[] = []
   eventTarget = new EventTarget()
 
-  // shallow copy
-  get points() {
-    return this._points.reduce(
-      (line, point) => [...line, point],
-      [] as number[][]
-    )
-  }
-
-  addObserver(cb: () => void) {
-    this.eventTarget.addEventListener('updated', cb)
-  }
-
-  removeObserver(cb: () => void) {
-    this.eventTarget.removeEventListener('updated', cb)
-  }
-
   // in normalized coordinates
-  addPoint(point: number[]) {
-    this._points = [...this._points, point]
+  addPoint(x: number, y: number) {
+    const pointToAdd = new Point(x, y)
+    this.points = [...this.points, pointToAdd]
     this.dispatchUpdatedEvent()
+    return pointToAdd
   }
 
-  removePoint(point: number[]) {
-    this._points = this._points.filter((p) => p !== point)
+  removePoint(point: Point) {
+    this.points = this.points.filter((p) => p !== point)
     this.dispatchUpdatedEvent()
   }
 

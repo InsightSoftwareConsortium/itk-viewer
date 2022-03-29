@@ -1,5 +1,6 @@
 import { iContainer } from './Container'
 import { ControlPoint } from './ControlPoint'
+import { Point } from './Point'
 import { Points } from './Points'
 
 // Adds new Points to model and create view of the points
@@ -19,18 +20,18 @@ export class PointsController {
 
     // react to model
     this.onPointsUpdated = () => this.updatePoints()
-    this.points.addObserver(this.onPointsUpdated)
+    this.points.eventTarget.addEventListener('updated', this.onPointsUpdated)
 
     this.updatePoints()
   }
 
   remove() {
-    this.points.removeObserver(this.onPointsUpdated)
+    this.points.eventTarget.removeEventListener('updated', this.onPointsUpdated)
   }
 
   onPointerDown(event: PointerEvent) {
     const [x, y] = this.container.toNormalized(event.clientX, event.clientY)
-    this.points.addPoint([x, y])
+    this.points.addPoint(x, y)
   }
 
   onControlPointDelete(event: CustomEvent) {
@@ -48,10 +49,10 @@ export class PointsController {
     )
 
     // add new ControlPoints
-    const isPointInControlPoints = (point: number[]) =>
+    const isPointInControlPoints = (point: Point) =>
       this.controlPoints.find((cp) => cp.point === point)
 
-    const addNewControlPoint = (point: number[]) =>
+    const addNewControlPoint = (point: Point) =>
       this.controlPoints.push(
         new ControlPoint(this.container, point, (e) =>
           this.onControlPointDelete(e)

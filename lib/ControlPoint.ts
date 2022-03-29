@@ -1,4 +1,5 @@
 import { iContainer } from './Container'
+import { Point } from './Point'
 
 export const CONTROL_POINT_CLASS = 'controlPoint'
 
@@ -19,14 +20,14 @@ const makeCircle = () => {
 export class ControlPoint {
   element: SVGCircleElement
   private container: iContainer
-  readonly point: number[]
+  readonly point: Point
 
   readonly DELETE_EVENT = 'deleteme'
   readonly eventTarget = new EventTarget()
 
   constructor(
     container: iContainer,
-    point: number[],
+    point: Point,
     deleteEventCallback?: (event: CustomEvent) => void
   ) {
     this.element = makeCircle()
@@ -55,7 +56,7 @@ export class ControlPoint {
 
   private positionElement() {
     const { width: sizeX, height: sizeY } = this.container.getSize()
-    const [x, y] = this.point
+    const { x, y } = this.point
     const xSvg = x * sizeX
     const ySvg = (1 - y) * sizeY
 
@@ -65,9 +66,7 @@ export class ControlPoint {
 
   movePoint(e: PointerEvent) {
     const [x, y] = this.container.toNormalized(e.clientX, e.clientY)
-    this.point[0] = x
-    this.point[1] = y
-
+    this.point.setPosition(x, y)
     this.positionElement()
   }
 

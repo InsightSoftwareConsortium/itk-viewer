@@ -64,7 +64,7 @@ describe('PointsController', () => {
       bubbles: true,
     })
     domElement.dispatchEvent(upperLeft)
-    let [normX, normY] = points.points[0]
+    let { x: normX, y: normY } = points.points[0]
     expect(normX).toBe(0)
     expect(normY).toBe(1)
 
@@ -74,13 +74,13 @@ describe('PointsController', () => {
       bubbles: true,
     })
     domElement.dispatchEvent(middle)
-    ;[normX, normY] = points.points[1]
+    ;({ x: normX, y: normY } = points.points[1])
     expect(normX).toBe(0.5)
     expect(normY).toBe(0.5)
   })
 
   it('remove cleans up Points callback', () => {
-    const removeSpy = vi.spyOn(points, 'removeObserver')
+    const removeSpy = vi.spyOn(points.eventTarget, 'removeEventListener')
     controller.remove()
     expect(removeSpy).toHaveBeenCalled()
   })

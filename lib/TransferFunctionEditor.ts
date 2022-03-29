@@ -16,7 +16,7 @@ export class TransferFunctionEditor {
       [0, 0],
       [1, 1],
     ]
-    startPoints.forEach((point) => this.points.addPoint(point))
+    startPoints.forEach(([x, y]) => this.points.addPoint(x, y))
 
     // eslint-disable-next-line no-unused-vars
     this.pointController = new PointsController(this.container, this.points)
@@ -27,7 +27,10 @@ export class TransferFunctionEditor {
   }
 
   getPoints() {
-    return this.points.points
+    return this.points.points.reduce(
+      (line, point) => [...line, [point.x, point.y]],
+      [] as number[][]
+    )
   }
 
   get eventTarget() {
