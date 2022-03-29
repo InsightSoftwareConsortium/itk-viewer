@@ -5,23 +5,13 @@ const makeSvg = () => {
   return svg
 }
 
-interface Size {
-  x: number
-  y: number
-}
-
-const computeSize = (svg: SVGSVGElement): Size => {
-  const { bottom, top, left, right } = svg.getBoundingClientRect()
-  return { x: right - left, y: bottom - top }
-}
-
 type SvgInHtml = HTMLElement & SVGSVGElement
 
 export interface iContainer {
   appendChild: (element: SVGGraphicsElement) => void
   toNormalized: (x: number, y: number) => number[]
   addSizeObserver: (func: () => void) => void
-  getSize: () => Size
+  getSize: () => DOMRectReadOnly
   domElement: SvgInHtml
   remove: () => void
 }
@@ -35,9 +25,8 @@ export const Container = (mount: HTMLElement): iContainer => {
   }
 
   const toNormalized = (x: number, y: number) => {
-    const { top, left } = svg.getBoundingClientRect()
-    const { x: sizeX, y: sizeY } = computeSize(svg)
-    return [(x - left) / sizeX, 1 - (y - top) / sizeY]
+    const { top, left, width, height } = svg.getBoundingClientRect()
+    return [(x - left) / width, 1 - (y - top) / height]
   }
 
   const sizeEmitter = new EventTarget()
@@ -50,7 +39,7 @@ export const Container = (mount: HTMLElement): iContainer => {
   })
   resizeObserver.observe(mount)
 
-  const getSize = () => computeSize(svg)
+  const getSize = () => svg.getBoundingClientRect()
 
   const remove = () => mount.removeChild(svg)
 

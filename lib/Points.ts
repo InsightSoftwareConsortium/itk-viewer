@@ -21,7 +21,11 @@ export class Points {
   // in normalized coordinates
   addPoint(point: number[]) {
     this._points = [...this._points, point]
-    const e = new Event('updated')
-    this.pointUpdatedEmitter.dispatchEvent(e)
+    this.pointUpdatedEmitter.dispatchEvent(new Event('updated'))
+  }
+
+  removePoint(point: number[]) {
+    this._points = this._points.filter((p) => p !== point)
+    this.pointUpdatedEmitter.dispatchEvent(new Event('updated'))
   }
 }

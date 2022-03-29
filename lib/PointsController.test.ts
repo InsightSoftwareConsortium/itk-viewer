@@ -38,6 +38,19 @@ describe('PointsController', async () => {
     expectPointCount(2)
   })
 
+  it('Clicking a point deletes it', () => {
+    const pointerDown = new PointerEvent('pointerdown', { bubbles: true })
+    const { domElement } = container
+    domElement.dispatchEvent(pointerDown)
+
+    const controlPointElement = container.domElement.querySelector(
+      `.${CONTROL_POINT_CLASS}`
+    )
+    controlPointElement.dispatchEvent(pointerDown)
+
+    expectPointCount(0)
+  })
+
   it('remove cleans up Points callback', () => {
     const removeSpy = vi.spyOn(points, 'removeObserver')
     controller.remove()

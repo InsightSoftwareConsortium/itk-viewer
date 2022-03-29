@@ -17,42 +17,50 @@ const makeCircle = () => {
 }
 
 export class ControlPoint {
-  shape: SVGCircleElement
-  container: iContainer
-  point: number[]
+  element: SVGCircleElement
+  private container: iContainer
+  readonly point: number[]
 
-  constructor(container: iContainer, point: number[]) {
-    this.shape = makeCircle()
+  readonly DELETE_EVENT = 'deleteme'
+  readonly eventTarget = new EventTarget()
+
+  constructor(
+    container: iContainer,
+    point: number[],
+    deleteEventCallback?: (event: CustomEvent) => void
+  ) {
+    this.element = makeCircle()
     this.point = point
     this.container = container
 
     container.addSizeObserver(() => {
-      this.positionShape()
+      this.positionElement()
     })
 
-    // drag control point around
-    this.shape.addEventListener('pointerdown', () => {
-      const onPointerMove = (e: PointerEvent) => this.movePoint(e)
-      document.addEventListener('pointermove', onPointerMove)
-      const removeListeners = () => {
-        document.removeEventListener('pointermove', onPointerMove)
-        document.removeEventListener('pointerup', removeListeners)
-      }
-      document.addEventListener('pointerup', removeListeners)
-    })
+    if (deleteEventCallback) {
+      this.eventTarget.addEventListener(this.DELETE_EVENT, (e: Event) => {
+        deleteEventCallback(<CustomEvent>e)
+      })
+    }
 
-    container.appendChild(this.shape)
-    this.positionShape()
+    container.appendChild(this.element)
+    this.positionElement()
+
+    this.setupInteraction()
   }
 
-  private positionShape() {
-    const { x: sizeX, y: sizeY } = this.container.getSize()
+  remove() {
+    this.container.domElement.removeChild(this.element)
+  }
+
+  private positionElement() {
+    const { width: sizeX, height: sizeY } = this.container.getSize()
     const [x, y] = this.point
     const xSvg = x * sizeX
     const ySvg = (1 - y) * sizeY
 
-    this.shape.setAttribute('cx', String(xSvg))
-    this.shape.setAttribute('cy', String(ySvg))
+    this.element.setAttribute('cx', String(xSvg))
+    this.element.setAttribute('cy', String(ySvg))
   }
 
   movePoint(e: PointerEvent) {
@@ -60,6 +68,31 @@ export class ControlPoint {
     this.point[0] = x
     this.point[1] = y
 
-    this.positionShape()
+    this.positionElement()
+  }
+
+  setupInteraction() {
+    this.element.addEventListener('pointerdown', (event) => {
+      event.stopPropagation()
+
+      let isDragging = false
+      const onPointerMove = (e: PointerEvent) => {
+        isDragging = true
+        this.movePoint(e)
+      }
+      document.addEventListener('pointermove', onPointerMove)
+
+      const onPointerUp = () => {
+        document.removeEventListener('pointermove', onPointerMove)
+        document.removeEventListener('pointerup', onPointerUp)
+
+        if (!isDragging) {
+          const delEvent = new CustomEvent(this.DELETE_EVENT, { detail: this })
+          this.eventTarget.dispatchEvent(delEvent)
+        }
+      }
+
+      document.addEventListener('pointerup', onPointerUp)
+    })
   }
 }
