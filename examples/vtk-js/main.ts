@@ -15,6 +15,6 @@ app.innerHTML = `
 const editorHome = document.querySelector<HTMLDivElement>('#editorHome')
 if (editorHome) {
   const editor = new TransferFunctionEditor(editorHome)
-  console.log('Control points', editor.getPoints())
+
   globalThis.editor = editor
 }

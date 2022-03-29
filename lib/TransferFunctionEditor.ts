@@ -29,4 +29,8 @@ export class TransferFunctionEditor {
   getPoints() {
     return this.points.points
   }
+
+  get eventTarget() {
+    return this.points.eventTarget
+  }
 }
