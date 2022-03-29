@@ -1,9 +1,9 @@
 import './style.css'
-import { TransferFunctionEditor } from '../lib/TransferFunctionEditor'
+import { TransferFunctionEditor } from '../../lib/TransferFunctionEditor'
 
 declare global {
   // eslint-disable-next-line
-  var editor: TfEditor
+  var editor: TransferFunctionEditor
 }
 
 const app = document.querySelector<HTMLDivElement>('#app')!
