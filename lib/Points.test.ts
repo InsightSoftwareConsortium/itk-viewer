@@ -23,6 +23,6 @@ describe('PointController', async () => {
     points.eventTarget.addEventListener('updated', () => (hasFired = true))
     point.x = 0.5
 
-    expect(hasFired).toBe(false)
+    expect(hasFired).toBe(true)
   })
 })

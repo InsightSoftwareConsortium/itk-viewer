@@ -6,6 +6,9 @@ export class Points {
   // in normalized coordinates
   addPoint(x: number, y: number) {
     const pointToAdd = new Point(x, y)
+    pointToAdd.eventTarget.addEventListener('updated', () =>
+      this.dispatchUpdatedEvent()
+    )
     this.points = [...this.points, pointToAdd]
     this.dispatchUpdatedEvent()
     return pointToAdd

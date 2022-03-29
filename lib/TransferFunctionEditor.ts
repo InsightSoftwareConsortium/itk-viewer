@@ -3,10 +3,10 @@ import { PointsController } from './PointsController'
 import { Points } from './Points'
 
 export class TransferFunctionEditor {
-  points: Points
-
-  pointController: PointsController
-  container: iContainer
+  private points: Points
+  // @ts-ignore pointController is all side effects
+  private pointController: PointsController
+  private container: iContainer
 
   constructor(mount: HTMLElement) {
     this.container = Container(mount)
@@ -18,7 +18,6 @@ export class TransferFunctionEditor {
     ]
     startPoints.forEach(([x, y]) => this.points.addPoint(x, y))
 
-    // eslint-disable-next-line no-unused-vars
     this.pointController = new PointsController(this.container, this.points)
   }
 

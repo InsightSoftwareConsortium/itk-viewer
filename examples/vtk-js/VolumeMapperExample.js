@@ -44,6 +44,8 @@ ctfun.addRGBPoint(95, 1.0, 1.0, 1.0)
 ctfun.addRGBPoint(225, 0.66, 0.66, 0.5)
 ctfun.addRGBPoint(255, 0.3, 1.0, 0.5)
 const ofun = vtkPiecewiseFunction.newInstance()
+ofun.addPoint(0.0, 0.0)
+ofun.addPoint(255.0, 1.0)
 actor.getProperty().setRGBTransferFunction(0, ctfun)
 actor.getProperty().setScalarOpacity(0, ofun)
 actor.getProperty().setScalarOpacityUnitDistance(0, 3.0)
@@ -61,28 +63,20 @@ actor.getProperty().setSpecularPower(8.0)
 
 mapper.setInputConnection(reader.getOutputPort())
 
-reader.setUrl('https://kitware.github.io/vtk-js/data/volume/LIDC2.vti').then(() => {
-  reader.loadData().then(() => {
-    renderer.addVolume(actor)
-    const interactor = renderWindow.getInteractor()
-    interactor.setDesiredUpdateRate(15.0)
-    renderer.resetCamera()
-    renderer.getActiveCamera().zoom(1.5)
-    renderer.getActiveCamera().elevation(70)
-    renderer.resetCamera()
-    renderWindow.render()
+reader
+  .setUrl('https://kitware.github.io/vtk-js/data/volume/LIDC2.vti')
+  .then(() => {
+    reader.loadData().then(() => {
+      renderer.addVolume(actor)
+      const interactor = renderWindow.getInteractor()
+      interactor.setDesiredUpdateRate(15.0)
+      renderer.resetCamera()
+      renderer.getActiveCamera().zoom(1.5)
+      renderer.getActiveCamera().elevation(70)
+      renderer.resetCamera()
+      renderWindow.render()
+    })
   })
-})
 
-const MAX_SCALAR = 255
-globalThis.editor.getPoints().forEach(([x, y]) => {
-  ofun.addPoint(x * MAX_SCALAR, y)
-})
-
-globalThis.editor.eventTarget.addEventListener('updated', ({ detail: points }) => {
-  ofun.removeAllPoints()
-  points.forEach(([x, y]) => {
-    ofun.addPoint(x * MAX_SCALAR, y)
-  })
-  renderWindow.render()
-})
+globalThis.ofun = ofun
+globalThis.renderWindow = renderWindow
