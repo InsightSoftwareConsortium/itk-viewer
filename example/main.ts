@@ -1,5 +1,5 @@
 import './style.css'
-import { TfEditor } from '../lib/TfEditor'
+import { TransferFunctionEditor } from '../lib/TransferFunctionEditor'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 
@@ -9,6 +9,6 @@ app.innerHTML = `
 
 const editorHome = document.querySelector<HTMLDivElement>('#editorHome')
 if (editorHome) {
-  const editor = new TfEditor(editorHome)
+  const editor = new TransferFunctionEditor(editorHome)
   console.log('Control points', editor.getPoints())
 }

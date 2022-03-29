@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { TfEditor } from './TfEditor'
+import { TransferFunctionEditor } from './TransferFunctionEditor'
 
 const makeEditor = () => {
   const root = document.createElement('div')
-  const editor = new TfEditor(root)
+  const editor = new TransferFunctionEditor(root)
   return { root, editor }
 }
 
 describe('TfEditor', () => {
-  let root: HTMLDivElement, editor: TfEditor
+  let root: HTMLDivElement, editor: TransferFunctionEditor
 
   beforeEach(() => {
     ;({ root, editor } = makeEditor())

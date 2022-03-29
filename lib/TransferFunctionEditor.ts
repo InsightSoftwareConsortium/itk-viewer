@@ -2,7 +2,7 @@ import { Container, iContainer } from './Container'
 import { PointsController } from './PointsController'
 import { Points } from './Points'
 
-export class TfEditor {
+export class TransferFunctionEditor {
   points: Points
 
   pointController: PointsController
