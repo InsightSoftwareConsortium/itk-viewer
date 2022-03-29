@@ -48,6 +48,9 @@ describe('PointsController', async () => {
     )
     controlPointElement.dispatchEvent(pointerDown)
 
+    const pointerUp = new PointerEvent('pointerup', { bubbles: true })
+    document.dispatchEvent(pointerUp)
+
     expectPointCount(0)
   })
 

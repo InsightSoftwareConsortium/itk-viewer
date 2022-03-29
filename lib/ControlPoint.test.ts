@@ -22,10 +22,13 @@ describe('ControlPoint', async () => {
     })
     document.dispatchEvent(pointerMove)
 
+    const pointerUp = new PointerEvent('pointerup', { bubbles: true })
+    document.dispatchEvent(pointerUp)
+
     expect(point[0]).not.toBe(0)
   })
 
-  it('Clicking ControlPoint without moving fires delete event', () => {
+  it('Fires delete event when clicking ControlPoint without moving', () => {
     let shouldDelete = false
     const cb = () => (shouldDelete = true)
     controlPoint.eventTarget.addEventListener(controlPoint.DELETE_EVENT, cb)
