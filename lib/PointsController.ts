@@ -15,7 +15,7 @@ export class PointsController {
 
     // update model
     const { domElement } = container
-    domElement.addEventListener('pointerdown', () => this.onPointerDown())
+    domElement.addEventListener('pointerdown', (e) => this.onPointerDown(e))
 
     // react to model
     this.onPointsUpdated = () => this.updatePoints()
@@ -28,8 +28,9 @@ export class PointsController {
     this.points.removeObserver(this.onPointsUpdated)
   }
 
-  onPointerDown() {
-    this.points.addPoint([0.5, 0.5])
+  onPointerDown(event: PointerEvent) {
+    const [x, y] = this.container.toNormalized(event.clientX, event.clientY)
+    this.points.addPoint([x, y])
   }
 
   onControlPointDelete(event: CustomEvent) {

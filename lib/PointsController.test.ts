@@ -51,6 +51,31 @@ describe('PointsController', async () => {
     expectPointCount(0)
   })
 
+  it('New point appears where click happens', () => {
+    const { domElement } = container
+    const { left, top, width, height } = domElement.getBoundingClientRect()
+
+    const upperLeft = new PointerEvent('pointerdown', {
+      clientX: left,
+      clientY: top,
+      bubbles: true,
+    })
+    domElement.dispatchEvent(upperLeft)
+    let [normX, normY] = points.points[0]
+    expect(normX).toBe(0)
+    expect(normY).toBe(1)
+
+    const middle = new PointerEvent('pointerdown', {
+      clientX: left + width / 2,
+      clientY: top + height / 2,
+      bubbles: true,
+    })
+    domElement.dispatchEvent(middle)
+    ;[normX, normY] = points.points[1]
+    expect(normX).toBe(0.5)
+    expect(normY).toBe(0.5)
+  })
+
   it('remove cleans up Points callback', () => {
     const removeSpy = vi.spyOn(points, 'removeObserver')
     controller.remove()
