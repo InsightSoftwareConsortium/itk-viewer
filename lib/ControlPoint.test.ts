@@ -4,7 +4,7 @@ import { ControlPoint } from './ControlPoint'
 import { Point } from './Point'
 
 describe('ControlPoint', () => {
-  let controlPoint, point
+  let controlPoint: ControlPoint, point: Point
 
   beforeEach(() => {
     const { container } = makeTestableContainer()
@@ -26,7 +26,7 @@ describe('ControlPoint', () => {
     const pointerUp = new PointerEvent('pointerup', { bubbles: true })
     document.dispatchEvent(pointerUp)
 
-    expect(point[0]).not.toBe(0)
+    expect(point.x).not.toBe(0)
   })
 
   it('Fires delete event when clicking ControlPoint without moving', () => {

@@ -4,15 +4,14 @@
 
 ## Run examples
 
-First need to install example specific dependencies.
-
 ```
 cd examples/itk-vtk-viewer
 npm ci
+npm run dev
 ```
 
-Then in project root.
-
 ```
- npm run dev
+cd examples/vtk-js
+npm ci
+npm run dev
 ```

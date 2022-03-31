@@ -14,5 +14,5 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true
   },
-  "include": ["examples/**/*", "lib /**/*"]
+  "include": ["examples/**/*", "lib/**/*"]
 }

@@ -22,15 +22,17 @@ describe('TfEditor', () => {
     const svgElement = Array.from(root.children).find(
       (element) => element.nodeName === 'SVG'
     )
-    const pointElements = svgElement.querySelectorAll('.controlPoint')
-    expect(pointElements.length).toBe(2)
+    const pointElements = svgElement?.querySelectorAll('.controlPoint')
+    expect(pointElements?.length).toBe(2)
   })
 
   it('Initial points are in lower left and upper right', () => {
     const svgElement = Array.from(root.children).find(
       (element) => element.nodeName === 'SVG'
     )
-    const [first, second] = svgElement.querySelectorAll('.controlPoint')
+    const [first, second] = svgElement!.querySelectorAll(
+      '.controlPoint'
+    ) as unknown as [Element, Element]
     const { top, bottom, left, right } = root.getBoundingClientRect()
 
     expect(Number(first.getAttribute('cx'))).toBe(0)

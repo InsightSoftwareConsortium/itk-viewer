@@ -2,7 +2,7 @@ import { expect, describe, beforeEach, it } from 'vitest'
 import { Points } from './Points'
 
 describe('PointController', async () => {
-  let points
+  let points: Points
 
   beforeEach(async () => {
     points = new Points()
@@ -11,7 +11,7 @@ describe('PointController', async () => {
   it('Adding point triggers callback', () => {
     let hasFired = false
     points.eventTarget.addEventListener('updated', () => (hasFired = true))
-    points.addPoint([1, 1])
+    points.addPoint(1, 1)
     expect(hasFired).toBe(true)
   })
 

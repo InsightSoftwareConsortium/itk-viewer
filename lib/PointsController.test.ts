@@ -1,11 +1,12 @@
 import { describe, expect, beforeEach, it, vi } from 'vitest'
+import { iContainer } from './Container'
 import { makeTestableContainer } from './Container.test'
 import { CONTROL_POINT_CLASS } from './ControlPoint'
 import { Points } from './Points'
 import { PointsController } from './PointsController'
 
 describe('PointsController', () => {
-  let controller, container, points
+  let controller: PointsController, container: iContainer, points: Points
 
   const expectPointCount = (count: number) => {
     // model
@@ -46,7 +47,7 @@ describe('PointsController', () => {
     const controlPointElement = container.domElement.querySelector(
       `.${CONTROL_POINT_CLASS}`
     )
-    controlPointElement.dispatchEvent(pointerDown)
+    controlPointElement?.dispatchEvent(pointerDown)
 
     const pointerUp = new PointerEvent('pointerup', { bubbles: true })
     document.dispatchEvent(pointerUp)

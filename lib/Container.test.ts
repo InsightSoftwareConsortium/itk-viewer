@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { Container } from './Container'
+import { Container, iContainer } from './Container'
 
 export const makeTestableContainer = () => {
   const root = document.createElement('div')
@@ -26,7 +26,7 @@ export const makeTestableContainer = () => {
 }
 
 describe('Container', () => {
-  let root: HTMLDivElement, container
+  let root: HTMLDivElement, container: iContainer
 
   beforeEach(() => {
     ;({ root, container } = makeTestableContainer())

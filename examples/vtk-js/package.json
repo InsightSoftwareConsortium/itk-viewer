@@ -1,6 +1,9 @@
 {
   "name": "vtk-js-transfer-function-example",
   "version": "1.0.0",
+  "scripts": {
+    "dev": "vite"
+  },
   "dependencies": {
     "@kitware/vtk.js": "^24.0.2"
   }
