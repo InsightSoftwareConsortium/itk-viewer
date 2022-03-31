@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="favicon-32x32.png" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <title>Custom itk-viewer Reference UI Demo</title>
+  </head>
+  <body>
+    <div
+      class="content"
+      style="
+        position: absolute;
+        width: 100vw;
+        height: 100vh;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        background: black;
+        margin: 0;
+        padding: 0;
+      "
+    ></div>
+    <script
+      type="text/javascript"
+      src="https://unpkg.com/itk-vtk-viewer@11.11.2/dist/itkVtkViewerCDN.js"
+    ></script>
+
+    <script type="module" src="./main.js"></script>
+    <script>
+      const container = document.querySelector('.content')
+      const ipfsImage = new URL(
+        'https://data.kitware.com/api/v1/file/5b843d468d777f43cc8d4f6b/download/engine.nrrd'
+      )
+      const uiMachineOptions = {
+        href: new URL('./main.js', document.location).href,
+      }
+      itkVtkViewer.createViewer(container, {
+        image: ipfsImage,
+        rotate: false,
+        config: { uiMachineOptions },
+      })
+    </script>
+  </body>
+</html>

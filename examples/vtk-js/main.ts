@@ -1,6 +1,10 @@
 import './style.css'
+import { throttle } from '@kitware/vtk.js/macros'
 import { TransferFunctionEditor } from '../../lib/TransferFunctionEditor'
 import { Point } from '../../lib/Point'
+
+const OPACITY_UPDATE_DELAY = 100
+const MAX_SCALAR = 255
 
 declare global {
   // eslint-disable-next-line
@@ -19,14 +23,15 @@ const editorHome = document.querySelector<HTMLDivElement>('#editorHome')
 if (editorHome) {
   const editor = new TransferFunctionEditor(editorHome)
 
-  const MAX_SCALAR = 255
   const opacityFunction = globalThis.ofun
-  editor.eventTarget.addEventListener('updated', (e) => {
+  const updateViewerOpacityFunction = throttle((e) => {
     const points = (<CustomEvent>e).detail as Point[]
     opacityFunction.removeAllPoints()
     points.forEach(({ x, y }) => {
       opacityFunction.addPoint(x * MAX_SCALAR, y)
     })
     globalThis.renderWindow.render()
-  })
+  }, OPACITY_UPDATE_DELAY)
+
+  editor.eventTarget.addEventListener('updated', updateViewerOpacityFunction)
 }
