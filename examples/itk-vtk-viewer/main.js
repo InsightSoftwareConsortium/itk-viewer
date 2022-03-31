@@ -18,7 +18,6 @@ const updateContextPiecewiseFunction =
       midpoint: 0.5,
       sharpness: 0,
     }))
-    console.log(nodes.map(({ x }) => x))
     context.service.send({
       type: 'IMAGE_PIECEWISE_FUNCTION_CHANGED',
       data: {
@@ -32,6 +31,7 @@ const updateContextPiecewiseFunction =
 
 const createEditor = (imagesContext) => {
   const editorHome = document.createElement('div')
+  editorHome.setAttribute('style', 'border: 1px solid black; height: 150px')
   const editor = new TransferFunctionEditor(editorHome)
 
   const updateViewerPiecewiseFunction = throttle(

@@ -7,7 +7,6 @@
     "dev": "vite",
     "build": "tsc --project tsconfig.build.json && vite build",
     "test": "vitest",
-    "test:ui": "vitest --ui",
     "format": "prettier --write .",
     "lint": "prettier . --check && eslint . --ext .ts"
   },
