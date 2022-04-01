@@ -48,4 +48,14 @@ describe('TfEditor', () => {
     editor.remove()
     expect(root.children.length).toBe(0)
   })
+
+  it('Set points', () => {
+    const points = [
+      [0, 0.3],
+      [0.2, 0.3],
+      [0.1, 0.1],
+    ] as [number, number][]
+    editor.setPoints(points)
+    expect(editor.getPoints()).toEqual(points)
+  })
 })

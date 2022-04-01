@@ -1,62 +1,17 @@
-import referenceUIMachineOptions from 'itk-viewer-reference-ui/src/referenceUIMachineOptions.js'
-import { throttle } from '@kitware/vtk.js/macros'
-import { TransferFunctionEditor } from '../../lib/TransferFunctionEditor'
+import uiMachineOptions from './createUiMachineOptions'
 
-const PIECEWISE_UPDATE_DELAY = 100
+const bootViewer = () => {
+  const container = document.querySelector('.content')
 
-const updateContextPiecewiseFunction =
-  (context) =>
-  ({ detail: points }) => {
-    const name = context.images.selectedName
-    const actorContext = context.images.actorContext.get(name)
-    const component = actorContext.selectedComponent
-    const range = actorContext.colorRanges.get(component)
-    const delta = range[1] - range[0]
-    const nodes = points.map(({ x, y }, index) => ({
-      x: range[0] + delta * x,
-      y,
-      midpoint: 0.5,
-      sharpness: 0,
-    }))
-    context.service.send({
-      type: 'IMAGE_PIECEWISE_FUNCTION_CHANGED',
-      data: {
-        name,
-        component,
-        range,
-        nodes,
-      },
-    })
-  }
-
-const createEditor = (imagesContext) => {
-  const editorHome = document.createElement('div')
-  editorHome.setAttribute('style', 'border: 1px solid black; height: 150px')
-  const editor = new TransferFunctionEditor(editorHome)
-
-  const updateViewerPiecewiseFunction = throttle(
-    updateContextPiecewiseFunction(imagesContext),
-    PIECEWISE_UPDATE_DELAY
+  const image = new URL(
+    'https://data.kitware.com/api/v1/file/5b843d468d777f43cc8d4f6b/download/engine.nrrd'
   )
-  editor.eventTarget.addEventListener('updated', updateViewerPiecewiseFunction)
-
-  return editorHome
+  // eslint-disable-next-line no-undef
+  itkVtkViewer.createViewer(container, {
+    image,
+    rotate: false,
+    config: { uiMachineOptions },
+  })
 }
 
-const customOptions = {
-  ...referenceUIMachineOptions,
-
-  images: {
-    actions: {
-      ...referenceUIMachineOptions.images.actions,
-
-      createImagesInterface: (context) => {
-        referenceUIMachineOptions.images.actions.createImagesInterface(context)
-        const editor = createEditor(context)
-        context.images.imagesUIGroup.appendChild(editor)
-      },
-    },
-  },
-}
-
-export default customOptions
+bootViewer()

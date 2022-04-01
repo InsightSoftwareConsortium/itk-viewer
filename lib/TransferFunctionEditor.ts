@@ -32,6 +32,13 @@ export class TransferFunctionEditor {
     )
   }
 
+  setPoints(points: [number, number][]) {
+    ;[...this.points.points].forEach((point) => {
+      this.points.removePoint(point)
+    })
+    points.forEach(([x, y]) => this.points.addPoint(x, y))
+  }
+
   get eventTarget() {
     return this.points.eventTarget
   }

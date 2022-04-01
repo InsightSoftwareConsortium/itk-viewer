@@ -14,8 +14,6 @@
   },
   "dependencies": {
     "@kitware/vtk.js": "^19.0.2",
-    "@thewtex/iconselect.js": "^2.1.2",
-    "itk-viewer-icons": "^11.11.2",
-    "itk-viewer-reference-ui": "^11.11.2"
+    "itk-vtk-viewer": "^12.2.0"
   }
 }
