@@ -1,48 +1,54 @@
-
 const makeSvg = () => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  svg.setAttribute('id', 'tf-editor-container')
   svg.setAttribute('style', 'box-sizing: border-box; width: 100%; height: 100%')
   return svg
 }
 
-const getSize = (svg: SVGSVGElement) => {
-  const { bottom, top, left, right } = svg.getBoundingClientRect()
-  return { x: right - left, y: bottom - top }
-}
+type SvgInHtml = HTMLElement & SVGSVGElement
 
 export interface iContainer {
-  add: (element: SVGGraphicsElement, point: number[]) => void
+  appendChild: (element: SVGGraphicsElement) => void
   toNormalized: (x: number, y: number) => number[]
-  positionShape: (shape: SVGGraphicsElement, point: number[]) => void
+  addSizeObserver: (func: () => void) => void
+  getSize: () => DOMRectReadOnly
+  domElement: SvgInHtml
+  remove: () => void
 }
 
-export const Container = (mount: HTMLElement) => {
+export const Container = (mount: HTMLElement): iContainer => {
   const svg = makeSvg()
   mount.appendChild(svg)
 
-  const positionShape = (shape: SVGGraphicsElement, point: number[]) => {
-    const { x: sizeX, y: sizeY } = getSize(svg)
-    const [x, y] = point
-    const xSvg = x * sizeX
-    const ySvg = (1 - y) * sizeY
-
-    shape.setAttribute('cx', String(xSvg))
-    shape.setAttribute('cy', String(ySvg))
-  }
-
-  const add = (shape: SVGGraphicsElement, point: number[]) => {
+  const appendChild = (shape: SVGGraphicsElement) => {
     svg.appendChild(shape)
-    positionShape(shape, point)
   }
 
   const toNormalized = (x: number, y: number) => {
-    const { top, left } = svg.getBoundingClientRect()
-    const { x: sizeX, y: sizeY } = getSize(svg)
-    return [
-      (x - left) / sizeX,
-      1 - (y - top) / sizeY
-    ]
+    const { top, left, width, height } = svg.getBoundingClientRect()
+    return [(x - left) / width, 1 - (y - top) / height]
   }
 
-  return { add, positionShape, toNormalized }
+  const sizeEmitter = new EventTarget()
+  const addSizeObserver = (cb: () => void) => {
+    sizeEmitter.addEventListener('sizeupdated', cb)
+  }
+
+  const resizeObserver = new ResizeObserver(() => {
+    sizeEmitter.dispatchEvent(new Event('sizeupdated'))
+  })
+  resizeObserver.observe(mount)
+
+  const getSize = () => svg.getBoundingClientRect()
+
+  const remove = () => mount.removeChild(svg)
+
+  return {
+    appendChild,
+    toNormalized,
+    addSizeObserver,
+    getSize,
+    domElement: svg as SvgInHtml,
+    remove,
+  }
 }

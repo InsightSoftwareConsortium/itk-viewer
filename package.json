@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc --project tsconfig.build.json && vite build",
     "test": "vitest",
-    "test:ui": "vitest --ui"
+    "format": "prettier --write .",
+    "lint": "prettier . --check && eslint . --ext .ts"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.16.0",
@@ -19,9 +20,10 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^5.2.0",
     "happy-dom": "^2.50.0",
+    "prettier": "^2.6.1",
     "typescript": "^4.5.4",
     "vite": "^2.8.0",
-    "vitest": "^0.7.10"
+    "vitest": "^0.7.12"
   },
   "repository": {
     "type": "git",
@@ -39,5 +41,9 @@
   "bugs": {
     "url": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor/issues"
   },
-  "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor#readme"
+  "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor#readme",
+  "prettier": {
+    "singleQuote": true,
+    "semi": false
+  }
 }
