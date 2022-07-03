@@ -1,0 +1,43 @@
+{
+  "name": "itk-viewer",
+  "version": "0.1.0",
+  "description": "Multi-dimensional web-based image, mesh, and point set viewer",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "npm run test:downloadData",
+    "test:downloadData": "node test/downloadData.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/InsightSoftwareConsortium/itk-viewer.git"
+  },
+  "keywords": [
+    "3d",
+    "visualization",
+    "ray-tracing",
+    "webgl",
+    "webgpu",
+    "medical",
+    "scientific",
+    "itk",
+    "wasm",
+    "webassembly",
+    "imjoy",
+    "xstate",
+    "image",
+    "geometry",
+    "point",
+    "cloud",
+    "mesh",
+    "graphics"
+  ],
+  "author": "Matt McCormick",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer/issues"
+  },
+  "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
+  "devDependencies": {
+    "@web3-storage/w3": "^2.6.0"
+  }
+}
