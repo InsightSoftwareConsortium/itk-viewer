@@ -122,6 +122,10 @@ revision `f6b4fa13c8`, before they were extracted.
     <th><img src="src/sampleDistance.svg" width="40" alt="sampleDistanceIconDataUri"/></th>
   </tr>
   <tr>
+    <th>scaleSelectIconDataUri</th>
+    <th><img src="src/scaleSelect.svg" width="40" alt="scaleSelectIconDataUri"/></th>
+  </tr>
+  <tr>
     <th>screenshotIconDataUri</th>
     <th><img src="src/screenshot.svg" width="40" alt="screenshotIconDataUri"/></th>
   </tr>
