@@ -1,7 +1,11 @@
 import { Point } from './Point'
 export class Points {
-  points: Point[] = []
+  private _points: Point[] = []
   eventTarget = new EventTarget()
+
+  get points() {
+    return [...this._points]
+  }
 
   // in normalized coordinates
   addPoint(x: number, y: number) {
@@ -9,19 +13,19 @@ export class Points {
     pointToAdd.eventTarget.addEventListener('updated', () =>
       this.dispatchUpdatedEvent()
     )
-    this.points = [...this.points, pointToAdd]
+    this._points = [...this._points, pointToAdd]
     this.dispatchUpdatedEvent()
     return pointToAdd
   }
 
   removePoint(point: Point) {
-    this.points = this.points.filter((p) => p !== point)
+    this._points = this._points.filter((p) => p !== point)
     this.dispatchUpdatedEvent()
   }
 
   dispatchUpdatedEvent() {
     this.eventTarget.dispatchEvent(
-      new CustomEvent('updated', { detail: this.points })
+      new CustomEvent('updated', { detail: this._points })
     )
   }
 }

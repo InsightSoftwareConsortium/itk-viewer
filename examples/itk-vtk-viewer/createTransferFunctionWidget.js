@@ -1,6 +1,6 @@
 import vtkMouseRangeManipulator from '@kitware/vtk.js/Interaction/Manipulators/MouseRangeManipulator'
 
-import style from 'itk-viewer-reference-ui/src/ItkVtkViewer.module.css'
+import style from 'itk-vtk-viewer/src/UI/reference-ui/src/ItkVtkViewer.module.css'
 
 import { createTransferFunctionEditor } from './createTransferFunctionEditor'
 

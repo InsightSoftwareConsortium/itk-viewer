@@ -1,11 +1,14 @@
 import { Container, iContainer } from './Container'
 import { PointsController } from './PointsController'
 import { Points } from './Points'
+import { Line } from './Line'
 
 export class TransferFunctionEditor {
   private points: Points
-  // @ts-ignore pointController is all side effects
+  // @ts-ignore declared but never read as pointController is all side effects
   private pointController: PointsController
+  // @ts-ignore
+  private line: Line
   private container: iContainer
 
   constructor(mount: HTMLElement) {
@@ -18,6 +21,7 @@ export class TransferFunctionEditor {
     ]
     startPoints.forEach(([x, y]) => this.points.addPoint(x, y))
 
+    this.line = new Line(this.container, this.points)
     this.pointController = new PointsController(this.container, this.points)
   }
 
