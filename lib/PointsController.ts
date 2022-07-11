@@ -9,6 +9,7 @@ export class PointsController {
   points: Points
   private onPointsUpdated: () => void
   private controlPoints: ControlPoint[] = []
+  private isNewPointFromPointer = false
 
   constructor(container: iContainer, points: Points) {
     this.container = container
@@ -31,7 +32,9 @@ export class PointsController {
 
   onPointerDown(event: PointerEvent) {
     const [x, y] = this.container.toNormalized(event.clientX, event.clientY)
+    this.isNewPointFromPointer = true
     this.points.addPoint(x, y)
+    this.isNewPointFromPointer = false
   }
 
   onControlPointDelete(event: CustomEvent) {
@@ -54,8 +57,11 @@ export class PointsController {
 
     const addNewControlPoint = (point: Point) =>
       this.controlPoints.push(
-        new ControlPoint(this.container, point, (e) =>
-          this.onControlPointDelete(e)
+        new ControlPoint(
+          this.container,
+          point,
+          (e) => this.onControlPointDelete(e),
+          this.isNewPointFromPointer
         )
       )
 
