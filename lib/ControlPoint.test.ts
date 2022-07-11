@@ -19,7 +19,7 @@ describe('ControlPoint', () => {
 
     const pointerMove = new PointerEvent('pointermove', {
       bubbles: true,
-      clientX: 110,
+      clientX: 150,
     })
     document.dispatchEvent(pointerMove)
 

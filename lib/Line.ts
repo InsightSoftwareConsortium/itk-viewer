@@ -1,4 +1,4 @@
-import { iContainer } from './Container'
+import { ContainerType } from './Container'
 import { Points } from './Points'
 
 const createLine = () => {
@@ -7,18 +7,18 @@ const createLine = () => {
     'polyline'
   )
   line.setAttribute('fill', 'none')
-  line.setAttribute('stroke', 'red')
-  line.setAttribute('stroke-width', '3')
+  line.setAttribute('stroke', 'black')
+  line.setAttribute('stroke-width', '2')
   return line
 }
 
 export class Line {
   private readonly points: Points
-  private container: iContainer
+  private container: ContainerType
   private onPointsUpdated: () => void
   element: SVGPolylineElement
 
-  constructor(container: iContainer, points: Points) {
+  constructor(container: ContainerType, points: Points) {
     this.container = container
     this.points = points
 
@@ -49,10 +49,10 @@ export class Line {
     const tail = sortedPoints[sortedPoints.length - 1]
     // horizontal line to edges of container
     const points = [{ x: 0, y: head.y }, ...sortedPoints, { x: 1, y: tail.y }]
-    const { width: sizeX, height: sizeY } = this.container.getSize()
     const stringPoints = points
       .sort((a, b) => a.x - b.x)
-      .map(({ x, y }) => `${x * sizeX},${(1 - y) * sizeY}`)
+      .map(({ x, y }) => this.container.toDOMPosition(x, y))
+      .map(([x, y]) => `${x},${y}`)
       .join(' ')
 
     this.element.setAttribute('points', stringPoints)

@@ -1,12 +1,12 @@
 import { describe, expect, beforeEach, it, vi } from 'vitest'
-import { iContainer } from './Container'
+import { ContainerType } from './Container'
 import { makeTestableContainer } from './Container.test'
 import { CONTROL_POINT_CLASS } from './ControlPoint'
 import { Points } from './Points'
 import { PointsController } from './PointsController'
 
 describe('PointsController', () => {
-  let controller: PointsController, container: iContainer, points: Points
+  let controller: PointsController, container: ContainerType, points: Points
 
   const expectPointCount = (count: number) => {
     // model

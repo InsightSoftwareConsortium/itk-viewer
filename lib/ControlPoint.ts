@@ -1,4 +1,4 @@
-import { iContainer } from './Container'
+import { ContainerType } from './Container'
 import { Point } from './Point'
 
 export const CONTROL_POINT_CLASS = 'controlPoint'
@@ -8,9 +8,9 @@ const makeCircle = () => {
     'http://www.w3.org/2000/svg',
     'circle'
   )
-  circle.setAttribute('r', '10')
+  circle.setAttribute('r', '9')
   circle.setAttribute('fill', 'white')
-  circle.setAttribute('stroke', 'red')
+  circle.setAttribute('stroke', 'black')
   circle.setAttribute('stroke-width', '2')
   circle.setAttribute('class', CONTROL_POINT_CLASS)
 
@@ -19,14 +19,14 @@ const makeCircle = () => {
 
 export class ControlPoint {
   element: SVGCircleElement
-  private container: iContainer
+  private container: ContainerType
   readonly point: Point
 
   readonly DELETE_EVENT = 'deleteme'
   readonly eventTarget = new EventTarget()
 
   constructor(
-    container: iContainer,
+    container: ContainerType,
     point: Point,
     deleteEventCallback?: (event: CustomEvent) => void,
     isNewPointFromPointer = false
@@ -57,10 +57,8 @@ export class ControlPoint {
   }
 
   private positionElement() {
-    const { width: sizeX, height: sizeY } = this.container.getSize()
     const { x, y } = this.point
-    const xSvg = x * sizeX
-    const ySvg = (1 - y) * sizeY
+    const [xSvg, ySvg] = this.container.toDOMPosition(x, y)
 
     this.element.setAttribute('cx', String(xSvg))
     this.element.setAttribute('cy', String(ySvg))

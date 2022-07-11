@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { PADDING } from './Container'
 import { TransferFunctionEditor } from './TransferFunctionEditor'
 
 const makeEditor = () => {
@@ -35,13 +36,13 @@ describe('TfEditor', () => {
     ) as unknown as [Element, Element]
     const { top, bottom, left, right } = root.getBoundingClientRect()
 
-    expect(Number(first.getAttribute('cx'))).toBe(0)
-    expect(Number(first.getAttribute('cy'))).toBe(bottom)
+    expect(Number(first.getAttribute('cx'))).toBe(PADDING)
+    expect(Number(first.getAttribute('cy'))).toBe(bottom - PADDING)
 
     const width = right - left
-    expect(Number(second.getAttribute('cx'))).toBe(width)
+    expect(Number(second.getAttribute('cx'))).toBe(width - PADDING)
     const height = bottom - top
-    expect(Number(second.getAttribute('cy'))).toBe(height)
+    expect(Number(second.getAttribute('cy'))).toBe(height + PADDING)
   })
 
   it('Remove deletes svg', () => {

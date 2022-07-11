@@ -1,17 +1,17 @@
-import { iContainer } from './Container'
+import { ContainerType } from './Container'
 import { ControlPoint } from './ControlPoint'
 import { Point } from './Point'
 import { Points } from './Points'
 
 // Adds new Points to model and create view of the points
 export class PointsController {
-  container: iContainer
+  container: ContainerType
   points: Points
   private onPointsUpdated: () => void
   private controlPoints: ControlPoint[] = []
   private isNewPointFromPointer = false
 
-  constructor(container: iContainer, points: Points) {
+  constructor(container: ContainerType, points: Points) {
     this.container = container
     this.points = points
 

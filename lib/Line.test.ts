@@ -1,11 +1,11 @@
 import { describe, expect, beforeEach, it, vi } from 'vitest'
-import { iContainer } from './Container'
+import { ContainerType } from './Container'
 import { makeTestableContainer } from './Container.test'
 import { Line } from './Line'
 import { Points } from './Points'
 
 describe('Line', () => {
-  let line: Line, container: iContainer, points: Points
+  let line: Line, container: ContainerType, points: Points
 
   beforeEach(() => {
     ;({ container } = makeTestableContainer())

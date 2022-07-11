@@ -1,4 +1,4 @@
-import { Container, iContainer } from './Container'
+import { Container, ContainerType } from './Container'
 import { PointsController } from './PointsController'
 import { Points } from './Points'
 import { Line } from './Line'
@@ -9,7 +9,7 @@ export class TransferFunctionEditor {
   private pointController: PointsController
   // @ts-ignore
   private line: Line
-  private container: iContainer
+  private container: ContainerType
 
   constructor(mount: HTMLElement) {
     this.container = Container(mount)
