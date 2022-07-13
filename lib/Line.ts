@@ -51,7 +51,7 @@ export class Line {
     const points = [{ x: 0, y: head.y }, ...sortedPoints, { x: 1, y: tail.y }]
     const stringPoints = points
       .sort((a, b) => a.x - b.x)
-      .map(({ x, y }) => this.container.toDOMPosition(x, y))
+      .map(({ x, y }) => this.container.normalizedToSvg(x, y))
       .map(([x, y]) => `${x},${y}`)
       .join(' ')
 

@@ -18,8 +18,6 @@ export const Container = (mount: HTMLElement) => {
     'rect'
   )
   svg.appendChild(paddedBorder)
-  paddedBorder.setAttribute('x', `${PADDING}`)
-  paddedBorder.setAttribute('y', `${PADDING}`)
   paddedBorder.setAttribute('fill', 'none')
   paddedBorder.setAttribute('stroke', 'black')
 
@@ -27,18 +25,17 @@ export const Container = (mount: HTMLElement) => {
     svg.appendChild(shape)
   }
 
-  const sizeEmitter = new EventTarget()
-  const addSizeObserver = (cb: () => void) => {
-    const { width, height } = getSize()
-    paddedBorder.setAttribute('width', `${Math.max(0, width)}`)
-    paddedBorder.setAttribute('height', `${Math.max(0, height)}`)
-    sizeEmitter.addEventListener('sizeupdated', cb)
-  }
+  let viewBox = [0, 1.0, 0, 1.0]
 
-  const resizeObserver = new ResizeObserver(() => {
+  const setViewBox = (
+    valueStart: number,
+    valueEnd: number,
+    opacityMin = 0,
+    opacityMax = 1
+  ) => {
+    viewBox = [valueStart, valueEnd, opacityMin, opacityMax]
     sizeEmitter.dispatchEvent(new Event('sizeupdated'))
-  })
-  resizeObserver.observe(mount)
+  }
 
   const getSize = () => {
     const { top, left, width, height } = svg.getBoundingClientRect()
@@ -50,27 +47,54 @@ export const Container = (mount: HTMLElement) => {
     }
   }
 
-  const toNormalized = (x: number, y: number) => {
+  const domToNormalized = (x: number, y: number) => {
     const { top, left, width, height } = getSize()
-    return [(x - left) / width, 1 - (y - top) / height]
+    const valueRange = viewBox[1] - viewBox[0]
+    const opacityRange = viewBox[3] - viewBox[2]
+    return [
+      ((x - left) / width) * valueRange + viewBox[0],
+      (1 - (y - top) / height) * opacityRange + viewBox[2],
+    ]
   }
 
-  const toDOMPosition = (x: number, y: number) => {
+  const normalizedToSvg = (x: number, y: number) => {
     const { width, height } = getSize()
-    const xSvg = x * width + PADDING
-    const ySvg = (1 - y) * height + PADDING
+    const valueRange = viewBox[1] - viewBox[0]
+    const xSvg = ((x - viewBox[0]) / valueRange) * width + PADDING
+    const opacityRange = viewBox[3] - viewBox[2]
+    const ySvg = (1 - (y - viewBox[2]) / opacityRange) * height + PADDING
     return [xSvg, ySvg]
   }
+
+  const sizeEmitter = new EventTarget()
+  const addSizeObserver = (cb: () => void) => {
+    sizeEmitter.addEventListener('sizeupdated', cb)
+  }
+
+  const resizeObserver = new ResizeObserver(() => {
+    sizeEmitter.dispatchEvent(new Event('sizeupdated'))
+  })
+  resizeObserver.observe(mount)
+
+  const updateBorder = () => {
+    const [left, bottom] = normalizedToSvg(0, 0)
+    const [right, top] = normalizedToSvg(1, 1)
+    paddedBorder.setAttribute('x', `${left}`)
+    paddedBorder.setAttribute('y', `${top}`)
+    paddedBorder.setAttribute('width', `${Math.max(0, right - left)}`)
+    paddedBorder.setAttribute('height', `${Math.max(0, bottom - top)}`)
+  }
+  addSizeObserver(updateBorder)
 
   const remove = () => mount.removeChild(svg)
 
   return {
     appendChild,
     addSizeObserver,
-    getSize,
+    setViewBox,
     domElement: svg as SvgInHtml,
-    toNormalized,
-    toDOMPosition,
+    domToNormalized,
+    normalizedToSvg,
     remove,
   }
 }

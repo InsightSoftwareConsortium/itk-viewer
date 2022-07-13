@@ -58,14 +58,14 @@ export class ControlPoint {
 
   private positionElement() {
     const { x, y } = this.point
-    const [xSvg, ySvg] = this.container.toDOMPosition(x, y)
+    const [xSvg, ySvg] = this.container.normalizedToSvg(x, y)
 
     this.element.setAttribute('cx', String(xSvg))
     this.element.setAttribute('cy', String(ySvg))
   }
 
   movePoint(e: PointerEvent) {
-    const [x, y] = this.container.toNormalized(e.clientX, e.clientY)
+    const [x, y] = this.container.domToNormalized(e.clientX, e.clientY)
     this.point.setPosition(x, y)
     this.positionElement()
   }

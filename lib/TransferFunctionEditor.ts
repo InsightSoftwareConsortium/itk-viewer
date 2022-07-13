@@ -46,4 +46,13 @@ export class TransferFunctionEditor {
   get eventTarget() {
     return this.points.eventTarget
   }
+
+  setViewBox(
+    valueStart: number,
+    valueEnd: number,
+    opacityMin = 0,
+    opacityMax = 1
+  ) {
+    this.container.setViewBox(valueStart, valueEnd, opacityMin, opacityMax)
+  }
 }
