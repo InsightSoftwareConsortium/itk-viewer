@@ -2,6 +2,7 @@ import { Container, ContainerType } from './Container'
 import { PointsController } from './PointsController'
 import { Points } from './Points'
 import { Line } from './Line'
+import { WheelZoom } from './WheelZoom'
 
 export class TransferFunctionEditor {
   private points: Points
@@ -13,6 +14,7 @@ export class TransferFunctionEditor {
 
   constructor(mount: HTMLElement) {
     this.container = Container(mount)
+    WheelZoom(this.container)
 
     this.points = new Points()
     const startPoints = [

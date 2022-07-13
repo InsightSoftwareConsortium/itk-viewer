@@ -27,6 +27,8 @@ export const Container = (mount: HTMLElement) => {
 
   let viewBox = [0, 1.0, 0, 1.0]
 
+  const getViewBox = () => viewBox
+
   const setViewBox = (
     valueStart: number,
     valueEnd: number,
@@ -91,6 +93,7 @@ export const Container = (mount: HTMLElement) => {
   return {
     appendChild,
     addSizeObserver,
+    getViewBox,
     setViewBox,
     domElement: svg as SvgInHtml,
     domToNormalized,
