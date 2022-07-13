@@ -71,7 +71,7 @@ const createTransferFunctionWidget = (context, imagesUIGroup) => {
   }
   context.images.transferFunctionManipulator.windowSet = windowSet
 
-  // // Level
+  // Level
   const levelGet = () => {
     const gaussian = transferFunctionWidget.getGaussians()[0]
     return (
@@ -92,7 +92,7 @@ const createTransferFunctionWidget = (context, imagesUIGroup) => {
   }
   context.images.transferFunctionManipulator.levelSet = levelSet
 
-  // // Add range manipulator
+  // Add range manipulator
   context.itkVtkView
     .getInteractorStyle2D()
     .addMouseManipulator(rangeManipulator)

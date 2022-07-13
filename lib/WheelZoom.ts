@@ -1,6 +1,6 @@
 import { ContainerType } from './Container'
 
-const SCALE_SENSITIVITY = 1.2
+const SCALE_SENSITIVITY = 1.1
 
 export const WheelZoom = (container: ContainerType) => {
   container.domElement.addEventListener('wheel', (e) => {
