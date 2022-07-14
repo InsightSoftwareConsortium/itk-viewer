@@ -10,10 +10,12 @@ export class Points {
   // in normalized coordinates
   addPoint(x: number, y: number) {
     const pointToAdd = new Point(x, y)
-    pointToAdd.eventTarget.addEventListener('updated', () =>
+    pointToAdd.eventTarget.addEventListener('updated', () => {
+      this._points.sort((a, b) => a.x - b.x)
       this.dispatchUpdatedEvent()
-    )
-    this._points = [...this._points, pointToAdd]
+    })
+    this._points.push(pointToAdd)
+    this._points.sort((a, b) => a.x - b.x)
     this.dispatchUpdatedEvent()
     return pointToAdd
   }

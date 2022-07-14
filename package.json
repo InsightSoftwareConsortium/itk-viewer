@@ -21,9 +21,11 @@
     "eslint-plugin-promise": "^5.2.0",
     "happy-dom": "^2.50.0",
     "prettier": "^2.6.1",
+    "resize-observer-polyfill": "^1.5.1",
     "typescript": "^4.5.4",
     "vite": "^2.8.0",
-    "vitest": "^0.7.12"
+    "vitest": "^0.18.0",
+    "vitest-canvas-mock": "^0.2.0"
   },
   "repository": {
     "type": "git",

@@ -44,13 +44,12 @@ export class Line {
       return
     }
 
-    const sortedPoints = this.points.points.sort((a, b) => a.x - b.x)
-    const head = sortedPoints[0]
-    const tail = sortedPoints[sortedPoints.length - 1]
+    const { points } = this.points
+    const head = points[0]
+    const tail = points[points.length - 1]
     // horizontal line to edges of container
-    const points = [{ x: 0, y: head.y }, ...sortedPoints, { x: 1, y: tail.y }]
-    const stringPoints = points
-      .sort((a, b) => a.x - b.x)
+    const linePoints = [{ x: 0, y: head.y }, ...points, { x: 1, y: tail.y }]
+    const stringPoints = linePoints
       .map(({ x, y }) => this.container.normalizedToSvg(x, y))
       .map(([x, y]) => `${x},${y}`)
       .join(' ')

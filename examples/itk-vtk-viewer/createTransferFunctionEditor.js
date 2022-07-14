@@ -40,7 +40,10 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
   tfEditor.eventTarget.addEventListener('updated', throttledUpdate)
 
   return {
-    setColorTransferFunction: noop,
+    setColorTransferFunction: (tf) => {
+      tfEditor.setColorTransferFunction(tf)
+    },
+
     render: noop,
 
     getGaussians() {
@@ -52,6 +55,7 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
 
       return [{ width, position, height, min }]
     },
+
     setGaussians(gaussians) {
       const newG = gaussians[0]
       const oldG = this.getGaussians()[0]

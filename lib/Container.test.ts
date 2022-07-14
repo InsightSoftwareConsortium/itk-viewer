@@ -9,14 +9,11 @@ const LEFT = 100
 const TOP = 10
 
 export const makeTestableContainer = () => {
-  const root = document.createElement('div')
-  const container = Container(root)
+  const parent = document.createElement('div')
+  const container = Container(parent)
 
   // mock size
-  const svgElement = Array.from(root.children).find(
-    (element) => element.nodeName === 'SVG'
-  ) as typeof container.domElement
-  vi.spyOn(svgElement, 'getBoundingClientRect').mockImplementation(() => ({
+  vi.spyOn(container.root, 'getBoundingClientRect').mockImplementation(() => ({
     left: LEFT,
     right: LEFT + CONTAINER_WIDTH,
     top: TOP,
@@ -28,29 +25,29 @@ export const makeTestableContainer = () => {
     toJSON: () => {},
   }))
 
-  return { container, root }
+  return { container, parent }
 }
 
 describe('Container', () => {
-  let root: HTMLDivElement, container: ContainerType
+  let parent: HTMLDivElement, container: ContainerType
 
   beforeEach(() => {
-    ;({ root, container } = makeTestableContainer())
+    ;({ parent, container } = makeTestableContainer())
   })
 
   it('SVG element added to root', () => {
-    const svgElement = Array.from(root.children).find(
+    const svgElement = Array.from(container.root.children).find(
       (element) => element.nodeName === 'SVG'
     )
     expect(svgElement).toBeTruthy()
   })
 
-  it('Remove unmounts svg', () => {
+  it('Remove unmounts root', () => {
     container.remove()
-    expect(root.children.length).toBe(0)
+    expect(parent.children.length).toBe(0)
   })
 
-  it('setViewBox works', () => {
+  it('setViewBox influences normalizedToSvg and domToNormalized', () => {
     container.setViewBox(0.25, 0.5, 0.1, 0.5)
     let [domX, domY] = container.normalizedToSvg(0.5, 0.5)
     expect(domX).toBe(CONTAINER_WIDTH - PADDING)

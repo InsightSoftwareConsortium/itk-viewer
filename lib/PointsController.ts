@@ -16,8 +16,8 @@ export class PointsController {
     this.points = points
 
     // update model
-    const { domElement } = container
-    domElement.addEventListener('pointerdown', (e) => this.onPointerDown(e))
+    const { root } = container
+    root.addEventListener('pointerdown', (e) => this.onPointerDown(e))
 
     // react to model
     this.onPointsUpdated = () => this.updatePoints()

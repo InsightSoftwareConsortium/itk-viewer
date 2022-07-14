@@ -3,7 +3,7 @@ import { ContainerType } from './Container'
 const SCALE_SENSITIVITY = 1.1
 
 export const WheelZoom = (container: ContainerType) => {
-  container.domElement.addEventListener('wheel', (e) => {
+  container.root.addEventListener('wheel', (e) => {
     e.preventDefault()
     e.stopPropagation()
 

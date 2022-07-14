@@ -2,16 +2,30 @@ export const PADDING = 10
 
 const makeSvg = () => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-  svg.setAttribute('id', 'tf-editor-container')
-  svg.setAttribute('style', 'box-sizing: border-box; width: 100%; height: 100%')
+  svg.setAttribute(
+    'style',
+    'position: absolute; top: 0; left: 0; z-index: 2; box-sizing: border-box; width: 100%; height: 100%;'
+  )
   return svg
 }
 
-type SvgInHtml = HTMLElement & SVGSVGElement
+export const Container = (parent: HTMLElement) => {
+  const root = document.createElement('div')
+  root.setAttribute('style', 'position: relative; width: 100%; height: 100%')
+  parent.appendChild(root)
 
-export const Container = (mount: HTMLElement) => {
   const svg = makeSvg()
-  mount.appendChild(svg)
+  root.appendChild(svg)
+
+  const sizeEmitter = new EventTarget()
+  const addSizeObserver = (cb: () => void) => {
+    sizeEmitter.addEventListener('sizeupdated', cb)
+  }
+
+  const resizeObserver = new ResizeObserver(() => {
+    sizeEmitter.dispatchEvent(new Event('sizeupdated'))
+  })
+  resizeObserver.observe(root)
 
   const paddedBorder = document.createElementNS(
     'http://www.w3.org/2000/svg',
@@ -25,6 +39,11 @@ export const Container = (mount: HTMLElement) => {
     svg.appendChild(shape)
   }
 
+  const removeChild = (shape: SVGGraphicsElement) => {
+    svg.removeChild(shape)
+  }
+
+  // xmin, xmax, ymin, ymax
   let viewBox = [0, 1.0, 0, 1.0]
 
   const getViewBox = () => viewBox
@@ -40,7 +59,7 @@ export const Container = (mount: HTMLElement) => {
   }
 
   const getSize = () => {
-    const { top, left, width, height } = svg.getBoundingClientRect()
+    const { top, left, width, height } = root.getBoundingClientRect()
     return {
       width: width - 2 * PADDING,
       height: height - 2 * PADDING,
@@ -68,19 +87,14 @@ export const Container = (mount: HTMLElement) => {
     return [xSvg, ySvg]
   }
 
-  const sizeEmitter = new EventTarget()
-  const addSizeObserver = (cb: () => void) => {
-    sizeEmitter.addEventListener('sizeupdated', cb)
-  }
-
-  const resizeObserver = new ResizeObserver(() => {
-    sizeEmitter.dispatchEvent(new Event('sizeupdated'))
-  })
-  resizeObserver.observe(mount)
-
-  const updateBorder = () => {
+  const borderSize = () => {
     const [left, bottom] = normalizedToSvg(0, 0)
     const [right, top] = normalizedToSvg(1, 1)
+    return { left, bottom, right, top }
+  }
+
+  const updateBorder = () => {
+    const { left, bottom, right, top } = borderSize()
     paddedBorder.setAttribute('x', `${left}`)
     paddedBorder.setAttribute('y', `${top}`)
     paddedBorder.setAttribute('width', `${Math.max(0, right - left)}`)
@@ -88,17 +102,19 @@ export const Container = (mount: HTMLElement) => {
   }
   addSizeObserver(updateBorder)
 
-  const remove = () => mount.removeChild(svg)
+  const remove = () => parent.removeChild(root)
 
   return {
     appendChild,
+    removeChild,
     addSizeObserver,
     getViewBox,
     setViewBox,
-    domElement: svg as SvgInHtml,
     domToNormalized,
     normalizedToSvg,
+    borderSize,
     remove,
+    root,
   }
 }
 

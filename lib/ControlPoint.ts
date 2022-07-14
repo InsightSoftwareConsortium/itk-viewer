@@ -53,7 +53,7 @@ export class ControlPoint {
   }
 
   remove() {
-    this.container.domElement.removeChild(this.element)
+    this.container.removeChild(this.element)
   }
 
   private positionElement() {

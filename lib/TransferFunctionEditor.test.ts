@@ -20,18 +20,12 @@ describe('TfEditor', () => {
   })
 
   it('Initial points are represented', () => {
-    const svgElement = Array.from(root.children).find(
-      (element) => element.nodeName === 'SVG'
-    )
-    const pointElements = svgElement?.querySelectorAll('.controlPoint')
+    const pointElements = root.querySelectorAll('.controlPoint')
     expect(pointElements?.length).toBe(2)
   })
 
   it('Initial points are in lower left and upper right', () => {
-    const svgElement = Array.from(root.children).find(
-      (element) => element.nodeName === 'SVG'
-    )
-    const [first, second] = svgElement!.querySelectorAll(
+    const [first, second] = root.querySelectorAll(
       '.controlPoint'
     ) as unknown as [Element, Element]
     const { top, bottom, left, right } = root.getBoundingClientRect()
@@ -45,7 +39,7 @@ describe('TfEditor', () => {
     expect(Number(second.getAttribute('cy'))).toBe(height + PADDING)
   })
 
-  it('Remove deletes svg', () => {
+  it('Remove detaches all children nodes', () => {
     editor.remove()
     expect(root.children.length).toBe(0)
   })

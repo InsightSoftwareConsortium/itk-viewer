@@ -12,10 +12,10 @@ describe('PointsController', () => {
     // model
     expect(points.points.length).toBe(count)
     // view
-    const domElementCount = container.domElement.querySelectorAll(
+    const pointCount = container.root.querySelectorAll(
       `.${CONTROL_POINT_CLASS}`
     ).length
-    expect(domElementCount).toBe(count)
+    expect(pointCount).toBe(count)
   }
 
   beforeEach(() => {
@@ -26,25 +26,25 @@ describe('PointsController', () => {
 
   it('Clicking adds a point', () => {
     const event = new PointerEvent('pointerdown', { bubbles: true })
-    const { domElement } = container
-    domElement.dispatchEvent(event)
+    const { root } = container
+    root.dispatchEvent(event)
     expectPointCount(1)
   })
 
   it('Clicking twice adds 2 points', () => {
     const event = new PointerEvent('pointerdown', { bubbles: true })
-    const { domElement } = container
-    domElement.dispatchEvent(event)
-    domElement.dispatchEvent(event)
+    const { root } = container
+    root.dispatchEvent(event)
+    root.dispatchEvent(event)
     expectPointCount(2)
   })
 
   it('Clicking a point deletes it', () => {
     const pointerDown = new PointerEvent('pointerdown', { bubbles: true })
-    const { domElement } = container
-    domElement.dispatchEvent(pointerDown)
+    const { root } = container
+    root.dispatchEvent(pointerDown)
 
-    const controlPointElement = container.domElement.querySelector(
+    const controlPointElement = container.root.querySelector(
       `.${CONTROL_POINT_CLASS}`
     )
     controlPointElement?.dispatchEvent(pointerDown)
@@ -56,15 +56,15 @@ describe('PointsController', () => {
   })
 
   it('New point appears where click happens', () => {
-    const { domElement } = container
-    const { left, top, width, height } = domElement.getBoundingClientRect()
+    const { root } = container
+    const { left, top, width, height } = root.getBoundingClientRect()
 
     const upperLeft = new PointerEvent('pointerdown', {
       clientX: left,
       clientY: top,
       bubbles: true,
     })
-    domElement.dispatchEvent(upperLeft)
+    root.dispatchEvent(upperLeft)
     let { x: normX, y: normY } = points.points[0]
     expect(normX).toBe(0)
     expect(normY).toBe(1)
@@ -74,7 +74,7 @@ describe('PointsController', () => {
       clientY: top + height / 2,
       bubbles: true,
     })
-    domElement.dispatchEvent(middle)
+    root.dispatchEvent(middle)
     ;({ x: normX, y: normY } = points.points[1])
     expect(normX).toBe(0.5)
     expect(normY).toBe(0.5)

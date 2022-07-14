@@ -3,6 +3,8 @@ import { PointsController } from './PointsController'
 import { Points } from './Points'
 import { Line } from './Line'
 import { WheelZoom } from './WheelZoom'
+import { Background, BackgroundType } from './Background'
+import { ColorTransferFunction } from './PiecewiseUtils'
 
 export class TransferFunctionEditor {
   private points: Points
@@ -11,9 +13,10 @@ export class TransferFunctionEditor {
   // @ts-ignore
   private line: Line
   private container: ContainerType
+  private background: BackgroundType
 
-  constructor(mount: HTMLElement) {
-    this.container = Container(mount)
+  constructor(root: HTMLElement) {
+    this.container = Container(root)
     WheelZoom(this.container)
 
     this.points = new Points()
@@ -23,11 +26,14 @@ export class TransferFunctionEditor {
     ]
     startPoints.forEach(([x, y]) => this.points.addPoint(x, y))
 
+    this.background = Background(this.container, this.points)
+
     this.line = new Line(this.container, this.points)
     this.pointController = new PointsController(this.container, this.points)
   }
 
   remove() {
+    this.background.remove()
     this.container.remove()
   }
 
@@ -56,5 +62,9 @@ export class TransferFunctionEditor {
     opacityMax = 1
   ) {
     this.container.setViewBox(valueStart, valueEnd, opacityMin, opacityMax)
+  }
+
+  setColorTransferFunction(ctf: ColorTransferFunction) {
+    this.background.setColorTransferFunction(ctf)
   }
 }
