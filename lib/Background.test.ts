@@ -2,13 +2,18 @@ import { describe, expect, beforeEach, it } from 'vitest'
 import { BackgroundType, Background } from './Background'
 import { ContainerType } from './Container'
 import { makeTestableContainer } from './Container.test'
+import { Points } from './Points'
 
 describe('Background', () => {
-  let background: BackgroundType, container: ContainerType, parent: HTMLElement
+  let background: BackgroundType,
+    container: ContainerType,
+    parent: HTMLElement,
+    points: Points
 
   beforeEach(() => {
     ;({ parent, container } = makeTestableContainer())
-    background = Background(container)
+    points = new Points()
+    background = Background(container, points)
   })
 
   it('Remove detaches background node', () => {

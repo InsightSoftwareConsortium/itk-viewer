@@ -1,12 +1,11 @@
 import { ContainerType } from './Container'
 import { ColorTransferFunction, updateColorCanvas } from './PiecewiseUtils'
-import { Points } from './Points'
+import { Points, pointToWindowedPoints } from './Points'
 
 export const Background = (container: ContainerType, points: Points) => {
   const canvas = document.createElement('canvas')
   container.root.appendChild(canvas)
   canvas.setAttribute('style', 'width: 100%; height: 100%; ')
-
   const ctx = canvas.getContext('2d')
 
   let colorTransferFunction: ColorTransferFunction
@@ -22,33 +21,22 @@ export const Background = (container: ContainerType, points: Points) => {
       const borderWidth = Math.ceil(right - left)
       if (borderWidth < 0) return
 
-      const { points: pArray } = points
-      if (pArray.length === 0) return
-      ctx.save()
+      const windowed = pointToWindowedPoints(points.points)
+      const linePoints = [[0, 0], ...windowed, [1, 0]].map(([x, y]) =>
+        container.normalizedToSvg(x, y)
+      )
+
       ctx.beginPath()
-      const head = pArray[0]
-      const tail = pArray[pArray.length - 1]
-      // horizontal line to edges and bottom of border
-      const linePoints = [
-        { x: 0, y: 0 },
-        { x: 0, y: head.y },
-        ...pArray,
-        { x: 1, y: tail.y },
-        { x: 1, y: 0 },
-      ]
-      linePoints
-        .map(({ x, y }) => container.normalizedToSvg(x, y))
-        .forEach(([x, y]) => {
-          ctx.lineTo(x, y)
-        })
+      linePoints.forEach(([x, y]) => {
+        ctx.lineTo(x, y)
+      })
       ctx.clip()
 
-      updateColorCanvas(
-        colorTransferFunction,
-        borderWidth,
-        colorTransferFunction.getMappingRange(),
-        colorCanvas
-      )
+      // pixels between head and tail
+      const [tailX] = linePoints[linePoints.length - 2]
+      const [headX] = linePoints[1]
+      const pointsRange = Math.floor(tailX - headX) || borderWidth
+      updateColorCanvas(colorTransferFunction, pointsRange, colorCanvas)
 
       ctx.drawImage(
         colorCanvas,
@@ -56,9 +44,9 @@ export const Background = (container: ContainerType, points: Points) => {
         0,
         colorCanvas.width,
         colorCanvas.height,
-        Math.floor(left),
+        Math.floor(headX),
         Math.floor(top),
-        borderWidth,
+        pointsRange,
         Math.ceil(bottom - top)
       )
     }

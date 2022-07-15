@@ -1,11 +1,18 @@
 import { throttle } from '@kitware/vtk.js/macros'
-import { TransferFunctionEditor } from '../../lib/TransferFunctionEditor'
+import {
+  TransferFunctionEditor,
+  windowPoints,
+} from '../../lib/TransferFunctionEditor'
 
 const PIECEWISE_UPDATE_DELAY = 100
 
 const getNodes = (range, points) => {
   const delta = range[1] - range[0]
-  return points.map(([x, y]) => ({
+  const windowedPoints = windowPoints(points)
+  // avoid unstable Array.sort issues
+  windowedPoints[0][0] -= 1e-8
+  windowedPoints[windowedPoints.length - 1][0] += 1e-8
+  return windowedPoints.map(([x, y]) => ({
     x: range[0] + delta * x,
     y,
     midpoint: 0.5,
@@ -13,11 +20,15 @@ const getNodes = (range, points) => {
   }))
 }
 
-const updateContextPiecewiseFunction = (context, range, points) => {
+const getRange = (nodes, dataRange) =>
+  nodes.length > 1 ? [nodes[0].x, nodes[nodes.length - 1].x] : dataRange
+
+const updateContextPiecewiseFunction = (context, dataRange, points) => {
   const name = context.images.selectedName
   const actorContext = context.images.actorContext.get(name)
   const component = actorContext.selectedComponent
-  const nodes = getNodes(range, points)
+  const nodes = getNodes(dataRange, points)
+  const range = getRange(nodes, dataRange)
   context.service.send({
     type: 'IMAGE_PIECEWISE_FUNCTION_CHANGED',
     data: {
@@ -31,13 +42,15 @@ const updateContextPiecewiseFunction = (context, range, points) => {
 
 const noop = () => undefined
 const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
-  let range = [0, 255]
+  let dataRange = [0, 255]
 
   const update = () =>
-    updateContextPiecewiseFunction(context, range, tfEditor.getPoints())
+    updateContextPiecewiseFunction(context, dataRange, tfEditor.getPoints())
 
   const throttledUpdate = throttle(update, PIECEWISE_UPDATE_DELAY)
   tfEditor.eventTarget.addEventListener('updated', throttledUpdate)
+
+  const getOpacityNodes = () => getNodes(dataRange, tfEditor.getPoints())
 
   return {
     setColorTransferFunction: (tf) => {
@@ -82,11 +95,11 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
       tfEditor.setViewBox(...newRange)
     },
     setDataRange: (newRange) => {
-      range = [...newRange]
+      dataRange = [...newRange]
     },
 
-    getOpacityRange: () => [...range],
-    getOpacityNodes: () => getNodes(range, tfEditor.getPoints()),
+    getOpacityNodes,
+    getOpacityRange: () => getRange(getOpacityNodes(), dataRange),
     setHistogram: noop,
   }
 }

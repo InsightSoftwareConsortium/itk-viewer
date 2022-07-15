@@ -1,4 +1,7 @@
 {
   "extends": "./tsconfig",
-  "exclude": ["examples/**/*"]
+  "exclude": ["examples/**/*"],
+  "compilerOptions": {
+    "skipLibCheck": true
+  }
 }

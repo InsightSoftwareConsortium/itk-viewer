@@ -31,6 +31,7 @@ export class PointsController {
   }
 
   onPointerDown(event: PointerEvent) {
+    event.preventDefault()
     const [x, y] = this.container.domToNormalized(event.clientX, event.clientY)
     this.isNewPointFromPointer = true
     this.points.addPoint(x, y)

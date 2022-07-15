@@ -47,8 +47,8 @@ describe('TfEditor', () => {
   it('Set points', () => {
     const points = [
       [0, 0.3],
-      [0.2, 0.3],
       [0.1, 0.1],
+      [0.2, 0.3],
     ] as [number, number][]
     editor.setPoints(points)
     expect(editor.getPoints()).toEqual(points)

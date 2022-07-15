@@ -94,6 +94,7 @@ export class ControlPoint {
   setupInteraction() {
     this.element.addEventListener('pointerdown', (event) => {
       event.stopPropagation()
+      event.preventDefault()
       this.startInteraction()
     })
   }

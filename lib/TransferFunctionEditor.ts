@@ -6,12 +6,14 @@ import { WheelZoom } from './WheelZoom'
 import { Background, BackgroundType } from './Background'
 import { ColorTransferFunction } from './PiecewiseUtils'
 
+export { windowPoints } from './Points'
+
 export class TransferFunctionEditor {
   private points: Points
-  // @ts-ignore declared but never read as pointController is all side effects
-  private pointController: PointsController
-  // @ts-ignore
+  // @ts-ignore declared but never read
   private line: Line
+  // @ts-ignore
+  private pointController: PointsController
   private container: ContainerType
   private background: BackgroundType
 
@@ -38,10 +40,7 @@ export class TransferFunctionEditor {
   }
 
   getPoints() {
-    return this.points.points.reduce(
-      (line, point) => [...line, [point.x, point.y]],
-      [] as number[][]
-    )
+    return this.points.points.map(({ x, y }) => [x, y])
   }
 
   setPoints(points: [number, number][]) {

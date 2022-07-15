@@ -57,16 +57,18 @@ export type ColorTransferFunction = {
   getMappingRange: () => [number, number]
 }
 
+const CANVAS_HEIGHT = 1
+
 export const updateColorCanvas = (
   colorTransferFunction: ColorTransferFunction,
   width: number,
-  rangeToUse: [number, number],
   canvas: HTMLCanvasElement
 ) => {
   const workCanvas = canvas || document.createElement('canvas')
   workCanvas.setAttribute('width', String(width))
-  workCanvas.setAttribute('height', String(256))
+  workCanvas.setAttribute('height', String(CANVAS_HEIGHT))
 
+  const rangeToUse = colorTransferFunction.getMappingRange()
   const rgba = colorTransferFunction.getUint8Table(
     rangeToUse[0],
     rangeToUse[1],
@@ -76,15 +78,15 @@ export const updateColorCanvas = (
 
   const ctx = workCanvas.getContext('2d')
   if (ctx) {
-    const pixelsArea = ctx.getImageData(0, 0, width, 256)
-    for (let lineIdx = 0; lineIdx < 256; lineIdx++) {
+    const pixelsArea = ctx.getImageData(0, 0, width, CANVAS_HEIGHT)
+    for (let lineIdx = 0; lineIdx < CANVAS_HEIGHT; lineIdx++) {
       pixelsArea.data.set(rgba, lineIdx * 4 * width)
     }
 
-    const nbValues = 256 * width * 4
-    const lineSize = width * 4
+    const nbValues = CANVAS_HEIGHT * width * 4
+    // const lineSize = width * 4
     for (let i = 3; i < nbValues; i += 4) {
-      pixelsArea.data[i] = 255 - Math.floor(i / lineSize)
+      pixelsArea.data[i] = 255 // keep full opacity at bottom rather than: 255 - Math.floor(i / lineSize)
     }
 
     ctx.putImageData(pixelsArea, 0, 0)
