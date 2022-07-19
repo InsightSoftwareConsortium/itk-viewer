@@ -1,3 +1,5 @@
+import { windowPoints } from './Points'
+
 export type ChartStyle = {
   lineWidth: number
   strokeStyle: string
@@ -93,4 +95,12 @@ export const updateColorCanvas = (
   }
 
   return workCanvas
+}
+
+export const windowPointsForSort = (points: [number, number][]) => {
+  const windowedPoints = windowPoints(points)
+  // avoid unstable Array.sort issues
+  windowedPoints[0][0] -= 1e-8
+  windowedPoints[windowedPoints.length - 1][0] += 1e-8
+  return windowedPoints
 }

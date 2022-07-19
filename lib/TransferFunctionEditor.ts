@@ -6,7 +6,7 @@ import { WheelZoom } from './WheelZoom'
 import { Background, BackgroundType } from './Background'
 import { ColorTransferFunction } from './PiecewiseUtils'
 
-export { windowPoints } from './Points'
+export { windowPointsForSort } from './PiecewiseUtils'
 
 export class TransferFunctionEditor {
   private points: Points

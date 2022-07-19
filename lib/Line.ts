@@ -1,5 +1,5 @@
 import { ContainerType } from './Container'
-import { Points, pointToWindowedPoints } from './Points'
+import { Points, pointsToWindowedPoints } from './Points'
 
 const createLine = () => {
   const line = document.createElementNS(
@@ -44,7 +44,7 @@ export class Line {
       return
     }
 
-    const stringPoints = pointToWindowedPoints(this.points.points)
+    const stringPoints = pointsToWindowedPoints(this.points.points)
       .map(([x, y]) => this.container.normalizedToSvg(x, y))
       .map(([x, y]) => `${x},${y}`)
       .join(' ')

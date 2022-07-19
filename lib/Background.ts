@@ -1,6 +1,6 @@
 import { ContainerType } from './Container'
 import { ColorTransferFunction, updateColorCanvas } from './PiecewiseUtils'
-import { Points, pointToWindowedPoints } from './Points'
+import { Points, pointsToWindowedPoints } from './Points'
 
 export const Background = (container: ContainerType, points: Points) => {
   const canvas = document.createElement('canvas')
@@ -21,7 +21,7 @@ export const Background = (container: ContainerType, points: Points) => {
       const borderWidth = Math.ceil(right - left)
       if (borderWidth < 0) return
 
-      const windowed = pointToWindowedPoints(points.points)
+      const windowed = pointsToWindowedPoints(points.points)
       const linePoints = [[0, 0], ...windowed, [1, 0]].map(([x, y]) =>
         container.normalizedToSvg(x, y)
       )

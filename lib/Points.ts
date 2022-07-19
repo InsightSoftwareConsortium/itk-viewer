@@ -22,7 +22,7 @@ export const windowPoints = (points: [number, number][]) => {
   return [[head[0], 0], ...points, [tail[0], 0]]
 }
 
-export const pointToWindowedPoints = (points: Point[]) =>
+export const pointsToWindowedPoints = (points: Point[]) =>
   windowPoints(points.map(({ x, y }) => [x, y]))
 
 export class Points {

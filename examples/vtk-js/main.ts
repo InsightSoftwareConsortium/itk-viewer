@@ -2,7 +2,7 @@ import './style.css'
 import { throttle } from '@kitware/vtk.js/macros'
 import {
   TransferFunctionEditor,
-  windowPoints,
+  windowPointsForSort,
 } from '../../lib/TransferFunctionEditor'
 import { Point } from '../../lib/Point'
 
@@ -22,10 +22,7 @@ app.innerHTML = `
 // rescales into data range space
 const getNodes = (range: number[], points: Point[]) => {
   const delta = range[1] - range[0]
-  const windowedPoints = windowPoints(points.map(({ x, y }) => [x, y]))
-  // avoid unstable Array.sort issues
-  windowedPoints[0][0] -= 1e-8
-  windowedPoints[windowedPoints.length - 1][0] += 1e-8
+  const windowedPoints = windowPointsForSort(points.map(({ x, y }) => [x, y]))
   return windowedPoints.map(([x, y]) => ({
     x: range[0] + delta * x,
     y,

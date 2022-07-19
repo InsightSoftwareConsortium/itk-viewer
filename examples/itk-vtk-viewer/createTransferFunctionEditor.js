@@ -1,17 +1,14 @@
 import { throttle } from '@kitware/vtk.js/macros'
 import {
   TransferFunctionEditor,
-  windowPoints,
+  windowPointsForSort,
 } from '../../lib/TransferFunctionEditor'
 
 const PIECEWISE_UPDATE_DELAY = 100
 
 const getNodes = (range, points) => {
   const delta = range[1] - range[0]
-  const windowedPoints = windowPoints(points)
-  // avoid unstable Array.sort issues
-  windowedPoints[0][0] -= 1e-8
-  windowedPoints[windowedPoints.length - 1][0] += 1e-8
+  const windowedPoints = windowPointsForSort(points)
   return windowedPoints.map(([x, y]) => ({
     x: range[0] + delta * x,
     y,
