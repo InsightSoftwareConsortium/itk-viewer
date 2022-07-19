@@ -52,6 +52,9 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
 
   const getOpacityNodes = () => getNodes(dataRange, tfEditor.getPoints())
 
+  // to compare changes across setting the data view range
+  let cachedGaussian
+
   return {
     setColorTransferFunction: (tf) => {
       tfEditor.setColorTransferFunction(tf)
@@ -66,27 +69,30 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
       const position = min + width
       const height = Math.max(...tfEditor.getPoints().map(([, y]) => y))
 
-      return [{ width, position, height, min }]
+      return [{ width, position, height }]
     },
 
     setGaussians(gaussians) {
       const newG = gaussians[0]
-      const oldG = this.getGaussians()[0]
+      const oldG = cachedGaussian ?? this.getGaussians()[0]
       const heightDelta = newG.height - oldG.height
 
-      const oldMin = oldG.position - oldG.width
       const newMin = newG.position - newG.width
       const newRange = 2 * newG.width
 
+      const pointsGaussian = this.getGaussians()[0]
+      const pointsMin = pointsGaussian.position - pointsGaussian.width
       const points = tfEditor
         .getPoints()
-        // normalize x in "gaussian"
-        .map(([x, y]) => [(x - oldMin) / (oldG.width * 2), y])
+        // compute x in "gaussian"
+        .map(([x, y]) => [(x - pointsMin) / (pointsGaussian.width * 2), y])
         .map(([x, y]) => {
           return [x * newRange + newMin, y + y * heightDelta]
         })
 
       tfEditor.setPoints(points)
+
+      cachedGaussian = { ...newG }
 
       update()
     },
