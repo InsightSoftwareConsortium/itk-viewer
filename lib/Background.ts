@@ -1,6 +1,13 @@
 import { ContainerType } from './Container'
-import { ColorTransferFunction, updateColorCanvas } from './PiecewiseUtils'
+import {
+  ColorTransferFunction,
+  drawChart,
+  rescaleArray,
+  updateColorCanvas,
+} from './PiecewiseUtils'
 import { Points, pointsToWindowedPoints } from './Points'
+
+const HISTOGRAM_COLOR = 'rgba(200, 200, 200, 0.3)'
 
 export const Background = (container: ContainerType, points: Points) => {
   const canvas = document.createElement('canvas')
@@ -9,11 +16,15 @@ export const Background = (container: ContainerType, points: Points) => {
   const ctx = canvas.getContext('2d')
 
   let colorTransferFunction: ColorTransferFunction
+  let histogram: number[]
   const colorCanvas = document.createElement('canvas')
 
   const render = () => {
-    if (ctx && colorTransferFunction) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (!ctx) return
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    if (colorTransferFunction) {
       const { width, height } = container.root.getBoundingClientRect()
       canvas.setAttribute('width', String(width))
       canvas.setAttribute('height', String(height))
@@ -26,6 +37,7 @@ export const Background = (container: ContainerType, points: Points) => {
         container.normalizedToSvg(x, y)
       )
 
+      ctx.save() // only apply clip path to color transfer function, leave historgram alone
       ctx.beginPath()
       linePoints.forEach(([x, y]) => {
         ctx.lineTo(x, y)
@@ -49,8 +61,31 @@ export const Background = (container: ContainerType, points: Points) => {
         pointsRange,
         Math.ceil(bottom - top)
       )
+      ctx.restore()
+    }
+
+    if (histogram) {
+      const { left, right, bottom, top } = container.borderSize()
+      const graphArea = [left, top, right - left, bottom - top] as [
+        number,
+        number,
+        number,
+        number
+      ]
+      const viewBox = container.getViewBox()
+      drawChart(
+        ctx,
+        graphArea,
+        rescaleArray(histogram, [viewBox[0], viewBox[1]]),
+        {
+          lineWidth: 1,
+          strokeStyle: HISTOGRAM_COLOR,
+          fillStyle: HISTOGRAM_COLOR,
+        }
+      )
     }
   }
+
   container.addSizeObserver(render)
   points.eventTarget.addEventListener('updated', render)
 
@@ -59,10 +94,16 @@ export const Background = (container: ContainerType, points: Points) => {
     render()
   }
 
+  const setHistogram = (newHistogram: number[]) => {
+    histogram = newHistogram
+    render()
+  }
+
   return {
     container,
     canvas,
     setColorTransferFunction,
+    setHistogram,
     remove: () => container.root.removeChild(canvas),
   }
 }

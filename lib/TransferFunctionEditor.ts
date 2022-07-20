@@ -66,4 +66,8 @@ export class TransferFunctionEditor {
   setColorTransferFunction(ctf: ColorTransferFunction) {
     this.background.setColorTransferFunction(ctf)
   }
+
+  setHistogram(histogram: number[]) {
+    this.background.setHistogram(histogram)
+  }
 }

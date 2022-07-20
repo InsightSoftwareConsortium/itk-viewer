@@ -1,10 +1,19 @@
 import { windowPoints } from './Points'
 
+export function rescaleArray(array: number[], focusArea: [number, number]) {
+  if (!focusArea) {
+    return array
+  }
+  const maxIdx = array.length - 1
+  const idxRange = focusArea.map((v) => Math.round(v * maxIdx))
+  return array.slice(idxRange[0], idxRange[1] + 1)
+}
+
 export type ChartStyle = {
   lineWidth: number
   strokeStyle: string
-  fillStyle: string | CanvasGradient | CanvasPattern | undefined
-  clip: boolean
+  fillStyle?: string | CanvasGradient | CanvasPattern | undefined
+  clip?: boolean
 }
 
 export const drawChart = (
@@ -70,10 +79,10 @@ export const updateColorCanvas = (
   workCanvas.setAttribute('width', String(width))
   workCanvas.setAttribute('height', String(CANVAS_HEIGHT))
 
-  const rangeToUse = colorTransferFunction.getMappingRange()
+  const [startValue, endValue] = colorTransferFunction.getMappingRange()
   const rgba = colorTransferFunction.getUint8Table(
-    rangeToUse[0],
-    rangeToUse[1],
+    startValue,
+    endValue,
     width,
     true
   )

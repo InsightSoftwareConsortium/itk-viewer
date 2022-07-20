@@ -17,6 +17,7 @@ const getNodes = (range, points) => {
   }))
 }
 
+// grab head and tail or fallback to data range if 1 or less points
 const getRange = (nodes, dataRange) =>
   nodes.length > 1 ? [nodes[0].x, nodes[nodes.length - 1].x] : dataRange
 
@@ -103,7 +104,7 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
 
     getOpacityNodes,
     getOpacityRange: () => getRange(getOpacityNodes(), dataRange),
-    setHistogram: noop,
+    setHistogram: (h) => tfEditor.setHistogram(h),
   }
 }
 
