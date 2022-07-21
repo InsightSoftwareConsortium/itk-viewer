@@ -1,6 +1,6 @@
 import vtkMouseRangeManipulator from '@kitware/vtk.js/Interaction/Manipulators/MouseRangeManipulator'
 
-import style from 'itk-viewer-reference-ui/src/ItkVtkViewer.module.css'
+import style from 'itk-vtk-viewer/src/UI/reference-ui/src/ItkVtkViewer.module.css'
 
 import { createTransferFunctionEditor } from './createTransferFunctionEditor'
 
@@ -71,7 +71,7 @@ const createTransferFunctionWidget = (context, imagesUIGroup) => {
   }
   context.images.transferFunctionManipulator.windowSet = windowSet
 
-  // // Level
+  // Level
   const levelGet = () => {
     const gaussian = transferFunctionWidget.getGaussians()[0]
     return (
@@ -92,7 +92,7 @@ const createTransferFunctionWidget = (context, imagesUIGroup) => {
   }
   context.images.transferFunctionManipulator.levelSet = levelSet
 
-  // // Add range manipulator
+  // Add range manipulator
   context.itkVtkView
     .getInteractorStyle2D()
     .addMouseManipulator(rangeManipulator)

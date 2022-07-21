@@ -15,6 +15,7 @@ app.innerHTML = `
 const editorHome = document.querySelector<HTMLDivElement>('#editorHome')
 if (editorHome) {
   const editor = new TransferFunctionEditor(editorHome)
+  // eslint-disable-next-line no-console
   console.log('Control points', editor.getPoints())
   globalThis.editor = editor
 }

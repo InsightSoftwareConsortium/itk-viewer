@@ -79,4 +79,5 @@ reader
   })
 
 globalThis.ofun = ofun
+globalThis.ctfun = ctfun
 globalThis.renderWindow = renderWindow

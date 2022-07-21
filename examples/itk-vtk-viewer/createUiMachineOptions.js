@@ -1,14 +1,14 @@
-import referenceUIMachineOptions from 'itk-viewer-reference-ui/src/referenceUIMachineOptions.js'
+import referenceUIMachineOptions from 'itk-vtk-viewer/src/UI/reference-ui/src/referenceUIMachineOptions.js'
 
-import style from 'itk-viewer-reference-ui/src/ItkVtkViewer.module.css'
-import applyGroupVisibility from 'itk-viewer-reference-ui/src/applyGroupVisibility'
+import style from 'itk-vtk-viewer/src/UI/reference-ui/src/ItkVtkViewer.module.css'
+import applyGroupVisibility from 'itk-vtk-viewer/src/UI/reference-ui/src/applyGroupVisibility'
 
-import createComponentSelector from 'itk-viewer-reference-ui/src/Images/createComponentSelector'
-import createColorRangeInput from 'itk-viewer-reference-ui/src/Images/createColorRangeInput'
-import createVolumeRenderingInputs from 'itk-viewer-reference-ui/src/Images/createVolumeRenderingInputs'
+import createComponentSelector from 'itk-vtk-viewer/src/UI/reference-ui/src/Images/createComponentSelector'
+import createColorRangeInput from 'itk-vtk-viewer/src/UI/reference-ui/src/Images/createColorRangeInput'
+import createVolumeRenderingInputs from 'itk-vtk-viewer/src/UI/reference-ui/src/Images/createVolumeRenderingInputs'
 
-import createLabelImageColorWidget from 'itk-viewer-reference-ui/src/Images/createLabelImageColorWidget'
-import createLabelImageWeightWidget from 'itk-viewer-reference-ui/src/Images/createLabelImageWeightWidget'
+import createLabelImageColorWidget from 'itk-vtk-viewer/src/UI/reference-ui/src/Images/createLabelImageColorWidget'
+import createLabelImageWeightWidget from 'itk-vtk-viewer/src/UI/reference-ui/src/Images/createLabelImageWeightWidget'
 
 import createTransferFunctionWidget from './createTransferFunctionWidget'
 

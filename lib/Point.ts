@@ -1,11 +1,13 @@
+const clamp0to1 = (x: number) => Math.max(0, Math.min(1, x))
+
 export class Point {
-  _x: number
-  _y: number
+  private _x!: number
+  private _y!: number
   eventTarget = new EventTarget()
 
   constructor(x: number, y: number) {
-    this._x = x
-    this._y = y
+    this.x = x
+    this.y = y
   }
 
   get x() {
@@ -13,7 +15,7 @@ export class Point {
   }
 
   set x(newX: number) {
-    this._x = newX
+    this._x = clamp0to1(newX)
     this.dispatchUpdatedEvent()
   }
 
@@ -22,19 +24,19 @@ export class Point {
   }
 
   set y(newY: number) {
-    this._y = newY
+    this._y = clamp0to1(newY)
     this.dispatchUpdatedEvent()
   }
 
   setPosition(x: number, y: number) {
-    this._x = x
-    this._y = y
+    this.x = x
+    this.y = y
     this.dispatchUpdatedEvent()
   }
 
   dispatchUpdatedEvent() {
     this.eventTarget.dispatchEvent(
-      new CustomEvent('updated', { detail: [this._x, this._y] })
+      new CustomEvent('updated', { detail: [this.x, this.y] })
     )
   }
 }

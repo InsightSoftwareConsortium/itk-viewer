@@ -1,22 +1,23 @@
-import { iContainer } from './Container'
+import { ContainerType } from './Container'
 import { ControlPoint } from './ControlPoint'
 import { Point } from './Point'
 import { Points } from './Points'
 
 // Adds new Points to model and create view of the points
 export class PointsController {
-  container: iContainer
+  container: ContainerType
   points: Points
   private onPointsUpdated: () => void
   private controlPoints: ControlPoint[] = []
+  private isNewPointFromPointer = false
 
-  constructor(container: iContainer, points: Points) {
+  constructor(container: ContainerType, points: Points) {
     this.container = container
     this.points = points
 
     // update model
-    const { domElement } = container
-    domElement.addEventListener('pointerdown', (e) => this.onPointerDown(e))
+    const { root } = container
+    root.addEventListener('pointerdown', (e) => this.onPointerDown(e))
 
     // react to model
     this.onPointsUpdated = () => this.updatePoints()
@@ -30,8 +31,11 @@ export class PointsController {
   }
 
   onPointerDown(event: PointerEvent) {
-    const [x, y] = this.container.toNormalized(event.clientX, event.clientY)
+    event.preventDefault()
+    const [x, y] = this.container.domToNormalized(event.clientX, event.clientY)
+    this.isNewPointFromPointer = true
     this.points.addPoint(x, y)
+    this.isNewPointFromPointer = false
   }
 
   onControlPointDelete(event: CustomEvent) {
@@ -54,8 +58,11 @@ export class PointsController {
 
     const addNewControlPoint = (point: Point) =>
       this.controlPoints.push(
-        new ControlPoint(this.container, point, (e) =>
-          this.onControlPointDelete(e)
+        new ControlPoint(
+          this.container,
+          point,
+          (e) => this.onControlPointDelete(e),
+          this.isNewPointFromPointer
         )
       )
 
