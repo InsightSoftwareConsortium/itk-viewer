@@ -7,7 +7,7 @@ import {
 } from './PiecewiseUtils'
 import { Points, pointsToWindowedPoints } from './Points'
 
-const HISTOGRAM_COLOR = 'rgba(200, 200, 200, 0.3)'
+const HISTOGRAM_COLOR = 'rgba(200, 200, 200, 0.5)'
 
 export const Background = (container: ContainerType, points: Points) => {
   const canvas = document.createElement('canvas')
