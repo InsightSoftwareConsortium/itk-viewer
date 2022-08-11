@@ -1,14 +1,5 @@
 import { windowPoints } from './Points'
 
-export function rescaleArray(array: number[], focusArea: [number, number]) {
-  if (!focusArea) {
-    return array
-  }
-  const maxIdx = array.length - 1
-  const idxRange = focusArea.map((v) => Math.round(v * maxIdx))
-  return array.slice(idxRange[0], idxRange[1] + 1)
-}
-
 export type ChartStyle = {
   lineWidth: number
   strokeStyle: string

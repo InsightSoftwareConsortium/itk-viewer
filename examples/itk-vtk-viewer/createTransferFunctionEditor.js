@@ -22,6 +22,8 @@ const getRange = (nodes, dataRange) =>
   nodes.length > 1 ? [nodes[0].x, nodes[nodes.length - 1].x] : dataRange
 
 const updateContextPiecewiseFunction = (context, dataRange, points) => {
+  if (!context.images.piecewiseFunctions) return // not ready yet
+
   const name = context.images.selectedName
   const actorContext = context.images.actorContext.get(name)
   const component = actorContext.selectedComponent
