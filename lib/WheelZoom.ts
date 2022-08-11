@@ -17,19 +17,14 @@ export const WheelZoom = (container: ContainerType) => {
       0,
       left - Math.max(0, targetX - left) * (scaleFactor - 1)
     )
-    const newRight = (right - left) * scaleFactor + newLeft
+    const newRight = Math.min(1, (right - left) * scaleFactor + newLeft)
 
     const newBottom = Math.max(
       0,
       bottom - Math.max(0, targetY - bottom) * (scaleFactor - 1)
     )
-    const newTop = (top - bottom) * scaleFactor + newBottom
+    const newTop = Math.min(1, (top - bottom) * scaleFactor + newBottom)
 
-    container.setViewBox(
-      newLeft,
-      Math.min(1, newRight),
-      newBottom,
-      Math.min(1, newTop)
-    )
+    container.setViewBox(newLeft, newRight, newBottom, newTop)
   })
 }

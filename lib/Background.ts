@@ -2,12 +2,11 @@ import { ContainerType } from './Container'
 import {
   ColorTransferFunction,
   drawChart,
-  rescaleArray,
   updateColorCanvas,
 } from './PiecewiseUtils'
 import { Points, pointsToWindowedPoints } from './Points'
 
-const HISTOGRAM_COLOR = 'rgba(200, 200, 200, 0.5)'
+const HISTOGRAM_COLOR = 'rgba(50, 50, 50, 0.8)'
 
 export const Background = (container: ContainerType, points: Points) => {
   const canvas = document.createElement('canvas')
@@ -72,17 +71,11 @@ export const Background = (container: ContainerType, points: Points) => {
         number,
         number
       ]
-      const viewBox = container.getViewBox()
-      drawChart(
-        ctx,
-        graphArea,
-        rescaleArray(histogram, [viewBox[0], viewBox[1]]),
-        {
-          lineWidth: 1,
-          strokeStyle: HISTOGRAM_COLOR,
-          fillStyle: HISTOGRAM_COLOR,
-        }
-      )
+      drawChart(ctx, graphArea, histogram, {
+        lineWidth: 1,
+        strokeStyle: HISTOGRAM_COLOR,
+        fillStyle: HISTOGRAM_COLOR,
+      })
     }
   }
 
