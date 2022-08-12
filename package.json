@@ -16,7 +16,7 @@
     "test": "vitest",
     "format": "prettier --write .",
     "lint": "prettier . --check && eslint . --ext .ts",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release --branches main"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.16.0",
