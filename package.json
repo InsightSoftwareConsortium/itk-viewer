@@ -1,14 +1,22 @@
 {
   "name": "itk-viewer-transfer-function-editor",
-  "version": "0.0.1",
+  "version": "0.0.0-development",
   "description": "Interface to interactively edit opacity transfer functions, etc",
-  "main": "index.js",
+  "main": "./dist/TransferFunctionEditor.umd.js",
+  "module": "./dist/TransferFunctionEditor.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/TransferFunctionEditor.es.js",
+      "require": "./dist/TransferFunctionEditor.umd.js"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --project tsconfig.build.json && vite build",
     "test": "vitest",
     "format": "prettier --write .",
-    "lint": "prettier . --check && eslint . --ext .ts"
+    "lint": "prettier . --check && eslint . --ext .ts",
+    "semantic-release": "semantic-release"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^5.16.0",
@@ -22,6 +30,7 @@
     "happy-dom": "^2.50.0",
     "prettier": "^2.6.1",
     "resize-observer-polyfill": "^1.5.1",
+    "semantic-release": "^19.0.3",
     "typescript": "^4.5.4",
     "vite": "^2.8.0",
     "vitest": "^0.18.0",
@@ -29,7 +38,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor.git"
+    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor.git"
   },
   "keywords": [
     "visualization",

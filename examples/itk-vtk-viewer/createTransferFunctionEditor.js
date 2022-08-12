@@ -65,7 +65,7 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
     getGaussians() {
       const xPositions = tfEditor.getPoints().map(([x]) => x)
       const min = Math.min(...xPositions)
-      const width = (Math.max(...xPositions) - min) / 2
+      const width = (Math.max(...xPositions) - min) / 2 || 0.5 // if one point, fill width
       const position = min + width
       const height = Math.max(...tfEditor.getPoints().map(([, y]) => y))
 
@@ -84,8 +84,9 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
       const pointsMin = pointsGaussian.position - pointsGaussian.width
       const points = tfEditor
         .getPoints()
-        // compute x in "gaussian"
+        // compute x in "gaussian" space
         .map(([x, y]) => [(x - pointsMin) / (pointsGaussian.width * 2), y])
+        // rescale points into new gaussian range
         .map(([x, y]) => {
           return [x * newRange + newMin, y + y * heightDelta]
         })
