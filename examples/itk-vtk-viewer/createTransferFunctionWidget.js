@@ -1,10 +1,8 @@
 import vtkMouseRangeManipulator from '@kitware/vtk.js/Interaction/Manipulators/MouseRangeManipulator'
 
-import style from 'itk-vtk-viewer/src/UI/reference-ui/src/ItkVtkViewer.module.css'
-
 import { createTransferFunctionEditor } from './createTransferFunctionEditor'
 
-const createTransferFunctionWidget = (context, imagesUIGroup) => {
+const createTransferFunctionWidget = (context, imagesUIGroup, style) => {
   const piecewiseWidgetContainer = document.createElement('div')
   piecewiseWidgetContainer.setAttribute('style', 'height: 150px; width: 400px')
   piecewiseWidgetContainer.setAttribute('class', style.piecewiseWidget)

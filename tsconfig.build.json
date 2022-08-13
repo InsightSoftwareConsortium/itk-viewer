@@ -2,6 +2,10 @@
   "extends": "./tsconfig",
   "exclude": ["examples/**/*"],
   "compilerOptions": {
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noEmit": false,
+    "outDir": "dist",
+    "declaration": true,
+    "emitDeclarationOnly": true
   }
 }

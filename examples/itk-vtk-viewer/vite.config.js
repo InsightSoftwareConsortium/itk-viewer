@@ -10,6 +10,9 @@ export default defineConfig({
           import.meta.url
         )
       ),
+      'itk-viewer-transfer-function-editor': fileURLToPath(
+        new URL('../../lib/TransferFunctionEditor.ts', import.meta.url)
+      ),
     },
   },
 })
