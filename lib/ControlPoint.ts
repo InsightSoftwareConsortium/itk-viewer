@@ -59,7 +59,6 @@ export class ControlPoint {
   private positionElement() {
     const { x, y } = this.point
     const [xSvg, ySvg] = this.container.normalizedToSvg(x, y)
-
     this.element.setAttribute('cx', String(xSvg))
     this.element.setAttribute('cy', String(ySvg))
   }

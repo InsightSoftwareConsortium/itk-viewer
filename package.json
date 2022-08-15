@@ -18,7 +18,7 @@
   "types": "./dist/TransferFunctionEditor.d.ts",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && tsc --project tsconfig.build.json && node dist-itk-viewer-integration.js",
+    "build": "vite build && tsc --project tsconfig.build.json",
     "test": "vitest",
     "format": "prettier --write .",
     "lint": "prettier . --check && eslint . --ext .ts",

@@ -27,8 +27,18 @@ const updateContextPiecewiseFunction = (context, dataRange, points) => {
   const name = context.images.selectedName
   const actorContext = context.images.actorContext.get(name)
   const component = actorContext.selectedComponent
+  context.service.send({
+    type: 'IMAGE_PIECEWISE_FUNCTION_POINTS_CHANGED',
+    data: {
+      name,
+      component,
+      points,
+    },
+  })
+
   const nodes = getNodes(dataRange, points)
   const range = getRange(dataRange, nodes)
+
   context.service.send({
     type: 'IMAGE_PIECEWISE_FUNCTION_CHANGED',
     data: {
@@ -40,7 +50,6 @@ const updateContextPiecewiseFunction = (context, dataRange, points) => {
   })
 }
 
-const noop = () => undefined
 const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
   let dataRange = [0, 255]
 
@@ -67,7 +76,9 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
       tfEditor.setColorTransferFunction(tf)
     },
 
-    render: noop,
+    setPoints(points) {
+      tfEditor.setPoints(points)
+    },
 
     getGaussians() {
       const xPositions = tfEditor.getPoints().map(([x]) => x)
@@ -80,7 +91,6 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
     },
 
     setGaussians(gaussians) {
-      console.log('setGaussians', gaussians)
       const newG = gaussians[0]
       const oldG = cachedGaussian ?? this.getGaussians()[0]
       const heightDelta = newG.height - oldG.height
@@ -106,6 +116,10 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
       update()
     },
 
+    getPoints() {
+      return tfEditor.getPoints()
+    },
+
     setRangeZoom: (newRange) => {
       tfEditor.setViewBox(...newRange)
     },
@@ -117,6 +131,7 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
     getOpacityNodes,
     getOpacityRange,
     setHistogram: (h) => tfEditor.setHistogram(h),
+    render: () => undefined,
   }
 }
 

@@ -25,8 +25,8 @@ export class TransferFunctionEditor {
     const startPoints = [
       [0, 0],
       [1, 1],
-    ]
-    startPoints.forEach(([x, y]) => this.points.addPoint(x, y))
+    ] as [number, number][]
+    this.points.setPoints(startPoints)
 
     this.background = Background(this.container, this.points)
 
@@ -44,10 +44,7 @@ export class TransferFunctionEditor {
   }
 
   setPoints(points: [number, number][]) {
-    ;[...this.points.points].forEach((point) => {
-      this.points.removePoint(point)
-    })
-    points.forEach(([x, y]) => this.points.addPoint(x, y))
+    this.points.setPoints(points)
   }
 
   get eventTarget() {
