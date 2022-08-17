@@ -43,8 +43,11 @@ export class TransferFunctionEditor {
     return this.points.points.map(({ x, y }) => [x, y])
   }
 
+  // No Points update event on setPoints to avoid emitting 'update' event to user code.
+  // User code responsible for updating downstream piecewise function without update in setPoints case.
   setPoints(points: [number, number][]) {
     this.points.setPoints(points)
+    this.pointController.updatePoints()
   }
 
   get eventTarget() {
