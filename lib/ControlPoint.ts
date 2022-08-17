@@ -13,6 +13,7 @@ const makeCircle = () => {
   circle.setAttribute('stroke', 'black')
   circle.setAttribute('stroke-width', '2')
   circle.setAttribute('class', CONTROL_POINT_CLASS)
+  circle.setAttribute('style', 'cursor: move;')
 
   return circle
 }
@@ -20,6 +21,8 @@ const makeCircle = () => {
 export class ControlPoint {
   element: SVGCircleElement
   private container: ContainerType
+  private isDragging: boolean = false
+  private isHovered: boolean = false
   readonly point: Point
 
   readonly DELETE_EVENT = 'deleteme'
@@ -70,9 +73,13 @@ export class ControlPoint {
   }
 
   startInteraction(forceDragging = false) {
-    let isDragging = forceDragging
+    this.isDragging = forceDragging
+    if (!this.isDragging) {
+      this.element.setAttribute('stroke', 'red') // deleteable
+    }
     const onPointerMove = (e: PointerEvent) => {
-      isDragging = true
+      this.isDragging = true
+      this.element.setAttribute('stroke', 'black')
       this.movePoint(e)
     }
     document.addEventListener('pointermove', onPointerMove)
@@ -81,10 +88,12 @@ export class ControlPoint {
       document.removeEventListener('pointermove', onPointerMove)
       document.removeEventListener('pointerup', onPointerUp)
 
-      if (!isDragging) {
+      if (!this.isDragging) {
         const delEvent = new CustomEvent(this.DELETE_EVENT, { detail: this })
         this.eventTarget.dispatchEvent(delEvent)
       }
+      if (!this.isHovered) this.element.setAttribute('stroke-width', '2')
+      this.isDragging = false
     }
 
     document.addEventListener('pointerup', onPointerUp)
@@ -95,6 +104,16 @@ export class ControlPoint {
       event.stopPropagation()
       event.preventDefault()
       this.startInteraction()
+    })
+    this.element.addEventListener('pointerenter', () => {
+      this.isHovered = true
+      this.element.setAttribute('stroke-width', '4')
+    })
+    this.element.addEventListener('pointerleave', () => {
+      this.isHovered = false
+      if (!this.isDragging) {
+        this.element.setAttribute('stroke-width', '2')
+      }
     })
   }
 }
