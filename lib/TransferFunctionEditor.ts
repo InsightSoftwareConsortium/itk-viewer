@@ -25,8 +25,8 @@ export class TransferFunctionEditor {
     const startPoints = [
       [0, 0],
       [1, 1],
-    ]
-    startPoints.forEach(([x, y]) => this.points.addPoint(x, y))
+    ] as [number, number][]
+    this.points.setPoints(startPoints)
 
     this.background = Background(this.container, this.points)
 
@@ -43,11 +43,11 @@ export class TransferFunctionEditor {
     return this.points.points.map(({ x, y }) => [x, y])
   }
 
+  // No Points update event on setPoints to avoid emitting 'update' event to user code.
+  // User code responsible for updating downstream piecewise function without update in setPoints case.
   setPoints(points: [number, number][]) {
-    ;[...this.points.points].forEach((point) => {
-      this.points.removePoint(point)
-    })
-    points.forEach(([x, y]) => this.points.addPoint(x, y))
+    this.points.setPoints(points)
+    this.pointController.updatePoints()
   }
 
   get eventTarget() {

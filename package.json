@@ -2,17 +2,23 @@
   "name": "itk-viewer-transfer-function-editor",
   "version": "0.0.0-development",
   "description": "Interface to interactively edit opacity transfer functions, etc",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
   "main": "./dist/TransferFunctionEditor.umd.js",
   "module": "./dist/TransferFunctionEditor.es.js",
   "exports": {
     ".": {
       "import": "./dist/TransferFunctionEditor.es.js",
       "require": "./dist/TransferFunctionEditor.umd.js"
-    }
+    },
+    "./itk-vtk-viewer/createTransferFunctionWidget": "./dist/createTransferFunctionWidget.js"
   },
+  "types": "./dist/TransferFunctionEditor.d.ts",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --project tsconfig.build.json && vite build",
+    "build": "vite build && tsc --project tsconfig.build.json",
     "test": "vitest",
     "format": "prettier --write .",
     "lint": "prettier . --check && eslint . --ext .ts",

@@ -15,6 +15,12 @@ app.innerHTML = `
 const editorHome = document.querySelector<HTMLDivElement>('#editorHome')
 if (editorHome) {
   const editor = new TransferFunctionEditor(editorHome)
+  editor.setPoints([
+    [0, 0],
+    [0.4, 0.8],
+    [0.6, 0.2],
+    [1, 1],
+  ])
   // eslint-disable-next-line no-console
   console.log('Control points', editor.getPoints())
   globalThis.editor = editor

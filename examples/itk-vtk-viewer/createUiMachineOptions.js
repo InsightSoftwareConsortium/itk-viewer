@@ -18,10 +18,14 @@ function createImagesInterface(context) {
   context.images.imagesUIGroup = imagesUIGroup
   context.uiGroups.set('images', imagesUIGroup)
 
-  createComponentSelector(context, imagesUIGroup)
-  createColorRangeInput(context, imagesUIGroup)
+  const componentAndScale = document.createElement('div')
+  imagesUIGroup.appendChild(componentAndScale)
+  componentAndScale.setAttribute('style', 'display: flex;')
+  context.images.componentAndScale = componentAndScale
 
-  createTransferFunctionWidget(context, imagesUIGroup) // Loads our Editor Widget
+  createComponentSelector(context, componentAndScale)
+  createColorRangeInput(context, imagesUIGroup)
+  createTransferFunctionWidget(context, imagesUIGroup, style) // Loads our Editor Widget
 
   createVolumeRenderingInputs(context, imagesUIGroup)
 
@@ -41,6 +45,7 @@ const customOptions = {
   ...referenceUIMachineOptions,
 
   images: {
+    ...referenceUIMachineOptions.images,
     actions: {
       ...referenceUIMachineOptions.images.actions,
       createImagesInterface,

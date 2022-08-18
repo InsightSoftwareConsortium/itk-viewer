@@ -1,5 +1,6 @@
 /// <reference types="vitest" />
 
+import { fileURLToPath } from 'url'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -18,5 +19,12 @@ export default defineConfig({
     },
     // For this config, check https://github.com/vitest-dev/vitest/issues/740
     threads: false,
+  },
+  resolve: {
+    alias: {
+      'itk-viewer-transfer-function-editor': fileURLToPath(
+        new URL('./lib/TransferFunctionEditor.ts', import.meta.url)
+      ),
+    },
   },
 })

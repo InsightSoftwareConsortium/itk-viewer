@@ -2,7 +2,7 @@ import { throttle } from '@kitware/vtk.js/macros'
 import {
   TransferFunctionEditor,
   windowPointsForSort,
-} from '../../lib/TransferFunctionEditor'
+} from 'itk-viewer-transfer-function-editor.js'
 
 const PIECEWISE_UPDATE_DELAY = 100
 
@@ -18,7 +18,7 @@ const getNodes = (range, points) => {
 }
 
 // grab head and tail or fallback to data range if 1 or less points
-const getRange = (nodes, dataRange) =>
+const getRange = (dataRange, nodes) =>
   nodes.length > 1 ? [nodes[0].x, nodes[nodes.length - 1].x] : dataRange
 
 const updateContextPiecewiseFunction = (context, dataRange, points) => {
@@ -27,8 +27,18 @@ const updateContextPiecewiseFunction = (context, dataRange, points) => {
   const name = context.images.selectedName
   const actorContext = context.images.actorContext.get(name)
   const component = actorContext.selectedComponent
+  context.service.send({
+    type: 'IMAGE_PIECEWISE_FUNCTION_POINTS_CHANGED',
+    data: {
+      name,
+      component,
+      points,
+    },
+  })
+
   const nodes = getNodes(dataRange, points)
-  const range = getRange(nodes, dataRange)
+  const range = getRange(dataRange, nodes)
+
   context.service.send({
     type: 'IMAGE_PIECEWISE_FUNCTION_CHANGED',
     data: {
@@ -40,7 +50,6 @@ const updateContextPiecewiseFunction = (context, dataRange, points) => {
   })
 }
 
-const noop = () => undefined
 const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
   let dataRange = [0, 255]
 
@@ -50,7 +59,14 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
   const throttledUpdate = throttle(update, PIECEWISE_UPDATE_DELAY)
   tfEditor.eventTarget.addEventListener('updated', throttledUpdate)
 
-  const getOpacityNodes = () => getNodes(dataRange, tfEditor.getPoints())
+  const getOpacityNodes = (tempDataRange) =>
+    getNodes(tempDataRange ?? dataRange, tfEditor.getPoints())
+
+  const getOpacityRange = (tempDataRange) =>
+    getRange(
+      tempDataRange ?? dataRange,
+      getOpacityNodes(tempDataRange ?? dataRange)
+    )
 
   // to compare changes across setting the data view range
   let cachedGaussian
@@ -60,7 +76,9 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
       tfEditor.setColorTransferFunction(tf)
     },
 
-    render: noop,
+    setPoints(points) {
+      tfEditor.setPoints(points)
+    },
 
     getGaussians() {
       const xPositions = tfEditor.getPoints().map(([x]) => x)
@@ -98,16 +116,22 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
       update()
     },
 
+    getPoints() {
+      return tfEditor.getPoints()
+    },
+
     setRangeZoom: (newRange) => {
       tfEditor.setViewBox(...newRange)
     },
+
     setDataRange: (newRange) => {
       dataRange = [...newRange]
     },
 
     getOpacityNodes,
-    getOpacityRange: () => getRange(getOpacityNodes(), dataRange),
+    getOpacityRange,
     setHistogram: (h) => tfEditor.setHistogram(h),
+    render: () => undefined,
   }
 }
 
