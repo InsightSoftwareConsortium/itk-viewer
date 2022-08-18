@@ -48,6 +48,7 @@ export class TransferFunctionEditor {
   setPoints(points: [number, number][]) {
     this.points.setPoints(points)
     this.pointController.updatePoints()
+    this.line.update()
   }
 
   get eventTarget() {

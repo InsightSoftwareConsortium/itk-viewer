@@ -19,6 +19,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && tsc --project tsconfig.build.json",
+    "build:watch": "vite build --watch",
     "test": "vitest",
     "format": "prettier --write .",
     "lint": "prettier . --check && eslint . --ext .ts",
