@@ -97,6 +97,7 @@ export const Background = (container: ContainerType, points: Points) => {
     canvas,
     setColorTransferFunction,
     setHistogram,
+    render,
     remove: () => container.root.removeChild(canvas),
   }
 }
