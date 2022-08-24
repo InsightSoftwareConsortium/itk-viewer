@@ -6,7 +6,7 @@ import {
 
 const PIECEWISE_UPDATE_DELAY = 100
 
-const getNodes = (range, points) => {
+export const getNodes = (range, points) => {
   const delta = range[1] - range[0]
   const windowedPoints = windowPointsForSort(points)
   return windowedPoints.map(([x, y]) => ({
@@ -38,7 +38,6 @@ const updateContextPiecewiseFunction = (context, dataRange, points) => {
 
   const nodes = getNodes(dataRange, points)
   const range = getRange(dataRange, nodes)
-
   context.service.send({
     type: 'IMAGE_PIECEWISE_FUNCTION_CHANGED',
     data: {
@@ -59,17 +58,11 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
   const throttledUpdate = throttle(update, PIECEWISE_UPDATE_DELAY)
   tfEditor.eventTarget.addEventListener('updated', throttledUpdate)
 
-  const getOpacityNodes = (tempDataRange) =>
-    getNodes(tempDataRange ?? dataRange, tfEditor.getPoints())
+  const getOpacityNodes = (range = dataRange) =>
+    getNodes(range, tfEditor.getPoints())
 
-  const getOpacityRange = (tempDataRange) =>
-    getRange(
-      tempDataRange ?? dataRange,
-      getOpacityNodes(tempDataRange ?? dataRange)
-    )
-
-  // to compare changes across setting the data view range
-  let cachedGaussian
+  const getOpacityRange = (range = dataRange) =>
+    getRange(range, getOpacityNodes(range))
 
   return {
     setColorTransferFunction: (tf) => {
@@ -78,42 +71,7 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
 
     setPoints(points) {
       tfEditor.setPoints(points)
-    },
-
-    getGaussians() {
-      const xPositions = tfEditor.getPoints().map(([x]) => x)
-      const min = Math.min(...xPositions)
-      const width = (Math.max(...xPositions) - min) / 2 || 0.5 // if one point, fill width
-      const position = min + width
-      const height = Math.max(...tfEditor.getPoints().map(([, y]) => y))
-
-      return [{ width, position, height }]
-    },
-
-    setGaussians(gaussians) {
-      const newG = gaussians[0]
-      const oldG = cachedGaussian ?? this.getGaussians()[0]
-      const heightDelta = newG.height - oldG.height
-
-      const newMin = newG.position - newG.width
-      const newRange = 2 * newG.width
-
-      const pointsGaussian = this.getGaussians()[0]
-      const pointsMin = pointsGaussian.position - pointsGaussian.width
-      const points = tfEditor
-        .getPoints()
-        // compute x in "gaussian" space
-        .map(([x, y]) => [(x - pointsMin) / (pointsGaussian.width * 2), y])
-        // rescale points into new gaussian range
-        .map(([x, y]) => {
-          return [x * newRange + newMin, y + y * heightDelta]
-        })
-
-      tfEditor.setPoints(points)
-
-      cachedGaussian = { ...newG }
-
-      update()
+      updateContextPiecewiseFunction(context, dataRange, points)
     },
 
     getPoints() {
@@ -132,6 +90,15 @@ const vtkPiecewiseGaussianWidgetFacade = (tfEditor, context) => {
     getOpacityRange,
     setHistogram: (h) => tfEditor.setHistogram(h),
     render: () => undefined,
+
+    getGaussians() {
+      console.warn('getGaussians not implemented, use getPoints')
+      return []
+    },
+
+    setGaussians() {
+      console.warn('setGaussians not implemented, use setPoints')
+    },
   }
 }
 

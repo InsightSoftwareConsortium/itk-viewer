@@ -43,11 +43,31 @@ export const Background = (container: ContainerType, points: Points) => {
       })
       ctx.clip()
 
-      // pixels between head and tail
-      const [tailX] = linePoints[linePoints.length - 2]
+      // width in pixels between head and tail, bounded by SVG size
       const [headX] = linePoints[1]
-      const pointsRange = Math.floor(tailX - headX) || borderWidth
-      updateColorCanvas(colorTransferFunction, pointsRange, colorCanvas)
+      const [tailX] = linePoints[linePoints.length - 2]
+      const headXClamped = Math.max(0, headX)
+      const tailXClamped = Math.min(width, tailX)
+      const colorCanvasWidth =
+        Math.floor(tailXClamped - headXClamped) || borderWidth
+
+      // Compute visible data range
+      const pointPixelWidth = tailX - headX
+      const headClampAmount = (headXClamped - headX) / pointPixelWidth
+      const tailClampAmount = (tailXClamped - tailX) / pointPixelWidth
+      const dataRange = colorTransferFunction.getMappingRange()
+      const dataWidth = dataRange[1] - dataRange[0]
+      const visibleDataRange = [
+        dataRange[0] + dataWidth * headClampAmount,
+        dataRange[1] + dataWidth * tailClampAmount,
+      ] as [number, number]
+
+      updateColorCanvas(
+        colorTransferFunction,
+        colorCanvasWidth,
+        visibleDataRange,
+        colorCanvas
+      )
 
       ctx.drawImage(
         colorCanvas,
@@ -55,9 +75,9 @@ export const Background = (container: ContainerType, points: Points) => {
         0,
         colorCanvas.width,
         colorCanvas.height,
-        Math.floor(headX),
+        Math.floor(headXClamped),
         Math.floor(top),
-        pointsRange,
+        colorCanvasWidth,
         Math.ceil(bottom - top)
       )
       ctx.restore()

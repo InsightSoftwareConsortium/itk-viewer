@@ -1,16 +1,16 @@
 import vtkMouseRangeManipulator from '@kitware/vtk.js/Interaction/Manipulators/MouseRangeManipulator'
-
 import { createTransferFunctionEditor } from './createTransferFunctionEditor'
+// import style from '../ItkVtkViewer.module.css'
 
 const MIN_WIDTH = 1e-8
 
-const createTransferFunctionWidget = (context, imagesUIGroup, style) => {
+const createTransferFunctionWidget = (context, imagesUIGroup) => {
   const piecewiseWidgetContainer = document.createElement('div')
   piecewiseWidgetContainer.setAttribute('style', 'height: 150px; width: 400px')
-  piecewiseWidgetContainer.setAttribute('class', style.piecewiseWidget)
+  // piecewiseWidgetContainer.setAttribute('class', style.piecewiseWidget)
 
   const transferFunctionWidgetRow = document.createElement('div')
-  transferFunctionWidgetRow.setAttribute('class', style.uiRow)
+  // transferFunctionWidgetRow.setAttribute('class', style.uiRow)
   // This row needs background different from normal uiRows, to aid
   // in the illusion that it's the content portion of a tabbed pane
   transferFunctionWidgetRow.setAttribute(
@@ -103,7 +103,7 @@ const createTransferFunctionWidget = (context, imagesUIGroup, style) => {
     const delta = newMaxOpacity - oldMax
     const newPoints = transferFunctionWidget
       .getPoints()
-      .map(([x, y]) => [x, y + delta])
+      .map(([x, y]) => [x, Math.min(y + delta, 1)])
     transferFunctionWidget.setPoints(newPoints)
   }
   // max as 1.01 not 1.0 to allow for squishing of low function points if a point is already at 1
@@ -118,3 +118,12 @@ const createTransferFunctionWidget = (context, imagesUIGroup, style) => {
 }
 
 export default createTransferFunctionWidget
+
+export const applyPiecewiseFunctionPointsToEditor = (context, event) => {
+  const { transferFunctionWidget, actorContext } = context.images
+  const { points, component, name } = event.data
+  const imageActorContext = actorContext.get(name)
+  if (component === imageActorContext.selectedComponent) {
+    transferFunctionWidget.setPoints(points)
+  }
+}
