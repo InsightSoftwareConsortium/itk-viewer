@@ -64,16 +64,16 @@ const CANVAS_HEIGHT = 1
 export const updateColorCanvas = (
   colorTransferFunction: ColorTransferFunction,
   width: number,
+  renderedDataRange: [number, number],
   canvas: HTMLCanvasElement
 ) => {
   const workCanvas = canvas || document.createElement('canvas')
   workCanvas.setAttribute('width', String(width))
   workCanvas.setAttribute('height', String(CANVAS_HEIGHT))
 
-  const [startValue, endValue] = colorTransferFunction.getMappingRange()
   const rgba = colorTransferFunction.getUint8Table(
-    startValue,
-    endValue,
+    renderedDataRange[0],
+    renderedDataRange[1],
     width,
     true
   )
