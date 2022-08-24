@@ -21,6 +21,14 @@ if (editorHome) {
     [0.6, 0.2],
     [1, 1],
   ])
+
+  editor.setHistogram([0.1, 0.2, 0.2, 0.5, 0.4, 0.1])
+
+  editor.setColorTransferFunction({
+    getMappingRange: () => [0, 10],
+    getUint8Table: () => new Uint8Array([255, 255, 255, 255]),
+  })
+
   // eslint-disable-next-line no-console
   console.log('Control points', editor.getPoints())
   globalThis.editor = editor
