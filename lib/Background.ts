@@ -46,40 +46,42 @@ export const Background = (container: ContainerType, points: Points) => {
       // width in pixels between head and tail, bounded by SVG size
       const [headX] = linePoints[1]
       const [tailX] = linePoints[linePoints.length - 2]
-      const headXClamped = Math.max(0, headX)
-      const tailXClamped = Math.min(width, tailX)
-      const colorCanvasWidth =
-        Math.floor(tailXClamped - headXClamped) || borderWidth
+      const headXClamped = Math.min(width, Math.max(0, headX))
+      const tailXClamped = Math.min(width, Math.max(0, tailX))
+      const colorCanvasWidth = Math.ceil(tailXClamped - headXClamped)
 
-      // Compute visible data range
-      const pointPixelWidth = tailX - headX
-      const headClampAmount = (headXClamped - headX) / pointPixelWidth
-      const tailClampAmount = (tailXClamped - tailX) / pointPixelWidth
-      const dataRange = colorTransferFunction.getMappingRange()
-      const dataWidth = dataRange[1] - dataRange[0]
-      const visibleDataRange = [
-        dataRange[0] + dataWidth * headClampAmount,
-        dataRange[1] + dataWidth * tailClampAmount,
-      ] as [number, number]
+      // color area not visible if 0 width
+      if (colorCanvasWidth) {
+        // Compute visible data range
+        const pointPixelWidth = tailX - headX
+        const headClampAmount = (headXClamped - headX) / pointPixelWidth
+        const tailClampAmount = (tailXClamped - tailX) / pointPixelWidth
+        const dataRange = colorTransferFunction.getMappingRange()
+        const dataWidth = dataRange[1] - dataRange[0]
+        const visibleDataRange = [
+          dataRange[0] + dataWidth * headClampAmount,
+          dataRange[1] + dataWidth * tailClampAmount,
+        ] as [number, number]
 
-      updateColorCanvas(
-        colorTransferFunction,
-        colorCanvasWidth,
-        visibleDataRange,
-        colorCanvas
-      )
+        updateColorCanvas(
+          colorTransferFunction,
+          colorCanvasWidth,
+          visibleDataRange,
+          colorCanvas
+        )
 
-      ctx.drawImage(
-        colorCanvas,
-        0,
-        0,
-        colorCanvas.width,
-        colorCanvas.height,
-        Math.floor(headXClamped),
-        Math.floor(top),
-        colorCanvasWidth,
-        Math.ceil(bottom - top)
-      )
+        ctx.drawImage(
+          colorCanvas,
+          0,
+          0,
+          colorCanvas.width,
+          colorCanvas.height,
+          Math.floor(headXClamped),
+          Math.floor(top),
+          colorCanvasWidth,
+          Math.ceil(bottom - top)
+        )
+      }
       ctx.restore()
     }
 
