@@ -4,7 +4,7 @@ import { Points } from './Points'
 import { Line } from './Line'
 import { WheelZoom } from './WheelZoom'
 import { Background, BackgroundType } from './Background'
-import { ColorTransferFunction } from './PiecewiseUtils'
+import { ColorTransferFunction, logTransform } from './PiecewiseUtils'
 
 export { windowPointsForSort } from './PiecewiseUtils'
 
@@ -70,6 +70,6 @@ export class TransferFunctionEditor {
   }
 
   setHistogram(histogram: number[]) {
-    this.background.setHistogram(histogram)
+    this.background.setHistogram(logTransform(histogram))
   }
 }
