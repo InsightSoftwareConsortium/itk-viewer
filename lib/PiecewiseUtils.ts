@@ -104,3 +104,13 @@ export const windowPointsForSort = (points: [number, number][]) => {
   windowedPoints[windowedPoints.length - 1][0] += 1e-8
   return windowedPoints
 }
+
+export const logTransform = (histogram: number[]): number[] => {
+  const loged = histogram.map((v) => (v === 0 ? 0 : Math.log(v)))
+  const noZeros = loged.filter(Boolean)
+  const min = Math.min(...noZeros)
+  const max = Math.max(...noZeros)
+  const delta = max - min
+  const normalized = loged.map((v) => (v === 0 ? 0 : (v - min) / delta))
+  return normalized
+}

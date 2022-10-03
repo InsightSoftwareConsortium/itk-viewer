@@ -25,8 +25,7 @@ function createImagesInterface(context) {
 
   createComponentSelector(context, componentAndScale)
   createColorRangeInput(context, imagesUIGroup)
-  createTransferFunctionWidget(context, imagesUIGroup, style) // Loads our Editor Widget
-
+  createTransferFunctionWidget(context, imagesUIGroup)
   createVolumeRenderingInputs(context, imagesUIGroup)
 
   context.uiContainer.appendChild(imagesUIGroup)

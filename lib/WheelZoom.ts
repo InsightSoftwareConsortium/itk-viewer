@@ -9,9 +9,9 @@ export const WheelZoom = (container: ContainerType) => {
 
     const scaleFactor = e.deltaY > 0 ? SCALE_SENSITIVITY : 1 / SCALE_SENSITIVITY
 
-    const [targetX, targetY] = container.domToNormalized(e.clientX, e.clientY)
+    const [targetX] = container.domToNormalized(e.clientX, e.clientY)
 
-    const [left, right, bottom, top] = container.getViewBox()
+    const [left, right] = container.getViewBox()
 
     const newLeft = Math.max(
       0,
@@ -19,12 +19,6 @@ export const WheelZoom = (container: ContainerType) => {
     )
     const newRight = Math.min(1, (right - left) * scaleFactor + newLeft)
 
-    const newBottom = Math.max(
-      0,
-      bottom - Math.max(0, targetY - bottom) * (scaleFactor - 1)
-    )
-    const newTop = Math.min(1, (top - bottom) * scaleFactor + newBottom)
-
-    container.setViewBox(newLeft, newRight, newBottom, newTop)
+    container.setViewBox(newLeft, newRight)
   })
 }
