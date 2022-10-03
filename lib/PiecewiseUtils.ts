@@ -105,7 +105,8 @@ export const windowPointsForSort = (points: [number, number][]) => {
   return windowedPoints
 }
 
-export const logTransform = (histogram: number[]): number[] => {
+export const logTransform = (histogram?: number[]): number[] => {
+  if (!histogram) return []
   const loged = histogram.map((v) => (v === 0 ? 0 : Math.log(v)))
   const noZeros = loged.filter(Boolean)
   const min = Math.min(...noZeros)
