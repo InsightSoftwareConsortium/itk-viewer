@@ -28,7 +28,7 @@ jobs:
       - run: npm run build --if-present
       - run: npm test
       - name: Release
-        if: matrix.node-version == '18.x' && matrix.os == 'ubuntu-latest'
+        if: matrix.node-version == '18.x'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
