@@ -70,8 +70,8 @@ export const Container = (parent: HTMLElement) => {
 
   const domToNormalized = (x: number, y: number) => {
     const { top, left, width, height } = getSize()
-    const valueRange = viewBox[1] - viewBox[0]
-    const opacityRange = viewBox[3] - viewBox[2]
+    const valueRange = viewBox[1] - viewBox[0] || 0.001
+    const opacityRange = viewBox[3] - viewBox[2] || 0.001
     return [
       ((x - left) / width) * valueRange + viewBox[0],
       (1 - (y - top) / height) * opacityRange + viewBox[2],
@@ -80,9 +80,9 @@ export const Container = (parent: HTMLElement) => {
 
   const normalizedToSvg = (x: number, y: number) => {
     const { width, height } = getSize()
-    const valueRange = viewBox[1] - viewBox[0]
+    const valueRange = viewBox[1] - viewBox[0] || 0.001
     const xSvg = ((x - viewBox[0]) / valueRange) * width + PADDING
-    const opacityRange = viewBox[3] - viewBox[2]
+    const opacityRange = viewBox[3] - viewBox[2] || 0.001
     const ySvg = (1 - (y - viewBox[2]) / opacityRange) * height + PADDING
     return [xSvg, ySvg]
   }
