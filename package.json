@@ -38,7 +38,9 @@
   },
   "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
+    "@web3-storage/w3": "^2.6.0",
+    "follow-redirects": "^1.15.2",
     "ipfs-car": "^0.9.1",
-    "@web3-storage/w3": "^2.6.0"
+    "tar": "^6.1.12"
   }
 }
