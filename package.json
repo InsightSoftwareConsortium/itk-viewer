@@ -3,11 +3,11 @@
   "version": "0.0.1",
   "description": "Multi-dimensional web-based image, mesh, and point set viewer",
   "type": "module",
-  "main": "dist/my-element.es.js",
+  "main": "dist/itk-viewer.js",
   "exports": {
-    ".": "./dist/my-element.es.js"
+    ".": "./dist/itk-viewer.js"
   },
-  "types": "types/my-element.d.ts",
+  "types": "types/index.d.ts",
   "files": [
     "dist",
     "types"
