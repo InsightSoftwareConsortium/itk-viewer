@@ -1,37 +1,38 @@
 name: Build and test
 
-on: [push,pull_request]
+on: [push, pull_request]
 
 jobs:
   build-test:
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - uses: actions/setup-node@v3
+        with:
+          node-version: "18"
 
-    - name: Install dependencies
-      run: |
-        npm install --location global pnpm
-        pnpm install
+      - name: Install dependencies
+        run: |
+          npm install --location global pnpm
+          pnpm install
 
-    - name: Build
-      run: |
-        pnpm build
+      - name: Build
+        run: |
+          pnpm build
 
-    - name: Test
-      run: |
-        pnpm test
+      - name: Test
+        uses: cypress-io/github-action@v4.2.0 # use the explicit version number
+        with:
+          command: pnpm test
 
     # Not quite read for automated publication
     #- name: Publish
-      #env:
-        #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        #NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      #run: |
-        #git config --global user.name "GitHub Actions"
-        #git config --global user.email "itk+community@discourse.itk.org"
-        #npx semantic-release
+    #env:
+    #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    #NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    #run: |
+    #git config --global user.name "GitHub Actions"
+    #git config --global user.email "itk+community@discourse.itk.org"
+    #npx semantic-release
