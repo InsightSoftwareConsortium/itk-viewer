@@ -14,8 +14,10 @@
   ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "test": "npm run test:downloadData",
+    "build": "pnpm build:tsc && pnpm build:vite",
+    "build:tsc": "tsc",
+    "build:vite": "vite build",
+    "test": "pnpm test:downloadData",
     "test:downloadData": "node test/downloadData.mjs"
   },
   "repository": {
