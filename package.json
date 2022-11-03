@@ -17,7 +17,7 @@
     "build": "pnpm build:tsc && pnpm build:vite",
     "build:tsc": "tsc",
     "build:vite": "vite build",
-    "test": "pnpm test:downloadData",
+    "test": "pnpm test:downloadData && pnpm cy:component",
     "test:downloadData": "node test/downloadData.mjs",
     "cy:open": "cypress open",
     "cy:component": "cypress run --component",

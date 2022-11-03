@@ -1,6 +1,6 @@
 import { html } from "lit";
 
-import "../../src/my-element";
+import "./my-element";
 
 describe("Lit mount", () => {
   it("mounts", () => {
