@@ -1,5 +1,7 @@
 # itk-viewer
 
+[![Build and test](https://github.com/InsightSoftwareConsortium/itk-viewer/actions/workflows/test.yml/badge.svg)](https://github.com/InsightSoftwareConsortium/itk-viewer/actions/workflows/test.yml)
+
 ## Development
 
 Contributions are welcome and appreciated.
