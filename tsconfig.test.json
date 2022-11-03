@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.root",
+  "compilerOptions": {
+    "types": ["cypress"]
+  },
+  "include": ["src/**/*.cy.ts"]
+}
