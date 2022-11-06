@@ -1,6 +1,10 @@
 {
   "extends": "./tsconfig.root",
-  "include": ["src/**/*.ts"],
-  "exclude": ["src/**/*.cy.ts"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "compilerOptions": {
+    "types": ["cypress"]
+  },
+  "references": [
+    { "path": "./tsconfig.node.json" },
+    { "path": "./cypress/tsconfig.json" }
+  ]
 }

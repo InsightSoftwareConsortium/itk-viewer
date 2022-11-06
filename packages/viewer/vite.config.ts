@@ -1,12 +1,11 @@
 import { defineConfig } from "vite";
-import path from "path";
 
 export default defineConfig({
   build: {
     lib: {
       entry: {
-        lib: path.resolve(__dirname, "src/index.ts"),
-        app: path.resolve(__dirname, "src/app.ts"),
+        lib: "src/index.ts",
+        app: "src/app.ts",
       },
       name: "ItkViewer",
       fileName: (format, entryName) => {
@@ -22,8 +21,8 @@ export default defineConfig({
     },
     rollupOptions: {
       input: {
-        app: path.resolve(__dirname, "index.html"),
-        lib: path.resolve(__dirname, "src", "index.ts"),
+        app: "index.html",
+        lib: "src/index.ts",
       },
       output: {
         globals: {},

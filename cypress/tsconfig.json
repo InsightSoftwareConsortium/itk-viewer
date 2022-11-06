@@ -1,6 +1,7 @@
 {
-  "extends": "../tsconfig",
+  "extends": "../tsconfig.root",
   "compilerOptions": {
-    "types": ["cypress"]
+    "types": ["cypress"],
+    "composite": true
   }
 }
