@@ -1,26 +1,41 @@
 lockfileVersion: 5.4
 
-specifiers:
-  '@cypress/mount-utils': ^2.1.0
-  cypress: ^10.11.0
-  cypress-watch-and-reload: ^1.10.4
-  follow-redirects: ^1.15.2
-  lit: ^2.4.0
-  tar: ^6.1.12
-  typescript: ^4.8.4
-  vite: ^3.2.2
+importers:
 
-dependencies:
-  lit: 2.4.0
+  .:
+    specifiers:
+      '@cypress/mount-utils': ^2.1.0
+      cypress: ^10.11.0
+      cypress-watch-and-reload: ^1.10.4
+      follow-redirects: ^1.15.2
+      lit: ^2.4.0
+      tar: ^6.1.12
+      typescript: ^4.8.4
+    devDependencies:
+      '@cypress/mount-utils': 2.1.0
+      cypress: 10.11.0
+      cypress-watch-and-reload: 1.10.4
+      follow-redirects: 1.15.2
+      lit: 2.4.0
+      tar: 6.1.12
+      typescript: 4.8.4
 
-devDependencies:
-  '@cypress/mount-utils': 2.1.0
-  cypress: 10.11.0
-  cypress-watch-and-reload: 1.10.4
-  follow-redirects: 1.15.2
-  tar: 6.1.12
-  typescript: 4.8.4
-  vite: 3.2.2
+  packages/io:
+    specifiers:
+      typescript: ^4.8.4
+    devDependencies:
+      typescript: 4.8.4
+
+  packages/viewer:
+    specifiers:
+      lit: ^2.4.0
+      typescript: ^4.8.4
+      vite: ^3.2.2
+    dependencies:
+      lit: 2.4.0
+    devDependencies:
+      typescript: 4.8.4
+      vite: 3.2.2
 
 packages:
 
@@ -88,7 +103,6 @@ packages:
 
   /@lit/reactive-element/1.4.1:
     resolution: {integrity: sha512-qDv4851VFSaBWzpS02cXHclo40jsbAjRXnebNXpm0uVg32kCneZPo9RYVQtrTNICtZ+1wAYHu1ZtxWSWMbKrBw==}
-    dev: false
 
   /@types/node/14.18.33:
     resolution: {integrity: sha512-qelS/Ra6sacc4loe/3MSjXNL1dNQ/GjxNHVzuChwMfmk7HuycRLVQN2qNY3XahK+fZc5E2szqQSKUyAF0E+2bg==}
@@ -104,7 +118,6 @@ packages:
 
   /@types/trusted-types/2.0.2:
     resolution: {integrity: sha512-F5DIZ36YVLE+PN+Zwws4kJogq47hNgX3Nx6WyDJ3kcplxyke3XIzB8uK5n/Lpm1HBsbGzd6nmGehL8cPekP+Tg==}
-    dev: false
 
   /@types/yauzl/2.10.0:
     resolution: {integrity: sha512-Cn6WYCm0tXv8p6k+A8PvbDG763EDpBoTzHdA+Q/MF6H3sapGjCm9NzoaJncJS9tUKSuCoDs9XHxYYsQDgxR6kw==}
@@ -1078,13 +1091,11 @@ packages:
     dependencies:
       '@lit/reactive-element': 1.4.1
       lit-html: 2.4.0
-    dev: false
 
   /lit-html/2.4.0:
     resolution: {integrity: sha512-G6qXu4JNUpY6aaF2VMfaszhO9hlWw0hOTRFDmuMheg/nDYGB+2RztUSOyrzALAbr8Nh0Y7qjhYkReh3rPnplVg==}
     dependencies:
       '@types/trusted-types': 2.0.2
-    dev: false
 
   /lit/2.4.0:
     resolution: {integrity: sha512-fdgzxEtLrZFQU/BqTtxFQCLwlZd9bdat+ltzSFjvWkZrs7eBmeX0L5MHUMb3kYIkuS8Xlfnii/iI5klirF8/Xg==}
@@ -1092,7 +1103,6 @@ packages:
       '@lit/reactive-element': 1.4.1
       lit-element: 3.2.2
       lit-html: 2.4.0
-    dev: false
 
   /lodash.once/4.1.1:
     resolution: {integrity: sha512-Sb487aTOCr9drQVL8pIxOzVhafOjZN9UU54hiN8PU3uAiSV7lx1yYNpbNmex2PK6dSJoNTSJUUswT651yww3Mg==}

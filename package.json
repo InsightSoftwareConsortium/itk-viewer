@@ -1,20 +1,12 @@
 {
-  "name": "itk-viewer",
   "version": "0.0.1",
+  "private": true,
+  "packageManager": "pnpm@7.12.0",
   "description": "Multi-dimensional web-based image, mesh, and point set viewer",
   "type": "module",
-  "main": "dist/itk-viewer.js",
-  "exports": {
-    ".": "./dist/itk-viewer.js"
-  },
-  "types": "types/index.d.ts",
-  "files": [
-    "dist",
-    "types"
-  ],
   "scripts": {
-    "dev": "vite",
-    "build": "pnpm build:tsc && pnpm build:vite",
+    "dev": "pnpm -r --parallel run dev",
+    "build": "pnpm -r build",
     "build:tsc": "tsc",
     "build:vite": "vite build",
     "test": "pnpm test:downloadData && pnpm cy:component",
@@ -23,46 +15,13 @@
     "cy:component": "cypress run --component",
     "cy:component:chrome": "cypress run --component --browser chrome"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/InsightSoftwareConsortium/itk-viewer.git"
-  },
-  "keywords": [
-    "3d",
-    "visualization",
-    "ray-tracing",
-    "webgl",
-    "webgpu",
-    "medical",
-    "scientific",
-    "itk",
-    "wasm",
-    "webassembly",
-    "imjoy",
-    "xstate",
-    "image",
-    "geometry",
-    "point",
-    "cloud",
-    "mesh",
-    "graphics"
-  ],
-  "author": "Matt McCormick",
-  "license": "Apache-2.0",
-  "bugs": {
-    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer/issues"
-  },
-  "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
     "@cypress/mount-utils": "^2.1.0",
     "cypress": "^10.11.0",
     "cypress-watch-and-reload": "^1.10.4",
     "follow-redirects": "^1.15.2",
+    "lit": "^2.4.0",
     "tar": "^6.1.12",
-    "typescript": "^4.8.4",
-    "vite": "^3.2.2"
-  },
-  "dependencies": {
-    "lit": "^2.4.0"
+    "typescript": "^4.8.4"
   }
 }
