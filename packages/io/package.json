@@ -1,7 +1,11 @@
 {
   "name": "itk-viewer-io",
   "version": "0.0.1",
-  "description": "Multi-dimensional web-based image, mesh, and point set viewer",
+  "description": "Multi-dimensional image IO",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "tsc --watch --outDir dist --project tsconfig.build.json",
     "build": "tsc --outDir dist --project tsconfig.build.json"

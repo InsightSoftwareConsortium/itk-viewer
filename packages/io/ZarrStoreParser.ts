@@ -7,7 +7,7 @@ const isMetadata = (item: string) =>
     item.endsWith(knownMetadataFile)
   );
 
-export class ZarrStore implements Store {
+export class ZarrStoreParser implements Store {
   store: Store;
   decoder: TextDecoder;
   constructor(store: Store) {

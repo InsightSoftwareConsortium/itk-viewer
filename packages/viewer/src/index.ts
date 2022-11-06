@@ -1,2 +1,1 @@
-import Viewer from './viewer.js'
-export { Viewer }
+export { Viewer } from "./viewer.js";

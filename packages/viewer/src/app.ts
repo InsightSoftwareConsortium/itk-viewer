@@ -1,1 +1,1 @@
-import './my-element.ts'
+import "./my-element.ts";

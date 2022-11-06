@@ -19,8 +19,10 @@ jobs:
           pnpm install
 
       - name: Build
-        run: |
-          pnpm build
+        run: pnpm build
+
+      - name: Lint
+        run: pnpm lint
 
       - name: Test
         uses: cypress-io/github-action@v4.2.0 # use the explicit version number

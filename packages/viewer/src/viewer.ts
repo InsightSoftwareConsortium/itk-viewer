@@ -1,4 +1,7 @@
-class Viewer {
-}
+import { ZarrStoreParser } from "itk-viewer-io/ZarrStoreParser.js";
 
-export default Viewer
+export class Viewer {
+  constructor() {
+    ZarrStoreParser;
+  }
+}
