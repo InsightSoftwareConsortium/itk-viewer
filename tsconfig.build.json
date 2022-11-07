@@ -2,6 +2,7 @@
   "extends": "./tsconfig.root",
   "exclude": [
     "packages/**/dist/",
+    "packages/**/types/",
     "packages/**/*.cy.ts",
     "packages/**/vite.config.ts"
   ]

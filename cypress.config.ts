@@ -2,7 +2,7 @@ import { defineConfig } from "cypress";
 // @ts-ignore
 import cypressWatchPlugin from "cypress-watch-and-reload/plugins";
 
-import viteConfig from "./packages/viewer/vite.config";
+import viteConfig from "./packages/element/vite.config";
 
 export default defineConfig({
   component: {
