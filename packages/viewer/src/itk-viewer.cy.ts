@@ -1,4 +1,4 @@
-import { Viewer } from "./viewer.js";
+import { Viewer } from "./itk-viewer.js";
 
 describe("Viewer", () => {
   it("constructs", () => {

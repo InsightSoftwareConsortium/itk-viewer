@@ -7,8 +7,6 @@
   "scripts": {
     "dev": "pnpm -r --parallel run dev",
     "build": "pnpm -r build",
-    "build:tsc": "tsc",
-    "build:vite": "vite build",
     "lint": "pnpm prettier --check . && pnpm eslint .",
     "test": "pnpm test:downloadData && pnpm cy:component",
     "test:downloadData": "node test/downloadData.mjs",

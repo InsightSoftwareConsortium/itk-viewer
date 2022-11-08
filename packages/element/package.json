@@ -1,13 +1,13 @@
 {
-  "name": "itk-viewer",
+  "name": "itk-viewer-element",
   "version": "0.0.1",
-  "description": "Multi-dimensional web-based image, mesh, and point set viewer",
+  "description": "Web Component for multi-dimensional viewer",
   "type": "module",
   "main": "dist/itk-viewer.js",
   "exports": {
     ".": "./dist/itk-viewer.js"
   },
-  "types": "types/itk-viewer.d.ts",
+  "types": "types/index.d.ts",
   "files": [
     "dist",
     "types"
@@ -51,6 +51,7 @@
     "vite": "^3.2.2"
   },
   "dependencies": {
-    "itk-viewer-io": "workspace:*"
+    "lit": "^2.4.0",
+    "itk-viewer": "workspace:*"
   }
 }
