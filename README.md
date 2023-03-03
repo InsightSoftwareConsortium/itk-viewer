@@ -158,6 +158,10 @@ revision `f6b4fa13c8`, before they were extracted.
     <th><img src="src/volumeScattering.svg" width="40" alt="volumeScatteringIconDataUri"/></th>
   </tr>
   <tr>
+    <th>windowingIconDataUri</th>
+    <th><img src="src/windowing.svg" width="40" alt="windowingIconDataUri"/></th>
+  </tr>
+  <tr>
     <th>yellowPlaneIconDataUri</th>
     <th><img src="src/yellowPlane.svg" width="40" alt="yellowPlaneIconDataUri"/></th>
   </tr>
