@@ -3,7 +3,7 @@ interface Store {
 }
 
 const isMetadata = (item: string) =>
-  [".zattrs", ".zgroup", ".zarray"].some((knownMetadataFile) =>
+  ['.zattrs', '.zgroup', '.zarray'].some((knownMetadataFile) =>
     item.endsWith(knownMetadataFile)
   );
 

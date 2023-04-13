@@ -1,7 +1,7 @@
-import { Viewer } from "./itk-viewer.js";
+import { Viewer } from './itk-viewer.js';
 
-describe("Viewer", () => {
-  it("constructs", () => {
+describe('Viewer', () => {
+  it('constructs', () => {
     expect(new Viewer()).to.be.ok;
   });
 });

@@ -3,9 +3,9 @@ import {
   injectStylesBeforeElement,
   setupHooks,
   StyleOptions,
-} from "@cypress/mount-utils";
-import { html, LitElement, render, TemplateResult } from "lit";
-import { unsafeHTML } from "lit/directives/unsafe-html.js";
+} from '@cypress/mount-utils';
+import { html, LitElement, render, TemplateResult } from 'lit';
+import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 
 export interface MountOptions<T extends HTMLElement>
   extends Partial<StyleOptions> {
@@ -54,7 +54,7 @@ export function mount<T extends keyof HTMLElementTagNameMap>(
 
     // If give a string set internal contents unsafely
     const element =
-      typeof Template === "string" ? html`${unsafeHTML(Template)}` : Template;
+      typeof Template === 'string' ? html`${unsafeHTML(Template)}` : Template;
 
     /**
      * Using get will give default cypress timeouts for the element to register
@@ -62,14 +62,14 @@ export function mount<T extends keyof HTMLElementTagNameMap>(
      */
     return cy
       .wait(0, { log: false })
-      .get("[data-cy-root]")
+      .get('[data-cy-root]')
       .then(() => {
         render(element, target);
       })
       .children()
       .first()
       .then((element) => {
-        const name = element.prop("tagName").toLowerCase();
+        const name = element.prop('tagName').toLowerCase();
         const el = document.getElementsByTagName<T>(name)[0];
         const { properties, log } = options;
 
@@ -80,7 +80,7 @@ export function mount<T extends keyof HTMLElementTagNameMap>(
          */
         if (
           properties &&
-          typeof properties === "object" &&
+          typeof properties === 'object' &&
           Array.isArray(properties) === false
         ) {
           Object.entries(properties).forEach(([key, value]) => {
@@ -94,10 +94,10 @@ export function mount<T extends keyof HTMLElementTagNameMap>(
           const mountMessage = `<${name} ... />`;
 
           Cypress.log({
-            name: "mount",
+            name: 'mount',
             message: [mountMessage],
           })
-            .snapshot("mounted")
+            .snapshot('mounted')
             .end();
         }
 

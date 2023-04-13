@@ -1,29 +1,29 @@
-import { PixelTypes } from "itk-wasm";
+import { PixelTypes } from 'itk-wasm';
 
-import MultiscaleSpatialImage from "./MultiscaleSpatialImage";
-import bloscZarrDecompress from "../Compression/bloscZarrDecompress";
-import ZarrStoreParser from "./ZarrStoreParser";
-import HttpStore from "./HttpStore";
-import { CXYZT, toDimensionMap } from "./dimensionUtils";
-import { getComponentType } from "./dtypeUtils";
+import MultiscaleSpatialImage from './MultiscaleSpatialImage';
+import bloscZarrDecompress from '../Compression/bloscZarrDecompress';
+import ZarrStoreParser from './ZarrStoreParser';
+import HttpStore from './HttpStore';
+import { CXYZT, toDimensionMap } from './dimensionUtils';
+import { getComponentType } from './dtypeUtils';
 
-import PQueue from "p-queue";
+import PQueue from 'p-queue';
 
 // ends with zarr and optional nested image name like foo.zarr/image1
 export const isZarr = (url) => /zarr((\/)[\w-]+\/?)?$/.test(url);
 
-const TCZYX = Object.freeze(["t", "c", "z", "y", "x"]);
+const TCZYX = Object.freeze(['t', 'c', 'z', 'y', 'x']);
 
 const composeTransforms = (transforms = [], dimCount) =>
   transforms.reduce(
     ({ scale, translation }, transform) => {
-      if (transform.type === "scale") {
+      if (transform.type === 'scale') {
         const scaleTransform = transform.scale;
         return {
           scale: scale.map((s, i) => s * scaleTransform[i]),
           translation: translation.map((t, i) => t * scaleTransform[i]),
         };
-      } else if (transform.type === "translation") {
+      } else if (transform.type === 'translation') {
         const translationTransform = transform.translation;
         return {
           scale,
@@ -46,10 +46,10 @@ export const computeTransform = (imageMetadata, datasetMetadata, dimCount) => {
 
   return composeTransforms(
     [
-      { type: "scale", scale: dataset.scale },
-      { type: "translation", translation: dataset.translation },
-      { type: "scale", scale: global.scale },
-      { type: "translation", translation: global.translation },
+      { type: 'scale', scale: dataset.scale },
+      { type: 'translation', translation: dataset.translation },
+      { type: 'scale', scale: global.scale },
+      { type: 'translation', translation: global.translation },
     ],
     dimCount
   );
@@ -85,7 +85,7 @@ const makeCoords = ({ shape, multiscaleImage, dataset }) => {
 };
 
 const findAxesLongNames = async ({ dataset, dataSource, dims }) => {
-  const upOneLevel = dataset.path.split("/").slice(0, -1).join("");
+  const upOneLevel = dataset.path.split('/').slice(0, -1).join('');
   return new Map(
     await Promise.all(
       dims.map((dim) => dataSource.getItem(`${upOneLevel}/${dim}/.zattrs`))
@@ -139,7 +139,7 @@ const createScaledImageInfo = async ({
 };
 
 const extractScaleSpacing = async (dataSource) => {
-  const zattrs = await dataSource.getItem(".zattrs");
+  const zattrs = await dataSource.getItem('.zattrs');
 
   const { multiscales, multiscaleSpatialImageVersion } = zattrs;
   const multiscaleImage = Array.isArray(multiscales)
@@ -163,11 +163,11 @@ const extractScaleSpacing = async (dataSource) => {
 
   const info = scaleInfo[0];
 
-  const components = info.arrayShape.get("c") ?? 1;
+  const components = info.arrayShape.get('c') ?? 1;
 
   const imageType = {
     // How many spatial dimensions?  Count greater than 1, X Y Z elements because "axis" metadata not defined in ngff V0.1
-    dimension: ["x", "y", "z"].filter((dim) => info.arrayShape.get(dim) > 1)
+    dimension: ['x', 'y', 'z'].filter((dim) => info.arrayShape.get(dim) > 1)
       .length,
     pixelType:
       components === 1 ? PixelTypes.Scalar : PixelTypes.VariableLengthVector,
@@ -207,7 +207,7 @@ export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
     const chunkPaths = [];
     const chunkPromises = [];
 
-    const { dimension_separator: dimSeparator = "." } = info.pixelArrayMetadata;
+    const { dimension_separator: dimSeparator = '.' } = info.pixelArrayMetadata;
 
     for (let index = 0; index < cxyztArray.length; index++) {
       let chunkPath = `${chunkPathBase}/`;

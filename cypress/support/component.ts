@@ -1,7 +1,7 @@
-import "cypress-watch-and-reload/support";
-import { mount } from "./lit";
+import 'cypress-watch-and-reload/support';
+import { mount } from './lit';
 
-Cypress.Commands.add("mount", mount);
+Cypress.Commands.add('mount', mount);
 
 declare global {
   namespace Cypress {

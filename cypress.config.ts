@@ -1,20 +1,20 @@
-import { defineConfig } from "cypress";
+import { defineConfig } from 'cypress';
 // @ts-ignore
-import cypressWatchPlugin from "cypress-watch-and-reload/plugins";
+import cypressWatchPlugin from 'cypress-watch-and-reload/plugins';
 
-import viteConfig from "./packages/element/vite.config";
+import viteConfig from './packages/element/vite.config';
 
 export default defineConfig({
   component: {
     devServer: {
-      framework: "svelte",
-      bundler: "vite",
+      framework: 'svelte',
+      bundler: 'vite',
       viteConfig,
     },
     env: {
       // list the files and file patterns to watch
-      "cypress-watch-and-reload": {
-        watch: ["src/*"],
+      'cypress-watch-and-reload': {
+        watch: ['src/*'],
       },
     },
     setupNodeEvents(on, config) {
