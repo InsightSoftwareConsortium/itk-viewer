@@ -1,7 +1,7 @@
 import { PixelTypes } from 'itk-wasm';
 
 import MultiscaleSpatialImage from './MultiscaleSpatialImage';
-import bloscZarrDecompress from '../Compression/bloscZarrDecompress';
+import bloscZarrDecompress from './Compression/bloscZarrDecompress';
 import ZarrStoreParser from './ZarrStoreParser';
 import HttpStore from './HttpStore';
 import { CXYZT, toDimensionMap } from './dimensionUtils';

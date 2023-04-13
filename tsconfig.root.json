@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
     "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES6", "DOM", "DOM.Iterable"],
+    "target": "ES6",
     "declaration": true,
     "strict": true,
     "noUnusedLocals": true,
@@ -14,6 +15,7 @@
     "experimentalDecorators": true,
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "allowJs": true
   }
 }
