@@ -18,7 +18,7 @@ const takeSnapshot = ({ data, ...rest }: Image) => {
 
 const IMAGE_BASELINES = [
   [
-    'base/test/data/input/astronaut.zarr',
+    './__cypress/src/test/data/input/astronaut.zarr',
     [
       Number.MAX_VALUE,
       -Number.MAX_VALUE, // X
@@ -58,7 +58,9 @@ const IMAGE_BASELINES = [
 describe('MultiscaleSpatialImage', () => {
   it('ZarrMultiscaleSpatialImage world bounded chunk assembly', async () => {
     for (const [path, bounds, baseline] of IMAGE_BASELINES) {
+      // const storeURL = new URL(path, document.location.origin);
       const storeURL = new URL(path, document.location.origin);
+      console.log(storeURL.href);
       const zarrImage = await ZarrMultiscaleSpatialImage.fromUrl(storeURL);
       const itkImage = await zarrImage.getImage(
         zarrImage.scaleInfo.length - 1,

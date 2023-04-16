@@ -11,7 +11,7 @@ export { testDataCid };
 
 const testDir = path.dirname(fileURLToPath(import.meta.url));
 
-const testDataDir = path.join(testDir, 'data', testDataCid);
+const testDataDir = path.join(testDir, 'data');
 export { testDataDir };
 
 async function downloadData() {
@@ -39,4 +39,5 @@ async function downloadData() {
       });
   });
 }
+
 export { downloadData };
