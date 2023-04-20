@@ -1,5 +1,9 @@
 import { runPipeline, InterfaceTypes, WorkerPool } from 'itk-wasm';
-import { getSize } from '../dtypeUtils';
+import { getSize } from '@itk-viewer/wasm-utils/dtypeUtils.js';
+import {
+  getPipelineWorkerUrl,
+  getPipelinesBaseUrl,
+} from './typescript/dist/bundles/blosc-zarr';
 
 const cores = navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
 const numberOfWorkers = cores + Math.floor(Math.sqrt(cores));
@@ -23,6 +27,13 @@ const workerPool = new WorkerPool(numberOfWorkers, runPipeline);
  *   An Array of decompressed ArrayBuffer chunks.
  */
 async function bloscZarrDecompress(chunkData) {
+  // const pipelineWorkerUrl = '/itk/web-workers/bundles/pipeline.min.worker.js';
+  const pipelineWorkerUrl = '/itk/web-workers/bundles/pipeline.worker.js';
+  const pipelineBaseUrl = '/itk/pipelines';
+  const options = {
+    pipelineBaseUrl, //: getPipelinesBaseUrl(),
+    pipelineWorkerUrl, //: getPipelineWorkerUrl(),
+  };
   const desiredOutputs = [{ type: InterfaceTypes.BinaryStream }];
   const taskArgsArray = [];
   let dtype = null;
@@ -50,17 +61,11 @@ async function bloscZarrDecompress(chunkData) {
       '--decompress',
       '--memory-io',
     ];
-    taskArgsArray.push(['BloscZarr', args, desiredOutputs, inputs]);
+    taskArgsArray.push(['BloscZarr', args, desiredOutputs, inputs, options]);
   }
   const results = await workerPool.runTasks(taskArgsArray).promise;
 
-  const decompressedChunks = [];
-  for (let index = 0; index < results.length; index++) {
-    // console.log(results[index].stdout)
-    // console.error(results[index].stderr)
-    decompressedChunks.push(results[index].outputs[0].data.data.buffer);
-  }
-  return decompressedChunks;
+  return results.map((result) => result.outputs[0].data.data.buffer);
 }
 
 export default bloscZarrDecompress;

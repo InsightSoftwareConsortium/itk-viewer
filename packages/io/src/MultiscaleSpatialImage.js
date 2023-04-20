@@ -5,14 +5,12 @@ import componentTypeToTypedArray from './componentTypeToTypedArray';
 
 import WebworkerPromise from 'webworker-promise';
 import { chunkArray, CXYZT, ensuredDims, orderBy } from './dimensionUtils';
-import { getDtype } from './dtypeUtils';
+import { getDtype } from '@itk-viewer/wasm-utils/dtypeUtils';
 import { transformBounds } from './transformBounds';
 
 const imageDataFromChunksWorker = new Worker(
   new URL('./ImageDataFromChunks.worker.js', import.meta.url),
-  {
-    type: 'module',
-  }
+  { type: 'module' }
 );
 const imageDataFromChunksWorkerPromise = new WebworkerPromise(
   imageDataFromChunksWorker
@@ -231,9 +229,9 @@ class MultiscaleSpatialImage {
     const spacing = new Array(this.spatialDims.length);
     for (let index = 0; index < this.spatialDims.length; index++) {
       const dim = this.spatialDims[index];
-      if (info.coords.has(dim)) {
-        const coords = await info.coords.get(dim);
-        spacing[index] = coords[1] - coords[0];
+      const dimCoords = await info.coords.get(dim);
+      if (dimCoords && dimCoords.length >= 2) {
+        spacing[index] = dimCoords[1] - dimCoords[0];
       } else {
         spacing[index] = 1.0;
       }
