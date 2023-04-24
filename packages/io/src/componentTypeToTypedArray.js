@@ -1,4 +1,4 @@
-import { IntTypes, FloatTypes } from 'itk-wasm'
+import { IntTypes, FloatTypes } from 'itk-wasm';
 
 const componentTypeToTypedArray = new Map([
   [IntTypes.Int8, Int8Array],
@@ -10,6 +10,6 @@ const componentTypeToTypedArray = new Map([
 
   [FloatTypes.Float32, Float32Array],
   [FloatTypes.Float64, Float64Array],
-])
+]);
 
-export default componentTypeToTypedArray
+export default componentTypeToTypedArray;

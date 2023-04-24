@@ -1,14 +1,14 @@
-import { IntTypes, FloatTypes } from 'itk-wasm'
+import { IntTypes, FloatTypes } from 'itk-wasm';
 
 // Currently missing on Safari
 const bigIntArrayType =
   typeof globalThis.BigInt64Array === 'function'
     ? globalThis.BigInt64Array
-    : Int32Array
+    : Int32Array;
 const bigUintArrayType =
   typeof globalThis.BigUint64Array === 'function'
     ? globalThis.BigUint64Array
-    : Uint32Array
+    : Uint32Array;
 
 // key is sans endian
 const dtypeUtils = Array.from(
@@ -31,34 +31,35 @@ const dtypeUtils = Array.from(
   (map, [dtype, [TypedArray, dataViewGetter, itkComponent]]) =>
     map.set(dtype, { TypedArray, dataViewGetter, itkComponent }),
   new Map()
-)
+);
 
-const getType = dtype => dtype.replace(/^(<|>|=|\|)/, '') // remove starting < > = | endianness
+const getType = (dtype) => dtype.replace(/^(<|>|=|\|)/, ''); // remove starting < > = | endianness
 
-export const getSize = dtype => {
-  const type = getType(dtype)
-  return type.length < 2 ? 1 : Number(type.slice(-1))
-}
+export const getSize = (dtype) => {
+  const type = getType(dtype);
+  return type.length < 2 ? 1 : Number(type.slice(-1));
+};
 
-export const getComponentType = dtype =>
-  dtypeUtils.get(getType(dtype)).itkComponent
+export const getComponentType = (dtype) =>
+  dtypeUtils.get(getType(dtype)).itkComponent;
 
-export const getTypedArray = dtype => dtypeUtils.get(getType(dtype)).TypedArray
+export const getTypedArray = (dtype) =>
+  dtypeUtils.get(getType(dtype)).TypedArray;
 
-export const testLittleEndian = dtype => dtype.charAt(0) === '<'
+export const testLittleEndian = (dtype) => dtype.charAt(0) === '<';
 
 export const ElementGetter = (dtype, buffer) => {
-  const view = new DataView(buffer)
-  const size = getSize(dtype)
-  const isLittleEndian = testLittleEndian(dtype)
-  const { dataViewGetter } = dtypeUtils.get(getType(dtype))
+  const view = new DataView(buffer);
+  const size = getSize(dtype);
+  const isLittleEndian = testLittleEndian(dtype);
+  const { dataViewGetter } = dtypeUtils.get(getType(dtype));
 
-  return index => view[dataViewGetter](index * size, isLittleEndian)
-}
+  return (index) => view[dataViewGetter](index * size, isLittleEndian);
+};
 
 export const getDtype = (typedArrayConstructor, endianness = '<') => {
   const typedArrayToDtype = new Map(
     Array.from(dtypeUtils).map(([key, { TypedArray }]) => [TypedArray, key])
-  )
-  return `${endianness}${typedArrayToDtype.get(typedArrayConstructor)}`
-}
+  );
+  return `${endianness}${typedArrayToDtype.get(typedArrayConstructor)}`;
+};

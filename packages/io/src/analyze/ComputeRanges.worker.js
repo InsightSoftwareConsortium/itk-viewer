@@ -1,5 +1,5 @@
-import registerWebworker from 'webworker-promise/lib/register'
-import { createRangeHelper } from './createRangeHelper'
+import registerWebworker from 'webworker-promise/lib/register';
+import { createRangeHelper } from './createRangeHelper';
 
 const computeRangesInSplit = ({
   split,
@@ -7,19 +7,19 @@ const computeRangesInSplit = ({
   values,
   numberOfComponents,
 }) => {
-  const helpers = [...Array(numberOfComponents)].map(createRangeHelper)
+  const helpers = [...Array(numberOfComponents)].map(createRangeHelper);
 
-  const start = Math.floor(values.length / numberOfSplits) * split
+  const start = Math.floor(values.length / numberOfSplits) * split;
   const end =
     split === numberOfSplits - 1
       ? values.length
-      : Math.floor(values.length / numberOfSplits) * (split + 1)
+      : Math.floor(values.length / numberOfSplits) * (split + 1);
 
   for (let i = start; i < end; i++) {
-    helpers[i % numberOfComponents].add(values[i])
+    helpers[i % numberOfComponents].add(values[i]);
   }
 
-  return helpers.map(h => h.getRange())
-}
+  return helpers.map((h) => h.getRange());
+};
 
-registerWebworker().operation('computeRanges', computeRangesInSplit)
+registerWebworker().operation('computeRanges', computeRangesInSplit);

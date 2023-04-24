@@ -1,3 +1,5 @@
 dist
 cypress
 cypress.config.ts
+packages/blosc-zarr/*
+!packages/blosc-zarr/bloscZarrDecompress.js
