@@ -45,5 +45,10 @@
   },
   "dependencies": {
     "itk-wasm": "1.0.0-b.98"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true
+    }
   }
 }

@@ -51,5 +51,10 @@
     "itk-wasm": "1.0.0-b.98",
     "p-queue": "^7.3.4",
     "webworker-promise": "^0.5.1"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true
+    }
   }
 }

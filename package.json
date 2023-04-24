@@ -20,7 +20,7 @@
     "@typescript-eslint/parser": "^5.42.0",
     "cypress": "^10.11.0",
     "cypress-watch-and-reload": "^1.10.4",
-    "eslint": "^8.27.0",
+    "eslint": "^8.39.0",
     "follow-redirects": "^1.15.2",
     "lit": "^2.4.0",
     "prettier": "^2.7.1",
