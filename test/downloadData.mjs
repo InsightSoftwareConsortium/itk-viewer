@@ -1,9 +1,9 @@
-import { testDataCid, testDataDir, downloadData } from './data.mjs';
+import { testDataDir, downloadData } from './data.mjs';
 import fs from 'fs';
 
 if (!fs.existsSync(testDataDir)) {
   console.log('Test data not found. Downloading...');
-  await downloadData(testDataCid, testDataDir);
+  await downloadData();
 } else {
   console.log('Test data found.');
 }
