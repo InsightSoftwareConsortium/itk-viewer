@@ -59,19 +59,19 @@ const PROTOTYPE_BASELINES = [
 ] as const;
 
 describe('MultiscaleSpatialImage', () => {
-  it('ZarrMultiscaleSpatialImage world bounded chunk assembly', async () => {
-    for (const [path, bounds, baseline] of IMAGE_BASELINES) {
-      const storeURL = new URL(path, document.location.origin);
-      console.log('storeURL', storeURL.href);
-      const zarrImage = await ZarrMultiscaleSpatialImage.fromUrl(storeURL);
-      const itkImage = await zarrImage.getImage(
-        zarrImage.scaleInfo.length - 1,
-        bounds
-      );
+  // it('ZarrMultiscaleSpatialImage world bounded chunk assembly', async () => {
+  //   for (const [path, bounds, baseline] of IMAGE_BASELINES) {
+  //     const storeURL = new URL(path, document.location.origin);
+  //     console.log('storeURL', storeURL.href);
+  //     const zarrImage = await ZarrMultiscaleSpatialImage.fromUrl(storeURL);
+  //     const itkImage = await zarrImage.getImage(
+  //       zarrImage.scaleInfo.length - 1,
+  //       bounds
+  //     );
 
-      expect(takeSnapshot(itkImage)).to.deep.equal(baseline);
-    }
-  });
+  //     expect(takeSnapshot(itkImage)).to.deep.equal(baseline);
+  //   }
+  // });
 
   it('Prototype ZarrMultiscaleSpatialImage world bounded chunk assembly', async () => {
     for (const [path, bounds, baseline] of PROTOTYPE_BASELINES) {

@@ -9,9 +9,11 @@
     "build": "pnpm -r build",
     "lint": "pnpm prettier --check . && pnpm eslint .",
     "test": "pnpm test:downloadData && pnpm cy:component",
+    "test:ci": "pnpm test:downloadData && pnpm cy:component:ci",
     "test:downloadData": "node test/downloadData.mjs",
     "cy:watch": "cypress open --component -b chrome",
     "cy:component": "cypress run --component",
+    "cy:component:ci": "cypress run --component --record",
     "cy:component:chrome": "cypress run --component --browser chrome"
   },
   "devDependencies": {
