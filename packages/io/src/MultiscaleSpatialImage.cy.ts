@@ -60,7 +60,7 @@ describe('MultiscaleSpatialImage', () => {
     it(`${path} ZarrMultiscaleSpatialImage world bounded chunk assembly`, async () => {
       const storeURL = new URL(path, document.location.origin);
 
-      cy.wait(ZarrMultiscaleSpatialImage.fromUrl(storeURL))
+      cy.wrap(ZarrMultiscaleSpatialImage.fromUrl(storeURL))
         .then((zarrImage) =>
           zarrImage.getImage(zarrImage.scaleInfo.length - 1, bounds)
         )
