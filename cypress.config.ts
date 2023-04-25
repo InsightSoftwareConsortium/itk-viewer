@@ -21,4 +21,5 @@ export default defineConfig({
       return cypressWatchPlugin(on, config);
     },
   },
+  projectId: 'nrnh8e',
 });
