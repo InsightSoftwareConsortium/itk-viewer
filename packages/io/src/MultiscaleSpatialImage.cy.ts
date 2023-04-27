@@ -1,4 +1,4 @@
-import { Image } from 'itk-wasm';
+import { Image, setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
 import { ZarrMultiscaleSpatialImage } from './ZarrMultiscaleSpatialImage.js';
 
 const SAMPLE_SIZE = 33;
@@ -56,8 +56,13 @@ const IMAGE_BASELINES = [
 ] as const;
 
 describe('MultiscaleSpatialImage', () => {
+  const pipelineWorkerUrl = '/itk/web-workers/bundles/pipeline.min.worker.js';
+  setPipelineWorkerUrl(pipelineWorkerUrl);
+  const pipelineBaseUrl = '/itk/pipelines';
+  setPipelinesBaseUrl(pipelineBaseUrl);
+
   for (const [path, bounds, baseline] of IMAGE_BASELINES) {
-    it(`${path} ZarrMultiscaleSpatialImage world bounded chunk assembly`, async () => {
+    it(`${path} ZarrMultiscaleSpatialImage world bounded chunk assembly`, () => {
       const storeURL = new URL(path, document.location.origin);
 
       cy.wrap(ZarrMultiscaleSpatialImage.fromUrl(storeURL))

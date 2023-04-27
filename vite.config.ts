@@ -4,7 +4,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 export default defineConfig({
   publicDir: './test/data/input',
   plugins: [
-    // put lazy loaded JavaScript and Wasm bundles in dist directory
+    // collect lazy loaded JavaScript and Wasm bundles in public directory
     viteStaticCopy({
       targets: [
         {

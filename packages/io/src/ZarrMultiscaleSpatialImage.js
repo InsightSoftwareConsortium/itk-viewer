@@ -1,7 +1,7 @@
 import { PixelTypes } from 'itk-wasm';
 import PQueue from 'p-queue';
 
-import bloscZarrDecompress from '@itk-viewer/blosc-zarr/bloscZarrDecompress';
+import { bloscZarrDecompress } from '@itk-viewer/blosc-zarr/bloscZarrDecompress';
 import { getComponentType } from '@itk-viewer/wasm-utils/dtypeUtils';
 
 import MultiscaleSpatialImage from './MultiscaleSpatialImage';
