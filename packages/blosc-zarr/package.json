@@ -1,14 +1,12 @@
 {
-  "name": "itk-viewer-io",
+  "name": "@itk-viewer/blosc-zarr",
   "version": "0.0.1",
-  "description": "Multi-dimensional image IO",
+  "description": "Decompress Blosc compressed Zarr data in the browser",
   "type": "module",
-  "files": [
-    "dist"
-  ],
   "scripts": {
-    "dev": "tsc --watch --outDir dist --project tsconfig.build.json",
-    "build": "tsc --outDir dist --project tsconfig.build.json"
+    "build": "sh ./download-c-blosc.sh && npm run build:emscripten && npm run build:bindgen",
+    "build:emscripten": "itk-wasm -i itkwasm/emscripten:latest -s . -b emscripten-build build",
+    "build:bindgen": "itk-wasm -i itkwasm/emscripten:latest -s . -b emscripten-build bindgen --package-name @itk-viewer/blosc-zarr --package-description \"Decompress Blosc compressed Zarr data in WebAssembly.\" --repository 'https://github.com/InsightSoftwareConsortium/itk-viewer'"
   },
   "repository": {
     "type": "git",
@@ -44,13 +42,8 @@
     "typescript": "^4.8.4"
   },
   "dependencies": {
-    "@itk-viewer/blosc-zarr": "workspace:^",
     "@itk-viewer/wasm-utils": "workspace:^",
-    "axios": "^1.3.5",
-    "gl-matrix": "^3.4.3",
-    "itk-wasm": "1.0.0-b.98",
-    "p-queue": "^7.3.4",
-    "webworker-promise": "^0.5.1"
+    "itk-wasm": "1.0.0-b.98"
   },
   "eslintConfig": {
     "env": {

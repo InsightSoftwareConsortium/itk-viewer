@@ -11,7 +11,7 @@ jobs:
 
       - uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: '18'
 
       - name: Install dependencies
         run: |
@@ -25,16 +25,21 @@ jobs:
         run: pnpm lint
 
       - name: Test
-        uses: cypress-io/github-action@v4.2.0 # use the explicit version number
+        uses: cypress-io/github-action@v5
         with:
-          command: pnpm test
+          start: pnpm test:ci
+          record: true
+          component: true
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-    # Not quite read for automated publication
-    #- name: Publish
-    #env:
-    #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-    #run: |
-    #git config --global user.name "GitHub Actions"
-    #git config --global user.email "itk+community@discourse.itk.org"
-    #npx semantic-release
+  # Not quite read for automated publication
+  #- name: Publish
+  #env:
+  #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+  #run: |
+  #git config --global user.name "GitHub Actions"
+  #git config --global user.email "itk+community@discourse.itk.org"
+  #npx semantic-release

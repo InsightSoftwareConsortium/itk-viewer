@@ -1,33 +1,34 @@
-import { PixelTypes } from "itk-wasm";
+import { PixelTypes } from 'itk-wasm';
+import PQueue from 'p-queue';
 
-import MultiscaleSpatialImage from "./MultiscaleSpatialImage";
-import bloscZarrDecompress from "../Compression/bloscZarrDecompress";
-import ZarrStoreParser from "./ZarrStoreParser";
-import HttpStore from "./HttpStore";
-import { CXYZT, toDimensionMap } from "./dimensionUtils";
-import { getComponentType } from "./dtypeUtils";
+import { bloscZarrDecompress } from '@itk-viewer/blosc-zarr/bloscZarrDecompress';
+import { getComponentType } from '@itk-viewer/wasm-utils/dtypeUtils';
 
-import PQueue from "p-queue";
+import MultiscaleSpatialImage from './MultiscaleSpatialImage';
+import { ZarrStoreParser } from './ZarrStoreParser';
+import HttpStore from './HttpStore';
+import { CXYZT, toDimensionMap } from './dimensionUtils';
 
 // ends with zarr and optional nested image name like foo.zarr/image1
 export const isZarr = (url) => /zarr((\/)[\w-]+\/?)?$/.test(url);
 
-const TCZYX = Object.freeze(["t", "c", "z", "y", "x"]);
+const MAX_CONCURRENCY = 1000;
+const TCZYX = Object.freeze(['t', 'c', 'z', 'y', 'x']);
 
 const composeTransforms = (transforms = [], dimCount) =>
   transforms.reduce(
     ({ scale, translation }, transform) => {
-      if (transform.type === "scale") {
-        const scaleTransform = transform.scale;
+      if (transform.type === 'scale') {
+        const { scale: transformScale } = transform;
         return {
-          scale: scale.map((s, i) => s * scaleTransform[i]),
-          translation: translation.map((t, i) => t * scaleTransform[i]),
+          scale: scale.map((s, i) => s * transformScale[i]),
+          translation: translation.map((t, i) => t * transformScale[i]),
         };
-      } else if (transform.type === "translation") {
-        const translationTransform = transform.translation;
+      } else if (transform.type === 'translation') {
+        const { translation: transformTranslation } = transform;
         return {
           scale,
-          translation: translation.map((t, i) => t + translationTransform[i]),
+          translation: translation.map((t, i) => t + transformTranslation[i]),
         };
       }
     },
@@ -46,13 +47,35 @@ export const computeTransform = (imageMetadata, datasetMetadata, dimCount) => {
 
   return composeTransforms(
     [
-      { type: "scale", scale: dataset.scale },
-      { type: "translation", translation: dataset.translation },
-      { type: "scale", scale: global.scale },
-      { type: "translation", translation: global.translation },
+      { type: 'scale', scale: dataset.scale },
+      { type: 'translation', translation: dataset.translation },
+      { type: 'scale', scale: global.scale },
+      { type: 'translation', translation: global.translation },
     ],
     dimCount
   );
+};
+
+// if missing coordinateTransformations, make all scales same size as finest scale
+const ensureScaleTransforms = (datasetsWithArrayMetadata) => {
+  const hasDatasetCoordinateTransform = datasetsWithArrayMetadata.some(
+    ({ dataset }) => dataset.coordinateTransformations
+  );
+  if (hasDatasetCoordinateTransform) return datasetsWithArrayMetadata;
+
+  const targetSize = datasetsWithArrayMetadata[0].pixelArrayMetadata.shape;
+
+  return datasetsWithArrayMetadata.map(({ dataset, pixelArrayMetadata }) => {
+    const { shape } = pixelArrayMetadata;
+    const scale = targetSize.map((target, idx) => target / shape[idx]);
+    return {
+      dataset: {
+        ...dataset,
+        coordinateTransformations: [{ scale, type: 'scale' }],
+      },
+      pixelArrayMetadata,
+    };
+  });
 };
 
 // lazy creation of voxel/pixel/dimension coordinates array
@@ -85,7 +108,7 @@ const makeCoords = ({ shape, multiscaleImage, dataset }) => {
 };
 
 const findAxesLongNames = async ({ dataset, dataSource, dims }) => {
-  const upOneLevel = dataset.path.split("/").slice(0, -1).join("");
+  const upOneLevel = dataset.path.split('/').slice(0, -1).join('');
   return new Map(
     await Promise.all(
       dims.map((dim) => dataSource.getItem(`${upOneLevel}/${dim}/.zattrs`))
@@ -97,8 +120,8 @@ const findAxesLongNames = async ({ dataset, dataSource, dims }) => {
 
 const createScaledImageInfo = async ({
   multiscaleImage,
-  pixelArrayMetadata,
   dataset,
+  pixelArrayMetadata,
   dataSource,
   multiscaleSpatialImageVersion,
 }) => {
@@ -139,22 +162,30 @@ const createScaledImageInfo = async ({
 };
 
 const extractScaleSpacing = async (dataSource) => {
-  const zattrs = await dataSource.getItem(".zattrs");
+  const zattrs = await dataSource.getItem('.zattrs');
 
   const { multiscales, multiscaleSpatialImageVersion } = zattrs;
   const multiscaleImage = Array.isArray(multiscales)
     ? multiscales[0] // if multiple images (multiscales), just grab first one
     : multiscales;
 
+  const datasetsWithArrayMetadataRaw = await Promise.all(
+    multiscaleImage.datasets.map(async (dataset) => ({
+      dataset,
+      pixelArrayMetadata: await dataSource.getItem(`${dataset.path}/.zarray`),
+    }))
+  );
+
+  const datasetsWithArrayMetadata = ensureScaleTransforms(
+    datasetsWithArrayMetadataRaw
+  );
+
   const scaleInfo = await Promise.all(
-    multiscaleImage.datasets.map(async (dataset) => {
-      const pixelArrayMetadata = await dataSource.getItem(
-        `${dataset.path}/.zarray`
-      );
+    datasetsWithArrayMetadata.map(async ({ dataset, pixelArrayMetadata }) => {
       return createScaledImageInfo({
         multiscaleImage,
-        pixelArrayMetadata,
         dataset,
+        pixelArrayMetadata,
         dataSource,
         multiscaleSpatialImageVersion,
       });
@@ -163,11 +194,11 @@ const extractScaleSpacing = async (dataSource) => {
 
   const info = scaleInfo[0];
 
-  const components = info.arrayShape.get("c") ?? 1;
+  const components = info.arrayShape.get('c') ?? 1;
 
   const imageType = {
     // How many spatial dimensions?  Count greater than 1, X Y Z elements because "axis" metadata not defined in ngff V0.1
-    dimension: ["x", "y", "z"].filter((dim) => info.arrayShape.get(dim) > 1)
+    dimension: ['x', 'y', 'z'].filter((dim) => info.arrayShape.get(dim) > 1)
       .length,
     pixelType:
       components === 1 ? PixelTypes.Scalar : PixelTypes.VariableLengthVector,
@@ -180,25 +211,34 @@ const extractScaleSpacing = async (dataSource) => {
 
 export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
   // Store parameter is object with getItem (but not a ZarrStoreParser)
-  static async fromStore(store) {
+  static async fromStore(store, maxConcurrency) {
     const zarrStoreParser = new ZarrStoreParser(store);
     const { scaleInfo, imageType } = await extractScaleSpacing(zarrStoreParser);
     return new ZarrMultiscaleSpatialImage(
       zarrStoreParser,
       scaleInfo,
-      imageType
+      imageType,
+      maxConcurrency
     );
   }
 
-  static async fromUrl(url) {
-    return ZarrMultiscaleSpatialImage.fromStore(new HttpStore(url));
+  static async fromUrl(url, maxConcurrency) {
+    return ZarrMultiscaleSpatialImage.fromStore(
+      new HttpStore(url),
+      maxConcurrency
+    );
   }
 
   // Use static factory functions to construct
-  constructor(zarrStoreParser, scaleInfo, imageType) {
+  constructor(zarrStoreParser, scaleInfo, imageType, maxConcurrency) {
     super(scaleInfo, imageType);
     this.dataSource = zarrStoreParser;
-    this.rpcQueue = new PQueue({ concurrency: 10 });
+
+    const concurrency = Math.min(
+      window.navigator.hardwareConcurrency,
+      maxConcurrency ?? MAX_CONCURRENCY
+    );
+    this.rpcQueue = new PQueue({ concurrency });
   }
 
   async getChunksImpl(scale, cxyztArray) {
@@ -207,7 +247,7 @@ export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
     const chunkPaths = [];
     const chunkPromises = [];
 
-    const { dimension_separator: dimSeparator = "." } = info.pixelArrayMetadata;
+    const { dimension_separator: dimSeparator = '.' } = info.pixelArrayMetadata;
 
     for (let index = 0; index < cxyztArray.length; index++) {
       let chunkPath = `${chunkPathBase}/`;

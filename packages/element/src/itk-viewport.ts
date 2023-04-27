@@ -1,9 +1,9 @@
-import { LitElement, css, html } from "lit";
-import { customElement } from "lit/decorators.js";
+import { LitElement, css, html } from 'lit';
+import { customElement } from 'lit/decorators.js';
 
-import { Viewer, Viewport } from "itk-viewer";
+import { Viewer, Viewport } from 'itk-viewer';
 
-@customElement("itk-viewport")
+@customElement('itk-viewport')
 export class ItkViewport extends LitElement {
   viewer?: Viewer;
 
@@ -31,6 +31,6 @@ export class ItkViewport extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    "itk-viewport": ItkViewport;
+    'itk-viewport': ItkViewport;
   }
 }
