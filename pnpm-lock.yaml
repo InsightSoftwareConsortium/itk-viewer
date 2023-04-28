@@ -103,7 +103,7 @@ importers:
 
   packages/viewer:
     dependencies:
-      itk-viewer-io:
+      '@itk-viewer/io':
         specifier: workspace:*
         version: link:../io
     devDependencies:

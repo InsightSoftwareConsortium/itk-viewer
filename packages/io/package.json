@@ -1,11 +1,11 @@
 {
-  "name": "itk-viewer-io",
+  "name": "@itk-viewer/io",
   "version": "0.0.1",
   "description": "Multi-dimensional image IO",
   "type": "module",
-  "files": [
-    "dist"
-  ],
+  "exports": {
+    "./*": "./dist/*"
+  },
   "scripts": {
     "dev": "tsc --watch --outDir dist --project tsconfig.build.json",
     "build": "tsc --outDir dist --project tsconfig.build.json"
