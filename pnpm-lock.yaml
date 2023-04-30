@@ -62,7 +62,7 @@ importers:
 
   packages/element:
     dependencies:
-      itk-viewer:
+      '@itk-viewer/viewer':
         specifier: workspace:*
         version: link:../viewer
       lit:
@@ -107,7 +107,7 @@ importers:
   packages/viewer:
     dependencies:
       '@itk-viewer/io':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../io
     devDependencies:
       typescript:

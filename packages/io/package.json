@@ -7,8 +7,8 @@
     "./*": "./dist/*"
   },
   "scripts": {
-    "dev": "tsc --watch --outDir dist --project tsconfig.build.json",
-    "build": "tsc --outDir dist --project tsconfig.build.json"
+    "dev": "tsc --watch --project tsconfig.build.json",
+    "build": "tsc --project tsconfig.build.json"
   },
   "repository": {
     "type": "git",

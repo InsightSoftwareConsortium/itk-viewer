@@ -1,9 +1,0 @@
-{
-  "extends": "../../tsconfig.build",
-  "compilerOptions": {
-    "outDir": "./types",
-    "emitDeclarationOnly": true
-    // "composite": true
-  },
-  "include": ["./src/*.ts"]
-}

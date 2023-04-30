@@ -52,6 +52,6 @@
   },
   "dependencies": {
     "lit": "^2.4.0",
-    "itk-viewer": "workspace:*"
+    "@itk-viewer/viewer": "workspace:*"
   }
 }

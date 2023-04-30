@@ -1,4 +1,4 @@
-import { Viewport } from './viewport';
+import { Viewport } from './viewport.js';
 
 export class Viewer {
   viewports: Viewport[] = [];
