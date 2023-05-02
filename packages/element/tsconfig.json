@@ -5,5 +5,8 @@
     "emitDeclarationOnly": true
   },
   "include": ["./src/*.ts"],
-  "references": [{ "path": "../viewer/tsconfig.build.json" }]
+  "references": [
+    { "path": "../viewer/tsconfig.build.json" },
+    { "path": "../io/tsconfig.build.json" }
+  ]
 }

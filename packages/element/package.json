@@ -51,7 +51,8 @@
     "vite": "^3.2.2"
   },
   "dependencies": {
-    "lit": "^2.4.0",
-    "@itk-viewer/viewer": "workspace:*"
+    "@itk-viewer/io": "workspace:^",
+    "@itk-viewer/viewer": "workspace:*",
+    "lit": "^2.4.0"
   }
 }

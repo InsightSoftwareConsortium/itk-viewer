@@ -3,15 +3,9 @@
   "version": "0.0.1",
   "description": "Multi-dimensional web-based image, mesh, and point set viewer",
   "type": "module",
-  "main": "dist/itk-viewer.js",
   "exports": {
-    ".": "./dist/itk-viewer.js"
+    "./*": "./dist/*"
   },
-  "types": "types/itk-viewer.d.ts",
-  "files": [
-    "dist",
-    "types"
-  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.build.json"

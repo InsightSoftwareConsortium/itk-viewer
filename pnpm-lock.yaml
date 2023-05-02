@@ -62,6 +62,9 @@ importers:
 
   packages/element:
     dependencies:
+      '@itk-viewer/io':
+        specifier: workspace:^
+        version: link:../io
       '@itk-viewer/viewer':
         specifier: workspace:*
         version: link:../viewer

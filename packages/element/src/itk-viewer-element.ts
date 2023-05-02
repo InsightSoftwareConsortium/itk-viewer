@@ -1,23 +1,44 @@
 import { LitElement, css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-import { Viewer } from '@itk-viewer/viewer';
+import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
+import { Viewer } from '@itk-viewer/viewer/viewer.js';
 import { ItkViewport } from './itk-viewport.js';
+import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 @customElement('itk-viewer')
 export class ItkViewer extends LitElement {
   viewer: Viewer;
+  image?: MultiscaleSpatialImage;
+  imageInfo = '';
+  viewports: ItkViewport[] = [];
 
   constructor() {
     super();
     this.viewer = new Viewer();
+    this.createImage();
+  }
+
+  distributeImage() {
+    this.viewports.forEach((viewport) => {
+      if (this.image) viewport.setImage(this.image);
+    });
+  }
+
+  async createImage() {
+    const storeURL = new URL(
+      '/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr',
+      document.location.origin
+    );
+    this.image = (await ZarrMultiscaleSpatialImage.fromUrl(
+      storeURL
+    )) as unknown as MultiscaleSpatialImage;
+    this.distributeImage();
   }
 
   handleSlotChange(e: { target: HTMLSlotElement }) {
-    const viewports = e.target.assignedElements() as ItkViewport[];
-    viewports.forEach((viewport) => {
-      viewport.setViewer(this.viewer);
-    });
+    this.viewports = e.target.assignedElements() as ItkViewport[];
+    this.distributeImage();
   }
 
   render() {

@@ -1,11 +1,9 @@
-import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
+import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
-export class Viewport {
-  constructor() {
-    const storeURL = new URL(
-      '/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr',
-      document.location.origin
-    );
-    ZarrMultiscaleSpatialImage.fromUrl(storeURL);
-  }
-}
+export const createViewport = () => {
+  return {
+    image: undefined as MultiscaleSpatialImage | undefined,
+  };
+};
+
+export type Viewport = ReturnType<typeof createViewport>;
