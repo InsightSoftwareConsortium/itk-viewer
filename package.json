@@ -22,7 +22,6 @@
     "@typescript-eslint/parser": "^5.59.1",
     "cypress": "^12.11.0",
     "cypress-lit": "^0.0.7",
-    "cypress-watch-and-reload": "^1.10.6",
     "eslint": "^8.39.0",
     "follow-redirects": "^1.15.2",
     "lit": "^2.7.3",

@@ -17,6 +17,10 @@ describe('ImageInfoViewport', () => {
       <image-info-viewport></image-info-viewport>
     </itk-viewer>`);
 
-    cy.get('image-info-viewport').shadow().contains('Image Type');
+    cy.get('image-info-viewport')
+      .shadow()
+      .contains('Image Type')
+      .contains('Spatial Dimensions')
+      .contains('Direction');
   });
 });

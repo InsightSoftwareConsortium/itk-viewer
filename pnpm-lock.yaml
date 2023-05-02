@@ -19,9 +19,6 @@ importers:
       cypress-lit:
         specifier: ^0.0.7
         version: 0.0.7(cypress@12.11.0)
-      cypress-watch-and-reload:
-        specifier: ^1.10.6
-        version: 1.10.6
       eslint:
         specifier: ^8.39.0
         version: 8.39.0
@@ -943,11 +940,6 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
-  /async-wait-until@1.2.6:
-    resolution: {integrity: sha512-7I1zd0bnMEo7WfLfDoLZp+iPYKv/dl7kcW8wphazZn+BAElTGvtkDuQuonr480JzkS7f42VcGyP90mk3+3IfWA==}
-    engines: {node: '>= 4', npm: '>= 2'}
-    dev: true
-
   /async@3.2.4:
     resolution: {integrity: sha512-iAB+JbDEGXhyIUavoDl9WP/Jj106Kz9DEn1DPgYw5ruDn0e3Wgi3sKFm55sASdGBNOQB8F59d9qQ7deqrHA8wQ==}
     dev: true
@@ -1218,17 +1210,6 @@ packages:
       cypress: '>=10.6.0'
     dependencies:
       cypress: 12.11.0
-    dev: true
-
-  /cypress-watch-and-reload@1.10.6:
-    resolution: {integrity: sha512-OI+3zZFSfMOjCH2xO9SUFfBurusbDOXctNtC6Q8VTokIURP+r0cwWZ5NVt6Ty3dtIMrWfiBsT+zsgAPvbmfTkA==}
-    dependencies:
-      async-wait-until: 1.2.6
-      chokidar: 3.5.3
-      ws: 8.13.0
-    transitivePeerDependencies:
-      - bufferutil
-      - utf-8-validate
     dev: true
 
   /cypress@12.11.0:
@@ -3317,19 +3298,6 @@ packages:
 
   /wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
-
-  /ws@8.13.0:
-    resolution: {integrity: sha512-x9vcZYTrFPC7aSIbj7sRCYo7L/Xb8Iy+pW0ng0wt2vCJv7M9HOMy0UoN3rr+IFC7hb7vXoqS+P9ktyLLLhO+LA==}
-    engines: {node: '>=10.0.0'}
-    peerDependencies:
-      bufferutil: ^4.0.1
-      utf-8-validate: '>=5.0.2'
-    peerDependenciesMeta:
-      bufferutil:
-        optional: true
-      utf-8-validate:
-        optional: true
-    dev: true
 
   /yallist@4.0.0:
     resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
