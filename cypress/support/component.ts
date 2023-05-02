@@ -1,5 +1,4 @@
-import 'cypress-watch-and-reload/support';
-import { mount } from './lit';
+import { mount } from 'cypress-lit';
 
 Cypress.Commands.add('mount', mount);
 

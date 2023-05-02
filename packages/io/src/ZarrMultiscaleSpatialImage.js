@@ -222,7 +222,7 @@ export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
     );
   }
 
-  static async fromUrl(url, maxConcurrency) {
+  static async fromUrl(url, maxConcurrency = undefined) {
     return ZarrMultiscaleSpatialImage.fromStore(
       new HttpStore(url),
       maxConcurrency

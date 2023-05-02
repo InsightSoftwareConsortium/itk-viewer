@@ -1,8 +1,12 @@
 {
   "extends": "../../tsconfig.build",
-  "include": ["./src/*.ts"],
   "compilerOptions": {
     "outDir": "./types",
     "emitDeclarationOnly": true
-  }
+  },
+  "include": ["./src/*.ts"],
+  "references": [
+    { "path": "../viewer/tsconfig.build.json" },
+    { "path": "../io/tsconfig.build.json" }
+  ]
 }

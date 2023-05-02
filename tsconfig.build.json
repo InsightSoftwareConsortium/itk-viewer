@@ -1,5 +1,9 @@
 {
   "extends": "./tsconfig.root",
+  "compilerOptions": {
+    "declaration": true,
+    "composite": true
+  },
   "exclude": [
     "packages/**/dist/",
     "packages/**/types/",

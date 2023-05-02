@@ -4,5 +4,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo"
-  }
+  },
+  "include": ["./src/*.ts"],
+  "references": [{ "path": "../io/tsconfig.build.json" }]
 }
