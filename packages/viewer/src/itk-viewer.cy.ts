@@ -1,7 +1,6 @@
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { Viewer } from './itk-viewer.js';
 import { createViewport } from './viewport.js';
-import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 describe('Viewer', () => {
   it('constructs', () => {

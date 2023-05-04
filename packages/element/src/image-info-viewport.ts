@@ -7,8 +7,10 @@ import { ItkViewport } from './itk-viewport.js';
 @customElement('image-info-viewport')
 export class ImageInfoViewport extends ItkViewport {
   image?: MultiscaleSpatialImage;
+
   @property()
   imageInfo = '';
+
   @property()
   imageName = '';
 

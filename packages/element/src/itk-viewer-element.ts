@@ -1,5 +1,5 @@
 import { LitElement, css, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { Viewer } from '@itk-viewer/viewer/viewer.js';
@@ -8,6 +8,9 @@ import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 @customElement('itk-viewer')
 export class ItkViewer extends LitElement {
+  @property()
+  imageUrl = '';
+
   viewer: Viewer;
   image?: MultiscaleSpatialImage;
   imageInfo = '';
