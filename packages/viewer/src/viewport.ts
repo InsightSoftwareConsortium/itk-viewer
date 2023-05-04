@@ -7,3 +7,7 @@ export const createViewport = () => {
 };
 
 export type Viewport = ReturnType<typeof createViewport>;
+
+export const setImage = (viewport: Viewport, image: MultiscaleSpatialImage) => {
+  viewport.image = image;
+};
