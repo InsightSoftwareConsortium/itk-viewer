@@ -1,6 +1,5 @@
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { createViewport, setImage } from './viewport.js';
-import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 describe('Viewport', () => {
   it('constructs', () => {
@@ -16,7 +15,7 @@ describe('Viewport', () => {
     );
     const image = await ZarrMultiscaleSpatialImage.fromUrl(storeURL);
 
-    setImage(viewport, image as unknown as MultiscaleSpatialImage);
+    setImage(viewport, image);
 
     expect(viewport.image).to.be.ok;
   });
