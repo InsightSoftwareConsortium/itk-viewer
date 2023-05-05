@@ -1,4 +1,4 @@
-import { PixelTypes } from 'itk-wasm';
+import { ImageType, PixelTypes } from 'itk-wasm';
 import PQueue from 'p-queue';
 
 import { bloscZarrDecompress } from '@itk-viewer/blosc-zarr/bloscZarrDecompress.js';
@@ -8,6 +8,7 @@ import MultiscaleSpatialImage from './MultiscaleSpatialImage.js';
 import { ZarrStoreParser } from './ZarrStoreParser.js';
 import HttpStore from './HttpStore.js';
 import { CXYZT, toDimensionMap } from './dimensionUtils.js';
+import { ScaleInfo } from './types.js';
 
 // ends with zarr and optional nested image name like foo.zarr/image1
 export const isZarr = (url: string) => /zarr((\/)[\w-]+\/?)?$/.test(url);
@@ -230,7 +231,10 @@ const extractScaleSpacing = async (dataSource) => {
 
 export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
   // Store parameter is object with getItem (but not a ZarrStoreParser)
-  static async fromStore(store, maxConcurrency) {
+  static async fromStore(
+    store: HttpStore,
+    maxConcurrency: number | undefined = undefined
+  ) {
     const zarrStoreParser = new ZarrStoreParser(store);
     const { scaleInfo, imageType } = await extractScaleSpacing(zarrStoreParser);
     return new ZarrMultiscaleSpatialImage(
@@ -241,16 +245,27 @@ export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
     );
   }
 
-  static async fromUrl(url, maxConcurrency = undefined) {
+  static async fromUrl(
+    url: URL,
+    maxConcurrency: number | undefined = undefined
+  ) {
     return ZarrMultiscaleSpatialImage.fromStore(
       new HttpStore(url),
       maxConcurrency
     );
   }
 
+  dataSource: ZarrStoreParser;
+  rpcQueue: PQueue;
+
   // Use static factory functions to construct
-  constructor(zarrStoreParser, scaleInfo, imageType, maxConcurrency) {
-    super(scaleInfo, imageType);
+  constructor(
+    zarrStoreParser: ZarrStoreParser,
+    scaleInfos: Array<ScaleInfo>,
+    imageType: ImageType,
+    maxConcurrency: number | undefined = undefined
+  ) {
+    super(scaleInfos, imageType);
     this.dataSource = zarrStoreParser;
 
     const concurrency = Math.min(
@@ -261,7 +276,7 @@ export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
   }
 
   async getChunksImpl(scale, cxyztArray) {
-    const info = this.scaleInfo[scale];
+    const info = this.scaleInfos[scale];
     const chunkPathBase = info.pixelArrayPath;
     const chunkPaths = [];
     const chunkPromises = [];
@@ -290,6 +305,6 @@ export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
       });
     }
 
-    return bloscZarrDecompress(toDecompress);
+    return bloscZarrDecompress(toDecompress) as Promise<Array<ArrayBuffer>>;
   }
 }

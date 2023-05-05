@@ -2,7 +2,7 @@ import { Image, setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
 import { ZarrMultiscaleSpatialImage } from './ZarrMultiscaleSpatialImage.js';
 
 const SAMPLE_SIZE = 33;
-const takeSnapshot = ({ data, ...rest }: Image) => {
+const takeSnapshot = ({ data, metadata, ...rest }: Image) => {
   if (!data) return '';
   const innerOffset = data.length / 2;
   const baseline = {
@@ -67,11 +67,9 @@ for (const [path, bounds, baseline] of IMAGE_BASELINES) {
 
     it(`Assembles chunks into world bounded ItkImage ZarrMultiscaleSpatialImage`, () => {
       const storeURL = new URL(path, document.location.origin);
-
-      return cy
-        .wrap(ZarrMultiscaleSpatialImage.fromUrl(storeURL))
+      cy.wrap(ZarrMultiscaleSpatialImage.fromUrl(storeURL))
         .then((zarrImage) =>
-          zarrImage.getImage(zarrImage.scaleInfo.length - 1, bounds)
+          zarrImage.getImage(zarrImage.scaleInfos.length - 1, bounds)
         )
         .then((itkImage) =>
           expect(takeSnapshot(itkImage)).to.deep.equal(baseline)
