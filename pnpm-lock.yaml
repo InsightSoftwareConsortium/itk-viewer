@@ -109,6 +109,9 @@ importers:
       '@itk-viewer/io':
         specifier: workspace:^
         version: link:../io
+      xstate:
+        specifier: 5.0.0-beta.8
+        version: 5.0.0-beta.8
     devDependencies:
       typescript:
         specifier: ^4.8.4
@@ -3298,6 +3301,10 @@ packages:
 
   /wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+
+  /xstate@5.0.0-beta.8:
+    resolution: {integrity: sha512-vxnNy2GaOcK4S1eCJUFAZ3g++HM+E1b0vPqzNYwnJyreJKsrhNCAd5CrmsZSBh96IkvmDD0MBx55VTSKTnUelg==}
+    dev: false
 
   /yallist@4.0.0:
     resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}

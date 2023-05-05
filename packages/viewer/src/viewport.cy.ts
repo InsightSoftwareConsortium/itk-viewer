@@ -6,7 +6,7 @@ describe('Viewport', () => {
     expect(createViewport()).to.be.ok;
   });
 
-  it('accepts a image', async () => {
+  it('accepts an image', async () => {
     const viewport = createViewport();
 
     const storeURL = new URL(
