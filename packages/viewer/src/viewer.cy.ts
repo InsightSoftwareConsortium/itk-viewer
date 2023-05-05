@@ -1,5 +1,5 @@
 import { createViewport } from './viewport.js';
-import { addViewport, createViewer } from './viewer.js';
+import { createViewer } from './viewer.js';
 
 describe('Viewer', () => {
   it('constructs', () => {
@@ -9,10 +9,14 @@ describe('Viewer', () => {
   it('accepts a viewport', () => {
     const viewer = createViewer();
     const viewport = createViewport();
-    addViewport(viewer, viewport);
 
-    cy.wrap(Object.values(viewer.viewports))
-      .should('have.length', 1)
-      .should('include', viewport);
+    viewer.send({ type: 'addViewport', name: 'first', viewport });
+
+    // should have property 'first' with value viewport
+    cy.wrap(viewer.getSnapshot().context.viewports).should(
+      'have.property',
+      'first',
+      viewport
+    );
   });
 });

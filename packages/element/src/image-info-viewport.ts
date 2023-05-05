@@ -21,7 +21,6 @@ export class ImageInfoViewport extends ItkViewport {
   setImage(image: MultiscaleSpatialImage) {
     this.image = image;
     this.imageName = this.image.name;
-    console.log(this.image);
     const { imageType, spatialDims, direction } = this.image;
     this.imageInfo = `Image Type: ${JSON.stringify(
       imageType,
