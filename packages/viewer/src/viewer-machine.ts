@@ -14,7 +14,7 @@ export const viewerMachine = createMachine({
       | { type: 'addViewport'; name: string; viewport: Viewport }
       | { type: 'addImage'; name: string; image: MultiscaleSpatialImage };
   },
-  id: 'feedback',
+  id: 'viewer',
   initial: 'active',
   context: {
     viewports: {},
@@ -32,12 +32,19 @@ export const viewerMachine = createMachine({
           }),
         },
         addImage: {
-          actions: assign({
-            images: ({ event: { name, image }, context }) => ({
-              ...context.images,
-              [name]: image,
+          actions: [
+            assign({
+              images: ({ event: { name, image }, context }) => ({
+                ...context.images,
+                [name]: image,
+              }),
             }),
-          }),
+            ({ event: { name }, context: { images, viewports } }) => {
+              Object.values(viewports).forEach((viewport) => {
+                viewport.send({ type: 'setImage', image: images[name] });
+              });
+            },
+          ],
         },
       },
     },

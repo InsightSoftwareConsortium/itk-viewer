@@ -1,5 +1,5 @@
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
-import { createViewport, setImage } from './viewport.js';
+import { createViewport } from './viewport.js';
 
 describe('Viewport', () => {
   it('constructs', () => {
@@ -15,8 +15,8 @@ describe('Viewport', () => {
     );
     const image = await ZarrMultiscaleSpatialImage.fromUrl(storeURL);
 
-    setImage(viewport, image);
+    viewport.send({ type: 'setImage', image });
 
-    expect(viewport.image).to.be.ok;
+    cy.wrap(viewport.getSnapshot().context.image).should('equal', image);
   });
 });

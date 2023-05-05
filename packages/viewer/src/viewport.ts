@@ -1,17 +1,8 @@
-import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { interpret } from 'xstate';
+import { viewportMachine } from './viewport-machine.js';
 
 export const createViewport = () => {
-  return {
-    image: undefined as MultiscaleSpatialImage | undefined,
-  };
+  return interpret(viewportMachine).start();
 };
 
 export type Viewport = ReturnType<typeof createViewport>;
-
-export const update = (viewport: Viewport) => {};
-
-export const setImage = (viewport: Viewport, image: MultiscaleSpatialImage) => {
-  viewport.image = image;
-
-  update(viewport);
-};
