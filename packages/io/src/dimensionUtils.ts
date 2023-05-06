@@ -12,13 +12,15 @@ export const ensuredDims = <T>(
     new Map(dimMap)
   );
 
-export const toDimensionMap = <T>(dims: Array<Dimension>, array: Array<T>) =>
-  new Map(dims.map((dim, i) => [dim, array[i]]));
+export const toDimensionMap = <T>(
+  dims: ReadonlyArray<Dimension>,
+  array: Array<T>
+) => new Map(dims.map((dim, i) => [dim, array[i]]));
 
 // example: orderBy(['y', 'x'])(new Map([['x', 1], ['y', 2], ['z', 3]])) -> Map([['y', 2], ['x', 1]])
 // drops dimensions that are not in dims!
 export const orderBy =
-  (dims: Array<Dimension>) =>
+  (dims: ReadonlyArray<Dimension>) =>
   <V>(map: Map<Dimension, V>) =>
     new Map(
       dims.map((dim) => {

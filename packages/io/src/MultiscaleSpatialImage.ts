@@ -1,5 +1,5 @@
 import { mat4, vec3 } from 'gl-matrix';
-import { Image, ImageType, setMatrixElement, TypedArray } from 'itk-wasm';
+import { Image, ImageType, setMatrixElement } from 'itk-wasm';
 import WebworkerPromise from 'webworker-promise';
 
 import { getDtype } from '@itk-viewer/wasm-utils/dtypeUtils.js';
@@ -81,12 +81,22 @@ const extentToBounds = (ex: Extent, indexToWorld: mat4) => {
   return bounds;
 };
 
-const ensure3dDirection = (d) => {
+const ensure3dDirection = (d: Float64Array): ReadonlyMat3 => {
   if (d.length >= 9) {
-    return d;
+    return mat3.fromValues(
+      d[0],
+      d[1],
+      d[2],
+      d[3],
+      d[4],
+      d[5],
+      d[6],
+      d[7],
+      d[8]
+    );
   }
   // Pad 2D with Z dimension
-  return [d[0], d[1], 0, d[2], d[3], 0, 0, 0, 1];
+  return mat3.fromValues(d[0], d[1], 0, d[2], d[3], 0, 0, 0, 1);
 };
 
 const makeMat4 = ({
