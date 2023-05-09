@@ -55,21 +55,28 @@ const IMAGE_BASELINES = [
   ],
 ] as const;
 
-describe(`MultiscaleSpatialImage`, () => {
+before(() => {
   const pipelineWorkerUrl = '/itk/web-workers/bundles/pipeline.worker.js';
   setPipelineWorkerUrl(pipelineWorkerUrl);
   const pipelineBaseUrl = '/itk/pipelines';
   setPipelinesBaseUrl(pipelineBaseUrl);
+});
+
+describe(`MultiscaleSpatialImage`, () => {
   for (const [path, bounds, baseline] of IMAGE_BASELINES) {
     it(`Assembles chunks into world bounded ItkImage ZarrMultiscaleSpatialImage`, () => {
-      const storeURL = new URL(path, document.location.origin);
-      cy.wrap(ZarrMultiscaleSpatialImage.fromUrl(storeURL))
-        .then((zarrImage) =>
-          zarrImage.getImage(zarrImage.scaleInfos.length - 1, bounds)
+      return cy
+        .wrap(
+          ZarrMultiscaleSpatialImage.fromUrl(
+            new URL(path, document.location.origin)
+          )
         )
-        .then((itkImage) =>
-          expect(takeSnapshot(itkImage)).to.deep.equal(baseline)
-        );
+        .then((zarrImage) => {
+          return zarrImage.getImage(zarrImage.scaleInfos.length - 1, bounds);
+        })
+        .then((itkImage) => {
+          return expect(takeSnapshot(itkImage)).to.deep.equal(baseline);
+        });
     });
   }
 });

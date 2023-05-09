@@ -38,7 +38,7 @@ function inflate(bounds: Bounds, delta: number) {
   return bounds;
 }
 
-// code modfied from vtk.js/ImageData
+// code modified from vtk.js/ImageData
 const extentToBounds = (ex: Extent, indexToWorld: mat4) => {
   // prettier-ignore
   const corners = [

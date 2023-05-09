@@ -1,7 +1,7 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
+// import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { Viewer, createViewer } from '@itk-viewer/viewer/viewer.js';
 import { ItkViewport } from './itk-viewport.js';
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
@@ -29,13 +29,13 @@ export class ItkViewer extends LitElement {
   }
 
   async createImage() {
-    const storeURL = new URL(
-      '/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr',
-      document.location.origin
-    );
-    this.image = (await ZarrMultiscaleSpatialImage.fromUrl(
-      storeURL
-    )) as unknown as MultiscaleSpatialImage;
+    // const storeURL = new URL(
+    //   '/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr',
+    //   document.location.origin
+    // );
+    // this.image = (await ZarrMultiscaleSpatialImage.fromUrl(
+    //   storeURL
+    // )) as unknown as MultiscaleSpatialImage;
     this.distributeImage();
   }
 

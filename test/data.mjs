@@ -29,6 +29,7 @@ async function downloadData() {
       .pipe(tar.x({ C: testDir }))
       .on('end', () => {
         fs.closeSync(fs.openSync(fetchCompleteFile, 'w'));
+        console.log('Test data downloaded.');
       })
       .on('error', (err) => {
         console.error(err);
