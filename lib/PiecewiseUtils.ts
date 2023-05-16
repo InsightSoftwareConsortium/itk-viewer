@@ -57,6 +57,7 @@ export type ColorTransferFunction = {
     withAlpha: boolean
   ) => Uint8Array
   getMappingRange: () => [number, number]
+  getSize: () => number
 }
 
 const CANVAS_HEIGHT = 1
@@ -70,6 +71,8 @@ export const updateColorCanvas = (
   const workCanvas = canvas || document.createElement('canvas')
   workCanvas.setAttribute('width', String(width))
   workCanvas.setAttribute('height', String(CANVAS_HEIGHT))
+
+  if (colorTransferFunction.getSize() === 0) return workCanvas
 
   const rgba = colorTransferFunction.getUint8Table(
     renderedDataRange[0],
@@ -114,4 +117,12 @@ export const logTransform = (histogram?: number[]): number[] => {
   const delta = max - min
   const normalized = loged.map((v) => (v === 0 ? 0 : (v - min) / delta))
   return normalized
+}
+
+export function arrayEquals<T>(a: Array<T>, b: Array<T>) {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false
+  }
+  return true
 }

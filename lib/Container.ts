@@ -1,3 +1,5 @@
+import { arrayEquals } from './PiecewiseUtils'
+
 export const PADDING = 10
 
 const makeSvg = () => {
@@ -54,8 +56,11 @@ export const Container = (parent: HTMLElement) => {
     opacityMin = 0,
     opacityMax = 1
   ) => {
+    const oldViewBox = viewBox
     viewBox = [valueStart, valueEnd, opacityMin, opacityMax]
-    sizeEmitter.dispatchEvent(new Event('sizeupdated'))
+    if (!arrayEquals(oldViewBox, viewBox)) {
+      sizeEmitter.dispatchEvent(new Event('sizeupdated'))
+    }
   }
 
   const getSize = () => {
