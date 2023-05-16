@@ -16,6 +16,12 @@ npm ci
 npm run dev
 ```
 
+## Dev server
+
+```
+npm run dev
+```
+
 ## Watch tests
 
 ```
