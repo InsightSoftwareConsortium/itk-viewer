@@ -15,3 +15,9 @@ cd examples/vtk-js
 npm ci
 npm run dev
 ```
+
+## Watch tests
+
+```
+npm run test
+```
