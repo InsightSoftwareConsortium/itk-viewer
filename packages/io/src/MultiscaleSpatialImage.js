@@ -1,12 +1,12 @@
 import { mat4, vec3 } from 'gl-matrix';
 import { setMatrixElement } from 'itk-wasm';
 
-import componentTypeToTypedArray from './componentTypeToTypedArray.js';
+import componentTypeToTypedArray from './componentTypeToTypedArray';
 
 import WebworkerPromise from 'webworker-promise';
-import { chunkArray, CXYZT, ensuredDims, orderBy } from './dimensionUtils.js';
+import { chunkArray, CXYZT, ensuredDims, orderBy } from './dimensionUtils';
 import { getDtype } from '@itk-viewer/wasm-utils/dtypeUtils';
-import { transformBounds } from './transformBounds.js';
+import { transformBounds } from './transformBounds';
 
 const imageDataFromChunksWorker = new Worker(
   new URL('./ImageDataFromChunks.worker.js', import.meta.url),
@@ -274,11 +274,11 @@ class MultiscaleSpatialImage {
 
   /* Return a promise that provides the requested chunk at a given scale and
    * chunk index. */
-  async getChunks(scale: number, cxyztArray: Array<number>) {
+  async getChunks(scale, cxyztArray) {
     return this.getChunksImpl(scale, cxyztArray);
   }
 
-  async getChunksImpl(scale: number, cxyztArray: Array<number>) {
+  async getChunksImpl(/* scale, cxyztArray */) {
     console.error('Override me in a derived class');
   }
 

@@ -1,36 +1,21 @@
 import { PixelTypes } from 'itk-wasm';
 import PQueue from 'p-queue';
 
-import { bloscZarrDecompress } from '@itk-viewer/blosc-zarr/bloscZarrDecompress.js';
-import { getComponentType } from '@itk-viewer/wasm-utils/dtypeUtils.js';
+import { bloscZarrDecompress } from '@itk-viewer/blosc-zarr/bloscZarrDecompress';
+import { getComponentType } from '@itk-viewer/wasm-utils/dtypeUtils';
 
-import MultiscaleSpatialImage from './MultiscaleSpatialImage.js';
-import { ZarrStoreParser } from './ZarrStoreParser.js';
-import HttpStore from './HttpStore.js';
-import { CXYZT, toDimensionMap } from './dimensionUtils.js';
+import MultiscaleSpatialImage from './MultiscaleSpatialImage';
+import { ZarrStoreParser } from './ZarrStoreParser';
+import HttpStore from './HttpStore';
+import { CXYZT, toDimensionMap } from './dimensionUtils';
 
 // ends with zarr and optional nested image name like foo.zarr/image1
-export const isZarr = (url: string) => /zarr((\/)[\w-]+\/?)?$/.test(url);
+export const isZarr = (url) => /zarr((\/)[\w-]+\/?)?$/.test(url);
 
 const MAX_CONCURRENCY = 1000;
 const TCZYX = Object.freeze(['t', 'c', 'z', 'y', 'x']);
 
-type ScaleTransform = {
-  type: 'scale';
-  scale: number[];
-};
-
-type TranslationTransform = {
-  type: 'translation';
-  translation: number[];
-};
-
-type NgffTransform = ScaleTransform | TranslationTransform;
-
-const composeTransforms = (
-  transforms: Array<NgffTransform> = [],
-  dimCount: number
-) =>
+const composeTransforms = (transforms = [], dimCount) =>
   transforms.reduce(
     ({ scale, translation }, transform) => {
       if (transform.type === 'scale') {
@@ -39,17 +24,13 @@ const composeTransforms = (
           scale: scale.map((s, i) => s * transformScale[i]),
           translation: translation.map((t, i) => t * transformScale[i]),
         };
-      }
-      if (transform.type === 'translation') {
+      } else if (transform.type === 'translation') {
         const { translation: transformTranslation } = transform;
         return {
           scale,
           translation: translation.map((t, i) => t + transformTranslation[i]),
         };
       }
-
-      const _exhaustiveCheck: never = transform;
-      throw new Error(`unknown transform type ${_exhaustiveCheck}`);
     },
     { scale: Array(dimCount).fill(1), translation: Array(dimCount).fill(0) }
   );
