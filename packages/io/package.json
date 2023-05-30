@@ -41,7 +41,7 @@
   },
   "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
-    "typescript": "^4.8.4"
+    "typescript": "^5.0.4"
   },
   "dependencies": {
     "@itk-viewer/blosc-zarr": "workspace:^",
