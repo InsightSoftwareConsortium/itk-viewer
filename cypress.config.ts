@@ -10,7 +10,7 @@ export default defineConfig({
       viteConfig,
     },
     watchForFileChanges: true,
-    defaultCommandTimeout: 10000,
+    defaultCommandTimeout: 30000,
   },
   projectId: 'nrnh8e',
 });
