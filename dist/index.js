@@ -1,6 +1,7 @@
 export { default as annotationsIconDataUri } from "./annotations.svg.uri.js"
 export { default as axesIconDataUri } from "./axes.svg.uri.js"
 export { default as blendModeIconDataUri } from "./blendMode.svg.uri.js"
+export { default as boundingBoxIconDataUri } from "./boundingBox.svg.uri.js"
 export { default as cropIconDataUri } from "./crop.svg.uri.js"
 export { default as fullscreenIconDataUri } from "./fullscreen.svg.uri.js"
 export { default as geometryIconDataUri } from "./geometry.svg.uri.js"

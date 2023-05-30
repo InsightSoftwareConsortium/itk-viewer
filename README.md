@@ -42,6 +42,10 @@ revision `f6b4fa13c8`, before they were extracted.
     <th><img src="src/blendMode.svg" width="40" alt="blendModeIconDataUri"/></th>
   </tr>
   <tr>
+    <th>boundingBoxIconDataUri</th>
+    <th><img src="src/boundingBox.svg" width="40" alt="boundingBoxIconDataUri"/></th>
+  </tr>
+  <tr>
     <th>cropIconDataUri</th>
     <th><img src="src/crop.svg" width="40" alt="cropIconDataUri"/></th>
   </tr>
