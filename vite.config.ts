@@ -12,8 +12,8 @@ export default defineConfig({
           dest: 'itk/web-workers',
         },
         {
-          src: '/io/node_modules/itk-image-io/*',
-          dest: 'dist/itk/image-io',
+          src: './packages/io/node_modules/itk-image-io/*',
+          dest: 'itk/image-io',
         },
         {
           src: './packages/blosc-zarr/emscripten-build/*',

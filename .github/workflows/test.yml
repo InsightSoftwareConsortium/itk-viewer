@@ -27,7 +27,7 @@ jobs:
       - name: Test
         uses: cypress-io/github-action@v5
         with:
-          start: pnpm test:ci
+          start: pnpm run test:ci
           record: true
           component: true
         env:

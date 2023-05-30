@@ -43,7 +43,7 @@
   },
   "dependencies": {
     "@itk-viewer/wasm-utils": "workspace:^",
-    "itk-wasm": "1.0.0-b.98"
+    "itk-wasm": "1.0.0-b.112"
   },
   "eslintConfig": {
     "env": {
