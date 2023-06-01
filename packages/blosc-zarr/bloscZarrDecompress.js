@@ -1,6 +1,32 @@
 import { runPipeline, InterfaceTypes, WorkerPool } from 'itk-wasm';
 import { getSize } from '@itk-viewer/wasm-utils/dtypeUtils.js';
-import { getPipelineWorkerUrl, getPipelinesBaseUrl } from './typescript/src';
+
+import { getPipelinesBaseUrl as itkWasmGetPipelinesBaseUrl } from 'itk-wasm';
+
+import { getPipelineWorkerUrl as itkWasmGetPipelineWorkerUrl } from 'itk-wasm';
+
+let pipelinesBaseUrl;
+
+export function getPipelinesBaseUrl() {
+  if (typeof pipelinesBaseUrl !== 'undefined') {
+    return pipelinesBaseUrl;
+  }
+  const itkWasmPipelinesBaseUrl = itkWasmGetPipelinesBaseUrl();
+  if (typeof itkWasmPipelinesBaseUrl !== 'undefined') {
+    return itkWasmPipelinesBaseUrl;
+  }
+}
+
+let pipelineWorkerUrl;
+export function getPipelineWorkerUrl() {
+  if (typeof pipelineWorkerUrl !== 'undefined') {
+    return pipelineWorkerUrl;
+  }
+  const itkWasmPipelineWorkerUrl = itkWasmGetPipelineWorkerUrl();
+  if (typeof itkWasmPipelineWorkerUrl !== 'undefined') {
+    return itkWasmPipelineWorkerUrl;
+  }
+}
 
 /**
  * Input:
