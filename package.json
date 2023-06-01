@@ -24,6 +24,7 @@
     "cypress-lit": "^0.0.7",
     "eslint": "^8.39.0",
     "follow-redirects": "^1.15.2",
+    "itk-wasm": "1.0.0-b.112",
     "lit": "^2.7.3",
     "prettier": "^2.8.8",
     "tar": "^6.1.13",

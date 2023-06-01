@@ -2,10 +2,6 @@ import { runPipeline, InterfaceTypes, WorkerPool } from 'itk-wasm';
 import { getSize } from '@itk-viewer/wasm-utils/dtypeUtils.js';
 import { getPipelineWorkerUrl, getPipelinesBaseUrl } from './typescript/src';
 
-const cores = navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
-const numberOfWorkers = cores + Math.floor(Math.sqrt(cores));
-const workerPool = new WorkerPool(numberOfWorkers, runPipeline);
-
 /**
  * Input:
  *
@@ -28,9 +24,17 @@ export async function bloscZarrDecompress(chunkData) {
     pipelineBaseUrl: getPipelinesBaseUrl(),
     pipelineWorkerUrl: getPipelineWorkerUrl(),
   };
+  const cores = navigator.hardwareConcurrency
+    ? navigator.hardwareConcurrency
+    : 4;
+  const numberOfWorkers = cores + Math.floor(Math.sqrt(cores));
+  const workerPool = new WorkerPool(numberOfWorkers, runPipeline);
   const desiredOutputs = [{ type: InterfaceTypes.BinaryStream }];
   const taskArgsArray = [];
   let dtype = null;
+
+  let results = [];
+  let webWorker;
   for (let index = 0; index < chunkData.length; index++) {
     const zarrayMetadata = chunkData[index].metadata;
     const compressedChunk = chunkData[index].data;
@@ -56,8 +60,29 @@ export async function bloscZarrDecompress(chunkData) {
       '--memory-io',
     ];
     taskArgsArray.push(['BloscZarr', args, desiredOutputs, inputs, options]);
-  }
-  const results = await workerPool.runTasks(taskArgsArray).promise;
 
-  return results.map((result) => result.outputs[0].data.data.buffer);
+    console.log(getPipelineWorkerUrl());
+    const pipelinePath = 'BloscZarr';
+    const {
+      webWorker: usedWebWorker,
+      returnValue,
+      outputs,
+      stderr,
+    } = await runPipeline(
+      webWorker,
+      pipelinePath,
+      args,
+      desiredOutputs,
+      inputs,
+      {
+        pipelineBaseUrl: getPipelinesBaseUrl(),
+        pipelineWorkerUrl: getPipelineWorkerUrl(),
+      }
+    );
+    results.push(outputs[0].data.data.buffer);
+    webWorker = usedWebWorker;
+  }
+  // const results = await workerPool.runTasks(taskArgsArray).promise;
+
+  return results; // results.map((result) => result.outputs[0].data.data.buffer);
 }
