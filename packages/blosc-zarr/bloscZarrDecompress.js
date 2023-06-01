@@ -38,6 +38,8 @@ export async function bloscZarrDecompress(chunkData) {
   for (let index = 0; index < chunkData.length; index++) {
     const zarrayMetadata = chunkData[index].metadata;
     const compressedChunk = chunkData[index].data;
+    console.log(compressedChunk);
+    console.log(zarrayMetadata);
     dtype = zarrayMetadata.dtype;
     const nElements = zarrayMetadata.chunks.reduce((a, b) => a * b);
     const elementSize = getSize(dtype);
@@ -59,9 +61,8 @@ export async function bloscZarrDecompress(chunkData) {
       '--decompress',
       '--memory-io',
     ];
-    taskArgsArray.push(['BloscZarr', args, desiredOutputs, inputs, options]);
+    // taskArgsArray.push(['BloscZarr', args, desiredOutputs, inputs, options]);
 
-    console.log(getPipelineWorkerUrl());
     const pipelinePath = 'BloscZarr';
     const {
       webWorker: usedWebWorker,

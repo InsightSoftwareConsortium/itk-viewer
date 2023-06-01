@@ -3,3 +3,4 @@ types
 pnpm-lock.yaml
 packages/blosc-zarr/*
 !packages/blosc-zarr/bloscZarrDecompress.js
+!packages/blosc-zarr/bloscZarrDecompress.cy.ts
