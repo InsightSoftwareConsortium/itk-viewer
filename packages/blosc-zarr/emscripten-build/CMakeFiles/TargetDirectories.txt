@@ -1,0 +1,9 @@
+/work/emscripten-build/CMakeFiles/BloscZarr.dir
+/work/emscripten-build/CMakeFiles/BloscZarr.umd.dir
+/work/emscripten-build/CMakeFiles/edit_cache.dir
+/work/emscripten-build/CMakeFiles/rebuild_cache.dir
+/work/emscripten-build/c-blosc/CMakeFiles/edit_cache.dir
+/work/emscripten-build/c-blosc/CMakeFiles/rebuild_cache.dir
+/work/emscripten-build/c-blosc/blosc/CMakeFiles/blosc_static.dir
+/work/emscripten-build/c-blosc/blosc/CMakeFiles/edit_cache.dir
+/work/emscripten-build/c-blosc/blosc/CMakeFiles/rebuild_cache.dir

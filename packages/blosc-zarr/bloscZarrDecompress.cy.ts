@@ -7,11 +7,10 @@ describe(`BloscZarrDecompress`, () => {
     document.location.origin
   );
   setPipelineWorkerUrl(pipelineWorkerUrl);
-  // const pipelineBaseUrl = '/';
   const pipelineBaseUrl = new URL('/itk/pipelines', document.location.origin);
   setPipelinesBaseUrl(pipelineBaseUrl);
 
-  it(`Assembles chunks into world bounded ItkImage ZarrMultiscaleSpatialImage`, async () => {
+  it(`Decompresses chunk`, async () => {
     const chunkPath =
       'ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr/s2/0/0/0';
     const chunkURL = new URL(chunkPath, document.location.origin);
