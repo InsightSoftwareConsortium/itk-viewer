@@ -1,3 +1,5 @@
 /c-blosc
-/emscripten-build
 /typescript
+/emscripten-build/*
+!emscripten-build/BloscZarr.*
+/emscripten-build/BloscZarr.umd.wasm

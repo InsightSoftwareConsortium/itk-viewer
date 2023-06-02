@@ -61,10 +61,9 @@ for (const [path, bounds, baseline] of IMAGE_BASELINES) {
       '/itk/web-workers/bundles/pipeline.worker.js',
       document.location.origin
     );
-    setPipelineWorkerUrl(pipelineWorkerUrl);
-    // const pipelineBaseUrl = '/';
+    setPipelineWorkerUrl(pipelineWorkerUrl.href);
     const pipelineBaseUrl = new URL('/itk/pipelines', document.location.origin);
-    setPipelinesBaseUrl(pipelineBaseUrl);
+    setPipelinesBaseUrl(pipelineBaseUrl.href);
 
     it(`Assembles chunks into world bounded ItkImage ZarrMultiscaleSpatialImage`, () => {
       const storeURL = new URL(path, document.location.origin);

@@ -14,7 +14,8 @@
     "cy:watch": "cypress open --component -b chrome",
     "cy:component": "cypress run --component",
     "cy:component:ci": "cypress run --component --record",
-    "cy:component:chrome": "cypress run --component --browser chrome"
+    "cy:component:chrome": "cypress run --component --browser chrome",
+    "clean": "git clean -fdx"
   },
   "devDependencies": {
     "@cypress/mount-utils": "^4.0.0",
