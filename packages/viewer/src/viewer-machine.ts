@@ -20,6 +20,44 @@ type context = {
   images: Record<string, MultiscaleSpatialImage>;
 };
 
+const addViewport = assign({
+  viewports: ({
+    event: { name, viewport },
+    context,
+  }: {
+    event: addViewportEvent;
+    context: context;
+  }) => ({
+    ...context.viewports,
+    [name]: viewport,
+  }),
+});
+
+const assignImage = assign({
+  images: ({
+    event: { name, image },
+    context,
+  }: {
+    event: addImageEvent;
+    context: context;
+  }) => ({
+    ...context.images,
+    [name]: image,
+  }),
+});
+
+const sendToViewports = ({
+  event: { name },
+  context: { images, viewports },
+}: {
+  event: addImageEvent;
+  context: context;
+}) => {
+  Object.values(viewports).forEach((viewport) => {
+    viewport.send({ type: 'setImage', image: images[name] });
+  });
+};
+
 export const viewerMachine = createMachine({
   types: {} as {
     context: context;
@@ -35,45 +73,10 @@ export const viewerMachine = createMachine({
     active: {
       on: {
         addViewport: {
-          actions: assign({
-            viewports: ({
-              event: { name, viewport },
-              context,
-            }: {
-              event: addViewportEvent;
-              context: context;
-            }) => ({
-              ...context.viewports,
-              [name]: viewport,
-            }),
-          }),
+          actions: addViewport,
         },
         addImage: {
-          actions: [
-            assign({
-              images: ({
-                event: { name, image },
-                context,
-              }: {
-                event: addImageEvent;
-                context: context;
-              }) => ({
-                ...context.images,
-                [name]: image,
-              }),
-            }),
-            ({
-              event: { name },
-              context: { images, viewports },
-            }: {
-              event: addImageEvent;
-              context: context;
-            }) => {
-              Object.values(viewports).forEach((viewport) => {
-                viewport.send({ type: 'setImage', image: images[name] });
-              });
-            },
-          ],
+          actions: [assignImage, sendToViewports],
         },
       },
     },

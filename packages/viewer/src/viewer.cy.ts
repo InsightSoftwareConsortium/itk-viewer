@@ -40,7 +40,8 @@ describe('Viewer', () => {
     viewer.send({ type: 'addImage', name: 'zarr', image });
 
     expect(watcher.viewportUpdated).to.be.called;
+    expect(viewport.getSnapshot().context.image).to.be.equal(image);
 
-    cy.wrap(() => sub.unsubscribe());
+    sub.unsubscribe();
   });
 });
