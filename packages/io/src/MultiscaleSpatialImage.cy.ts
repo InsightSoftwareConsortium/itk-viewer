@@ -57,15 +57,19 @@ const IMAGE_BASELINES = [
 
 for (const [path, bounds, baseline] of IMAGE_BASELINES) {
   describe(`MultiscaleSpatialImage  ${path}`, () => {
-    const pipelineWorkerUrl = '/itk/web-workers/bundles/pipeline.min.worker.js';
-    setPipelineWorkerUrl(pipelineWorkerUrl);
-    const pipelineBaseUrl = '/itk/pipelines';
-    setPipelinesBaseUrl(pipelineBaseUrl);
+    const pipelineWorkerUrl = new URL(
+      '/itk/web-workers/bundles/pipeline.worker.js',
+      document.location.origin
+    );
+    setPipelineWorkerUrl(pipelineWorkerUrl.href);
+    const pipelineBaseUrl = new URL('/itk/pipelines', document.location.origin);
+    setPipelinesBaseUrl(pipelineBaseUrl.href);
 
     it(`Assembles chunks into world bounded ItkImage ZarrMultiscaleSpatialImage`, () => {
       const storeURL = new URL(path, document.location.origin);
 
-      cy.wrap(ZarrMultiscaleSpatialImage.fromUrl(storeURL))
+      return cy
+        .wrap(ZarrMultiscaleSpatialImage.fromUrl(storeURL))
         .then((zarrImage) =>
           zarrImage.getImage(zarrImage.scaleInfo.length - 1, bounds)
         )

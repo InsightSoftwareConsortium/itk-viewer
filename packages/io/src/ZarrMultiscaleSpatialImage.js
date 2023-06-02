@@ -4,7 +4,7 @@ import PQueue from 'p-queue';
 import { bloscZarrDecompress } from '@itk-viewer/blosc-zarr/bloscZarrDecompress';
 import { getComponentType } from '@itk-viewer/wasm-utils/dtypeUtils';
 
-import MultiscaleSpatialImage from './MultiscaleSpatialImage';
+import MultiscaleSpatialImage from './MultiscaleSpatialImage.js';
 import { ZarrStoreParser } from './ZarrStoreParser';
 import HttpStore from './HttpStore';
 import { CXYZT, toDimensionMap } from './dimensionUtils';
