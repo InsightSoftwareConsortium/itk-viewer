@@ -7,8 +7,10 @@ import { ItkViewport } from './itk-viewport.js';
 @customElement('image-info-viewport')
 export class ImageInfoViewport extends ItkViewport {
   image?: MultiscaleSpatialImage;
+
   @property()
   imageInfo = '';
+
   @property()
   imageName = '';
 
@@ -19,7 +21,6 @@ export class ImageInfoViewport extends ItkViewport {
   setImage(image: MultiscaleSpatialImage) {
     this.image = image;
     this.imageName = this.image.name;
-    console.log(this.image);
     const { imageType, spatialDims, direction } = this.image;
     this.imageInfo = `Image Type: ${JSON.stringify(
       imageType,

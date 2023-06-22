@@ -1,9 +1,9 @@
-import { Viewport } from './viewport.js';
+import { interpret } from 'xstate';
 
-export class Viewer {
-  viewports: Viewport[] = [];
+import { viewerMachine } from './viewer-machine.js';
 
-  addViewport(viewport: Viewport) {
-    this.viewports.push(viewport);
-  }
-}
+export const createViewer = () => {
+  return interpret(viewerMachine).start();
+};
+
+export type Viewer = ReturnType<typeof createViewer>;

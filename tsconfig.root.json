@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "ESNext",
     "lib": ["ES2019", "DOM", "DOM.Iterable"],
-    "target": "ES6",
+    "target": "ES2019",
     "declaration": true,
     "strict": true,
     "noUnusedLocals": true,

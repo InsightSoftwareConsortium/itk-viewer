@@ -1,21 +1,39 @@
-import { PixelTypes } from 'itk-wasm';
+import { ImageType, PixelTypes } from 'itk-wasm';
 import PQueue from 'p-queue';
 
-import { bloscZarrDecompress } from '@itk-viewer/blosc-zarr/bloscZarrDecompress';
-import { getComponentType } from '@itk-viewer/wasm-utils/dtypeUtils';
+import { bloscZarrDecompress } from '@itk-viewer/blosc-zarr/bloscZarrDecompress.js';
+import { getComponentType } from '@itk-viewer/wasm-utils/dtypeUtils.js';
 
 import MultiscaleSpatialImage from './MultiscaleSpatialImage.js';
-import { ZarrStoreParser } from './ZarrStoreParser';
-import HttpStore from './HttpStore';
-import { CXYZT, toDimensionMap } from './dimensionUtils';
+import { ZarrStoreParser } from './ZarrStoreParser.js';
+import HttpStore from './HttpStore.js';
+import { CXYZT, toDimensionMap } from './dimensionUtils.js';
+import { Dimension, ScaleInfo } from './types.js';
+import {
+  Dataset,
+  DatasetWithTransformation,
+  DatasetZattrs,
+  MultiscaleImage,
+  NgffTransform,
+  ZArray,
+} from './ngff-zarr-types.js';
 
 // ends with zarr and optional nested image name like foo.zarr/image1
-export const isZarr = (url) => /zarr((\/)[\w-]+\/?)?$/.test(url);
+export const isZarr = (url: string) => /zarr((\/)[\w-]+\/?)?$/.test(url);
 
 const MAX_CONCURRENCY = 1000;
-const TCZYX = Object.freeze(['t', 'c', 'z', 'y', 'x']);
+const TCZYX = Object.freeze([
+  't',
+  'c',
+  'z',
+  'y',
+  'x',
+]) as ReadonlyArray<Dimension>;
 
-const composeTransforms = (transforms = [], dimCount) =>
+const composeTransforms = (
+  transforms: Array<NgffTransform> = [],
+  dimCount: number
+) =>
   transforms.reduce(
     ({ scale, translation }, transform) => {
       if (transform.type === 'scale') {
@@ -24,18 +42,26 @@ const composeTransforms = (transforms = [], dimCount) =>
           scale: scale.map((s, i) => s * transformScale[i]),
           translation: translation.map((t, i) => t * transformScale[i]),
         };
-      } else if (transform.type === 'translation') {
+      }
+      if (transform.type === 'translation') {
         const { translation: transformTranslation } = transform;
         return {
           scale,
           translation: translation.map((t, i) => t + transformTranslation[i]),
         };
       }
+
+      const _exhaustiveCheck: never = transform;
+      throw new Error(`unknown transform type ${_exhaustiveCheck}`);
     },
     { scale: Array(dimCount).fill(1), translation: Array(dimCount).fill(0) }
   );
 
-export const computeTransform = (imageMetadata, datasetMetadata, dimCount) => {
+export const computeTransform = (
+  imageMetadata: MultiscaleImage,
+  datasetMetadata: DatasetWithTransformation,
+  dimCount: number
+) => {
   const global = composeTransforms(
     imageMetadata.coordinateTransformations,
     dimCount
@@ -57,11 +83,20 @@ export const computeTransform = (imageMetadata, datasetMetadata, dimCount) => {
 };
 
 // if missing coordinateTransformations, make all scales same size as finest scale
-const ensureScaleTransforms = (datasetsWithArrayMetadata) => {
+const ensureScaleTransforms = (
+  datasetsWithArrayMetadata: Array<{
+    dataset: Dataset;
+    pixelArrayMetadata: ZArray;
+  }>
+) => {
   const hasDatasetCoordinateTransform = datasetsWithArrayMetadata.some(
     ({ dataset }) => dataset.coordinateTransformations
   );
-  if (hasDatasetCoordinateTransform) return datasetsWithArrayMetadata;
+  if (hasDatasetCoordinateTransform)
+    return datasetsWithArrayMetadata as Array<{
+      dataset: DatasetWithTransformation;
+      pixelArrayMetadata: ZArray;
+    }>;
 
   const targetSize = datasetsWithArrayMetadata[0].pixelArrayMetadata.shape;
 
@@ -71,7 +106,9 @@ const ensureScaleTransforms = (datasetsWithArrayMetadata) => {
     return {
       dataset: {
         ...dataset,
-        coordinateTransformations: [{ scale, type: 'scale' }],
+        coordinateTransformations: [
+          { scale, type: 'scale' },
+        ] as Array<NgffTransform>,
       },
       pixelArrayMetadata,
     };
@@ -79,16 +116,29 @@ const ensureScaleTransforms = (datasetsWithArrayMetadata) => {
 };
 
 // lazy creation of voxel/pixel/dimension coordinates array
-const makeCoords = ({ shape, multiscaleImage, dataset }) => {
-  const axes = multiscaleImage.axes?.map(({ name }) => name) ?? TCZYX;
-  const coords = new Map(axes.map((dim) => [dim, null]));
+const makeCoords = ({
+  shape,
+  multiscaleImage,
+  dataset,
+}: {
+  shape: Array<number>;
+  multiscaleImage: MultiscaleImage;
+  dataset: DatasetWithTransformation;
+}) => {
+  const axes =
+    multiscaleImage.axes?.map((axis) =>
+      typeof axis === 'object' ? axis.name : axis
+    ) ?? TCZYX;
+  const coords = new Map(
+    axes.map((dim) => [dim, undefined as Float32Array | undefined])
+  );
 
   const { scale: spacingDataset, translation: originDataset } =
     computeTransform(multiscaleImage, dataset, axes.length);
 
   return {
-    get(dim) {
-      if (coords.get(dim) === null) {
+    get(dim: Dimension) {
+      if (!coords.get(dim)) {
         // make array
         const dimIdx = axes.indexOf(dim);
         const spacing = spacingDataset[dimIdx];
@@ -99,15 +149,23 @@ const makeCoords = ({ shape, multiscaleImage, dataset }) => {
         }
         coords.set(dim, coordsPerElement);
       }
-      return coords.get(dim);
+      return coords.get(dim) as Float32Array;
     },
-    has(dim) {
+    has(dim: Dimension) {
       return axes.includes(dim);
     },
   };
 };
 
-const findAxesLongNames = async ({ dataset, dataSource, dims }) => {
+const findAxesLongNames = async ({
+  dataset,
+  dataSource,
+  dims,
+}: {
+  dataset: Dataset;
+  dataSource: ZarrStoreParser;
+  dims: ReadonlyArray<Dimension>;
+}) => {
   const upOneLevel = dataset.path.split('/').slice(0, -1).join('');
   return new Map(
     await Promise.all(
@@ -124,14 +182,22 @@ const createScaledImageInfo = async ({
   pixelArrayMetadata,
   dataSource,
   multiscaleSpatialImageVersion,
+}: {
+  multiscaleImage: MultiscaleImage;
+  dataset: DatasetWithTransformation;
+  pixelArrayMetadata: ZArray;
+  dataSource: ZarrStoreParser;
+  multiscaleSpatialImageVersion: string;
 }) => {
   const scaleZattrs = multiscaleSpatialImageVersion
-    ? await dataSource.getItem(`${dataset.path}/.zattrs`)
+    ? ((await dataSource.getItem(`${dataset.path}/.zattrs`)) as DatasetZattrs)
     : {};
 
   const dims =
     scaleZattrs._ARRAY_DIMENSIONS ??
-    multiscaleImage.axes?.map((axis) => axis.name ?? axis) ??
+    multiscaleImage.axes?.map((axis) =>
+      typeof axis === 'object' ? axis.name : axis
+    ) ??
     TCZYX; // default to TCZYX for NGFF v0.1
 
   const { shape, chunks } = pixelArrayMetadata;
@@ -154,25 +220,27 @@ const createScaledImageInfo = async ({
     axesNames,
     chunkCount: toDimensionMap(
       dims,
-      dims.map((dim) => Math.ceil(arrayShape.get(dim) / chunkSize.get(dim)))
+      dims.map((dim) => Math.ceil(arrayShape.get(dim)! / chunkSize.get(dim)!))
     ),
     chunkSize,
     arrayShape,
   };
 };
 
-const extractScaleSpacing = async (dataSource) => {
+const extractScaleSpacing = async (dataSource: ZarrStoreParser) => {
   const zattrs = await dataSource.getItem('.zattrs');
 
   const { multiscales, multiscaleSpatialImageVersion } = zattrs;
-  const multiscaleImage = Array.isArray(multiscales)
+  const multiscaleImage: MultiscaleImage = Array.isArray(multiscales)
     ? multiscales[0] // if multiple images (multiscales), just grab first one
     : multiscales;
 
   const datasetsWithArrayMetadataRaw = await Promise.all(
     multiscaleImage.datasets.map(async (dataset) => ({
       dataset,
-      pixelArrayMetadata: await dataSource.getItem(`${dataset.path}/.zarray`),
+      pixelArrayMetadata: (await dataSource.getItem(
+        `${dataset.path}/.zarray`
+      )) as ZArray,
     }))
   );
 
@@ -198,8 +266,9 @@ const extractScaleSpacing = async (dataSource) => {
 
   const imageType = {
     // How many spatial dimensions?  Count greater than 1, X Y Z elements because "axis" metadata not defined in ngff V0.1
-    dimension: ['x', 'y', 'z'].filter((dim) => info.arrayShape.get(dim) > 1)
-      .length,
+    dimension: (['x', 'y', 'z'] as Array<Dimension>)
+      .map((dim) => info.arrayShape.get(dim))
+      .filter((dim) => dim && dim > 1).length,
     pixelType:
       components === 1 ? PixelTypes.Scalar : PixelTypes.VariableLengthVector,
     componentType: getComponentType(info.pixelArrayMetadata.dtype),
@@ -211,7 +280,10 @@ const extractScaleSpacing = async (dataSource) => {
 
 export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
   // Store parameter is object with getItem (but not a ZarrStoreParser)
-  static async fromStore(store, maxConcurrency) {
+  static async fromStore(
+    store: HttpStore,
+    maxConcurrency: number | undefined = undefined
+  ) {
     const zarrStoreParser = new ZarrStoreParser(store);
     const { scaleInfo, imageType } = await extractScaleSpacing(zarrStoreParser);
     return new ZarrMultiscaleSpatialImage(
@@ -222,16 +294,27 @@ export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
     );
   }
 
-  static async fromUrl(url, maxConcurrency = undefined) {
+  static async fromUrl(
+    url: URL,
+    maxConcurrency: number | undefined = undefined
+  ) {
     return ZarrMultiscaleSpatialImage.fromStore(
       new HttpStore(url),
       maxConcurrency
     );
   }
 
+  dataSource: ZarrStoreParser;
+  rpcQueue: PQueue;
+
   // Use static factory functions to construct
-  constructor(zarrStoreParser, scaleInfo, imageType, maxConcurrency) {
-    super(scaleInfo, imageType);
+  constructor(
+    zarrStoreParser: ZarrStoreParser,
+    scaleInfos: Array<ScaleInfo>,
+    imageType: ImageType,
+    maxConcurrency: number | undefined = undefined
+  ) {
+    super(scaleInfos, imageType);
     this.dataSource = zarrStoreParser;
 
     const concurrency = Math.min(
@@ -241,13 +324,15 @@ export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
     this.rpcQueue = new PQueue({ concurrency });
   }
 
-  async getChunksImpl(scale, cxyztArray) {
-    const info = this.scaleInfo[scale];
+  async getChunksImpl(scale: number, cxyztArray: Array<Array<number>>) {
+    const info = this.scaleInfos[scale];
     const chunkPathBase = info.pixelArrayPath;
     const chunkPaths = [];
     const chunkPromises = [];
 
-    const { dimension_separator: dimSeparator = '.' } = info.pixelArrayMetadata;
+    const { dimension_separator: dimSeparator = '.' } = info.pixelArrayMetadata
+      ? info.pixelArrayMetadata
+      : {};
 
     for (let index = 0; index < cxyztArray.length; index++) {
       let chunkPath = `${chunkPathBase}/`;
@@ -271,6 +356,6 @@ export class ZarrMultiscaleSpatialImage extends MultiscaleSpatialImage {
       });
     }
 
-    return bloscZarrDecompress(toDecompress);
+    return bloscZarrDecompress(toDecompress) as Promise<Array<ArrayBuffer>>;
   }
 }

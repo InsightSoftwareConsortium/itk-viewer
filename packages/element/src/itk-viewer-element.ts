@@ -1,13 +1,16 @@
 import { LitElement, css, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 
-import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
-import { Viewer } from '@itk-viewer/viewer/viewer.js';
+// import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
+import { Viewer, createViewer } from '@itk-viewer/viewer/viewer.js';
 import { ItkViewport } from './itk-viewport.js';
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 @customElement('itk-viewer')
 export class ItkViewer extends LitElement {
+  @property()
+  imageUrl = '';
+
   viewer: Viewer;
   image?: MultiscaleSpatialImage;
   imageInfo = '';
@@ -15,7 +18,7 @@ export class ItkViewer extends LitElement {
 
   constructor() {
     super();
-    this.viewer = new Viewer();
+    this.viewer = createViewer();
     this.createImage();
   }
 
@@ -26,13 +29,13 @@ export class ItkViewer extends LitElement {
   }
 
   async createImage() {
-    const storeURL = new URL(
-      '/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr',
-      document.location.origin
-    );
-    this.image = (await ZarrMultiscaleSpatialImage.fromUrl(
-      storeURL
-    )) as unknown as MultiscaleSpatialImage;
+    // const storeURL = new URL(
+    //   '/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr',
+    //   document.location.origin
+    // );
+    // this.image = (await ZarrMultiscaleSpatialImage.fromUrl(
+    //   storeURL
+    // )) as unknown as MultiscaleSpatialImage;
     this.distributeImage();
   }
 

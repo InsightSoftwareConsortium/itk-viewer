@@ -41,12 +41,12 @@
   },
   "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
-    "typescript": "^5.0.4"
+    "typescript": "^5.1.3"
   },
   "dependencies": {
     "@itk-viewer/blosc-zarr": "workspace:^",
     "@itk-viewer/wasm-utils": "workspace:^",
-    "axios": "^1.3.5",
+    "axios": "^1.4.0",
     "gl-matrix": "^3.4.3",
     "itk-wasm": "1.0.0-b.112",
     "p-queue": "^7.3.4",

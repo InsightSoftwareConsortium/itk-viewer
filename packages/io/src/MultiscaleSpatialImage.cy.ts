@@ -2,7 +2,7 @@ import { Image, setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
 import { ZarrMultiscaleSpatialImage } from './ZarrMultiscaleSpatialImage.js';
 
 const SAMPLE_SIZE = 33;
-const takeSnapshot = ({ data, ...rest }: Image) => {
+const takeSnapshot = ({ data, metadata, ...rest }: Image) => {
   if (!data) return '';
   const innerOffset = data.length / 2;
   const baseline = {
@@ -55,27 +55,28 @@ const IMAGE_BASELINES = [
   ],
 ] as const;
 
-for (const [path, bounds, baseline] of IMAGE_BASELINES) {
-  describe(`MultiscaleSpatialImage  ${path}`, () => {
-    const pipelineWorkerUrl = new URL(
-      '/itk/web-workers/bundles/pipeline.worker.js',
-      document.location.origin
-    );
-    setPipelineWorkerUrl(pipelineWorkerUrl.href);
-    const pipelineBaseUrl = new URL('/itk/pipelines', document.location.origin);
-    setPipelinesBaseUrl(pipelineBaseUrl.href);
+before(() => {
+  const pipelineWorkerUrl = '/itk/web-workers/bundles/pipeline.worker.js';
+  setPipelineWorkerUrl(pipelineWorkerUrl);
+  const pipelineBaseUrl = '/itk/pipelines';
+  setPipelinesBaseUrl(pipelineBaseUrl);
+});
 
+describe(`MultiscaleSpatialImage`, () => {
+  for (const [path, bounds, baseline] of IMAGE_BASELINES) {
     it(`Assembles chunks into world bounded ItkImage ZarrMultiscaleSpatialImage`, () => {
-      const storeURL = new URL(path, document.location.origin);
-
       return cy
-        .wrap(ZarrMultiscaleSpatialImage.fromUrl(storeURL))
-        .then((zarrImage) =>
-          zarrImage.getImage(zarrImage.scaleInfo.length - 1, bounds)
+        .wrap(
+          ZarrMultiscaleSpatialImage.fromUrl(
+            new URL(path, document.location.origin)
+          )
         )
-        .then((itkImage) =>
-          expect(takeSnapshot(itkImage)).to.deep.equal(baseline)
-        );
+        .then((zarrImage) => {
+          return zarrImage.getImage(zarrImage.scaleInfos.length - 1, bounds);
+        })
+        .then((itkImage) => {
+          return expect(takeSnapshot(itkImage)).to.deep.equal(baseline);
+        });
     });
-  });
-}
+  }
+});
