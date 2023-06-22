@@ -6,6 +6,17 @@
 
 Contributions are welcome and appreciated.
 
+### Build and test
+
+```sh
+npm i -g pnpm
+pnpm i
+pnpm build
+pnpm test
+```
+
+### Update testing data
+
 To create a tarball of the current testing data:
 
 ```
