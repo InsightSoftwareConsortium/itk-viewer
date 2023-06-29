@@ -436,7 +436,7 @@ class MultiscaleSpatialImage {
 
     return {
       imageType: this.imageType,
-      name: this.scaleInfos[scale].name,
+      name: this.scaleInfos[scale].name ?? 'Default Image Name',
       origin,
       spacing,
       direction: this.direction,

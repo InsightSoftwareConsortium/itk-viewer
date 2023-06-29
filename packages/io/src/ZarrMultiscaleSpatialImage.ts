@@ -13,10 +13,14 @@ import {
   Dataset,
   DatasetWithTransformation,
   DatasetZattrs,
-  MultiscaleImage,
   NgffTransform,
   ZArray,
-} from './ngff-zarr-types.js';
+} from './ngff-types.js';
+import {
+  image as imageValidator,
+  IMAGE_VERSION_DEFAULT,
+  NgffImage,
+} from './ngff-validator.js';
 
 // ends with zarr and optional nested image name like foo.zarr/image1
 export const isZarr = (url: string) => /zarr((\/)[\w-]+\/?)?$/.test(url);
@@ -57,19 +61,22 @@ const composeTransforms = (
     { scale: Array(dimCount).fill(1), translation: Array(dimCount).fill(0) }
   );
 
+const getComposedTransformation = (
+  image: NgffImage | Dataset,
+  dimCount: number
+) => {
+  const coordinateTransformations =
+    'coordinateTransformations' in image ? image.coordinateTransformations : [];
+  return composeTransforms(coordinateTransformations, dimCount);
+};
+
 export const computeTransform = (
-  imageMetadata: MultiscaleImage,
+  imageMetadata: NgffImage,
   datasetMetadata: DatasetWithTransformation,
   dimCount: number
 ) => {
-  const global = composeTransforms(
-    imageMetadata.coordinateTransformations,
-    dimCount
-  );
-  const dataset = composeTransforms(
-    datasetMetadata.coordinateTransformations,
-    dimCount
-  );
+  const global = getComposedTransformation(imageMetadata, dimCount);
+  const dataset = getComposedTransformation(datasetMetadata, dimCount);
 
   return composeTransforms(
     [
@@ -122,13 +129,10 @@ const makeCoords = ({
   dataset,
 }: {
   shape: Array<number>;
-  multiscaleImage: MultiscaleImage;
+  multiscaleImage: NgffImage;
   dataset: DatasetWithTransformation;
 }) => {
-  const axes =
-    multiscaleImage.axes?.map((axis) =>
-      typeof axis === 'object' ? axis.name : axis
-    ) ?? TCZYX;
+  const axes = getAxisNames(multiscaleImage);
   const coords = new Map(
     axes.map((dim) => [dim, undefined as Float32Array | undefined])
   );
@@ -176,6 +180,15 @@ const findAxesLongNames = async ({
   );
 };
 
+const getAxisNames = (image: NgffImage) => {
+  if ('axes' in image)
+    return image.axes.map((axis) =>
+      typeof axis === 'object' ? axis.name : axis
+    );
+
+  return TCZYX; // default to TCZYX for NGFF v0.1
+};
+
 const createScaledImageInfo = async ({
   multiscaleImage,
   dataset,
@@ -183,7 +196,7 @@ const createScaledImageInfo = async ({
   dataSource,
   multiscaleSpatialImageVersion,
 }: {
-  multiscaleImage: MultiscaleImage;
+  multiscaleImage: NgffImage;
   dataset: DatasetWithTransformation;
   pixelArrayMetadata: ZArray;
   dataSource: ZarrStoreParser;
@@ -193,13 +206,7 @@ const createScaledImageInfo = async ({
     ? ((await dataSource.getItem(`${dataset.path}/.zattrs`)) as DatasetZattrs)
     : {};
 
-  const dims =
-    scaleZattrs._ARRAY_DIMENSIONS ??
-    multiscaleImage.axes?.map((axis) =>
-      typeof axis === 'object' ? axis.name : axis
-    ) ??
-    TCZYX; // default to TCZYX for NGFF v0.1
-
+  const dims = scaleZattrs._ARRAY_DIMENSIONS ?? getAxisNames(multiscaleImage);
   const { shape, chunks } = pixelArrayMetadata;
 
   const chunkSize = toDimensionMap(dims, chunks);
@@ -231,9 +238,16 @@ const extractScaleSpacing = async (dataSource: ZarrStoreParser) => {
   const zattrs = await dataSource.getItem('.zattrs');
 
   const { multiscales, multiscaleSpatialImageVersion } = zattrs;
-  const multiscaleImage: MultiscaleImage = Array.isArray(multiscales)
+
+  const multiscaleImage: NgffImage = Array.isArray(multiscales)
     ? multiscales[0] // if multiple images (multiscales), just grab first one
     : multiscales;
+
+  const schemaVersion = multiscaleImage?.version ?? IMAGE_VERSION_DEFAULT;
+
+  if (['0.1', '0.4'].includes(schemaVersion)) {
+    imageValidator[schemaVersion].parse(zattrs);
+  }
 
   const datasetsWithArrayMetadataRaw = await Promise.all(
     multiscaleImage.datasets.map(async (dataset) => ({

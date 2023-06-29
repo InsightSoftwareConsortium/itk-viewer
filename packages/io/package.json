@@ -50,7 +50,8 @@
     "gl-matrix": "^3.4.3",
     "itk-wasm": "1.0.0-b.112",
     "p-queue": "^7.3.4",
-    "webworker-promise": "^0.5.1"
+    "webworker-promise": "^0.5.1",
+    "zod": "^3.21.4"
   },
   "eslintConfig": {
     "env": {

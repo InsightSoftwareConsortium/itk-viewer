@@ -38,7 +38,7 @@ export type ScaleInfo = {
   chunkSize: ChunkParameter; // chunk shape in elements
   arrayShape: ChunkParameter; // array shape in elements
   ranges?: Array<Array<number>>; // Map('1': [0, 140], '2': [3, 130]) or null if unknown. Range of values for each component
-  name: string; // dataset name
+  name?: string; // dataset name
 
   indexToWorld?: mat4;
 
