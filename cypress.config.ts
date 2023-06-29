@@ -12,5 +12,7 @@ export default defineConfig({
     watchForFileChanges: true,
     defaultCommandTimeout: 30000,
   },
+  // videos are not reliable in github action: https://github.com/cypress-io/github-action/issues/337
+  video: false,
   projectId: 'nrnh8e',
 });
