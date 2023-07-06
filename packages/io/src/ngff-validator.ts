@@ -21,6 +21,21 @@ const customNgffProperties = {
   ranges: ranges.optional(),
 };
 
+const coordinateTransformations = z
+  .array(
+    z.union([
+      z.object({
+        type: z.enum(['scale']),
+        scale: z.array(z.number()).min(2),
+      }),
+      z.object({
+        type: z.enum(['translation']),
+        translation: z.array(z.number()).min(2),
+      }),
+    ])
+  )
+  .min(1);
+
 export const image = {
   '0.4': z
     .object({
@@ -32,76 +47,13 @@ export const image = {
               .array(
                 z.object({
                   path: z.string(),
-                  coordinateTransformations: z
-                    .array(
-                      z.any().superRefine((x, ctx) => {
-                        const schemas = [
-                          z.object({
-                            type: z.enum(['scale']),
-                            scale: z.array(z.number()).min(2),
-                          }),
-                          z.object({
-                            type: z.enum(['translation']),
-                            translation: z.array(z.number()).min(2),
-                          }),
-                        ];
-                        const errors = schemas.reduce(
-                          (errors: z.ZodError[], schema) =>
-                            ((result) =>
-                              'error' in result
-                                ? [...errors, result.error]
-                                : errors)(schema.safeParse(x)),
-                          []
-                        );
-                        if (schemas.length - errors.length !== 1) {
-                          ctx.addIssue({
-                            path: ctx.path,
-                            code: 'invalid_union',
-                            unionErrors: errors,
-                            message: 'Invalid input: Should pass single schema',
-                          });
-                        }
-                      })
-                    )
-                    .min(1),
+                  coordinateTransformations: coordinateTransformations,
                 })
               )
               .min(1),
             version: z.enum(['0.4']).optional(),
             axes: z.array(axis).min(2).max(5),
-            coordinateTransformations: z
-              .array(
-                z.any().superRefine((x, ctx) => {
-                  const schemas = [
-                    z.object({
-                      type: z.enum(['scale']),
-                      scale: z.array(z.number()).min(2),
-                    }),
-                    z.object({
-                      type: z.enum(['translation']),
-                      translation: z.array(z.number()).min(2),
-                    }),
-                  ];
-                  const errors = schemas.reduce(
-                    (errors: z.ZodError[], schema) =>
-                      ((result) =>
-                        'error' in result ? [...errors, result.error] : errors)(
-                        schema.safeParse(x)
-                      ),
-                    []
-                  );
-                  if (schemas.length - errors.length !== 1) {
-                    ctx.addIssue({
-                      path: ctx.path,
-                      code: 'invalid_union',
-                      unionErrors: errors,
-                      message: 'Invalid input: Should pass single schema',
-                    });
-                  }
-                })
-              )
-              .min(1)
-              .optional(),
+            coordinateTransformations: coordinateTransformations.optional(),
             ...customNgffProperties,
           })
         )
