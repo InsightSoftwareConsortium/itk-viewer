@@ -9,17 +9,15 @@ import { ZarrStoreParser } from './ZarrStoreParser.js';
 import HttpStore from './HttpStore.js';
 import { CXYZT, toDimensionMap } from './dimensionUtils.js';
 import { Dimension, ScaleInfo } from './types.js';
-import {
-  Dataset,
-  DatasetWithTransformation,
-  DatasetZattrs,
-  NgffTransform,
-  ZArray,
-} from './ngff-types.js';
+import { Dataset, DatasetWithTransformation } from './ngff-types.js';
 import {
   image as imageValidator,
   IMAGE_VERSION_DEFAULT,
   NgffImage,
+  Transform,
+  datasetZattrs,
+  zArray,
+  ZArray,
 } from './ngff-validator.js';
 
 // ends with zarr and optional nested image name like foo.zarr/image1
@@ -35,7 +33,7 @@ const TCZYX = Object.freeze([
 ]) as ReadonlyArray<Dimension>;
 
 const composeTransforms = (
-  transforms: Array<NgffTransform> = [],
+  transforms: Array<Transform> = [],
   dimCount: number
 ) =>
   transforms.reduce(
@@ -115,7 +113,7 @@ const ensureScaleTransforms = (
         ...dataset,
         coordinateTransformations: [
           { scale, type: 'scale' },
-        ] as Array<NgffTransform>,
+        ] as Array<Transform>,
       },
       pixelArrayMetadata,
     };
@@ -202,9 +200,12 @@ const createScaledImageInfo = async ({
   dataSource: ZarrStoreParser;
   multiscaleSpatialImageVersion: string;
 }) => {
-  const scaleZattrs = multiscaleSpatialImageVersion
-    ? ((await dataSource.getItem(`${dataset.path}/.zattrs`)) as DatasetZattrs)
-    : {};
+  // only fetch if version is defined to avoid 404s
+  const scaleZattrsRaw =
+    (multiscaleSpatialImageVersion &&
+      (await dataSource.getItem(`${dataset.path}/.zattrs`))) ||
+    {};
+  const scaleZattrs = datasetZattrs.parse(scaleZattrsRaw);
 
   const dims = scaleZattrs._ARRAY_DIMENSIONS ?? getAxisNames(multiscaleImage);
   const { shape, chunks } = pixelArrayMetadata;
@@ -212,6 +213,7 @@ const createScaledImageInfo = async ({
   const chunkSize = toDimensionMap(dims, chunks);
   const arrayShape = toDimensionMap(dims, shape);
 
+  // only fetch if version is defined to avoid 404s
   const axesNames = multiscaleSpatialImageVersion
     ? await findAxesLongNames({ dataset, dataSource, dims })
     : undefined;
@@ -252,9 +254,9 @@ const extractScaleSpacing = async (dataSource: ZarrStoreParser) => {
   const datasetsWithArrayMetadataRaw = await Promise.all(
     multiscaleImage.datasets.map(async (dataset) => ({
       dataset,
-      pixelArrayMetadata: (await dataSource.getItem(
-        `${dataset.path}/.zarray`
-      )) as ZArray,
+      pixelArrayMetadata: zArray.parse(
+        await dataSource.getItem(`${dataset.path}/.zarray`)
+      ) as ZArray,
     }))
   );
 
