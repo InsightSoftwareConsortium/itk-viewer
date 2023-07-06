@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { mat4, vec3 } from 'gl-matrix';
 import { Image, ImageType, setMatrixElement } from 'itk-wasm';
 import WebworkerPromise from 'webworker-promise';
@@ -351,7 +352,9 @@ class MultiscaleSpatialImage {
   }
 
   async getChunksImpl(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _scale: number,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _cxyztArray: Array<Array<number>>
   ): Promise<Array<ArrayBuffer>> {
     console.error('Override me in a derived class');
