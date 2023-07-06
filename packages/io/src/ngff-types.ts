@@ -22,21 +22,6 @@ export type DatasetWithTransformation = {
   coordinateTransformations: Array<NgffTransform>;
 };
 
-type Axis =
-  | {
-      name: Dimension;
-    }
-  | Dimension;
-
-export type MultiscaleImage = {
-  name: string;
-  datasets: Array<Dataset>;
-  axes?: Array<Axis>;
-  ranges?: Array<Array<number>>;
-  direction?: Direction;
-  coordinateTransformations?: Array<NgffTransform>;
-};
-
 export type ZArray = {
   shape: Array<number>;
   chunks: Array<number>;

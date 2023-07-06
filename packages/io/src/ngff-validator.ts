@@ -1,7 +1,25 @@
 import { z } from 'zod';
-import { Direction } from './types.js';
 
 export const IMAGE_VERSION_DEFAULT = '0.4';
+
+const direction = z.array(z.array(z.number()).length(3)).length(3);
+const ranges = z.array(z.array(z.number()).length(2));
+
+const dimension = z.enum(['x', 'y', 'z', 'c', 't']);
+
+export type Dimension = z.infer<typeof dimension>;
+
+const axis = z.object({
+  name: dimension,
+  type: z.enum(['channel', 'time', 'space']).optional(),
+});
+
+export type Axis = z.infer<typeof axis>;
+
+const customNgffProperties = {
+  direction: direction.optional(),
+  ranges: ranges.optional(),
+};
 
 export const image = {
   '0.4': z
@@ -50,48 +68,7 @@ export const image = {
               )
               .min(1),
             version: z.enum(['0.4']).optional(),
-            axes: z
-              .array(
-                z.any().superRefine((x, ctx) => {
-                  const schemas = [
-                    z.object({
-                      name: z.string(),
-                      type: z.enum(['channel', 'time', 'space']),
-                    }),
-                    z.object({
-                      name: z.string(),
-                      type: z
-                        .any()
-                        .refine(
-                          (value) =>
-                            !z
-                              .enum(['space', 'time', 'channel'])
-                              .safeParse(value).success,
-                          'Invalid input: Should NOT be valid against schema'
-                        )
-                        .optional(),
-                    }),
-                  ];
-                  const errors = schemas.reduce(
-                    (errors: z.ZodError[], schema) =>
-                      ((result) =>
-                        'error' in result ? [...errors, result.error] : errors)(
-                        schema.safeParse(x)
-                      ),
-                    []
-                  );
-                  if (schemas.length - errors.length !== 1) {
-                    ctx.addIssue({
-                      path: ctx.path,
-                      code: 'invalid_union',
-                      unionErrors: errors,
-                      message: 'Invalid input: Should pass single schema',
-                    });
-                  }
-                })
-              )
-              .min(2)
-              .max(5),
+            axes: z.array(axis).min(2).max(5),
             coordinateTransformations: z
               .array(
                 z.any().superRefine((x, ctx) => {
@@ -125,6 +102,7 @@ export const image = {
               )
               .min(1)
               .optional(),
+            ...customNgffProperties,
           })
         )
         .min(1)
@@ -163,6 +141,7 @@ export const image = {
                 version: z.string().optional(),
               })
               .optional(),
+            ...customNgffProperties,
           })
         )
         .min(1)
@@ -191,9 +170,4 @@ export const image = {
 
 type Schema = z.infer<(typeof image)['0.1'] | (typeof image)['0.4']>;
 
-type NgffImageCustomProps = {
-  direction?: Direction;
-  ranges?: Array<Array<number>>;
-};
-
-export type NgffImage = Schema['multiscales'][number] & NgffImageCustomProps;
+export type NgffImage = Schema['multiscales'][number];
