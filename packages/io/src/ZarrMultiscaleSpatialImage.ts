@@ -9,7 +9,6 @@ import { ZarrStoreParser } from './ZarrStoreParser.js';
 import HttpStore from './HttpStore.js';
 import { CXYZT, toDimensionMap } from './dimensionUtils.js';
 import { Dimension, ScaleInfo } from './types.js';
-import { Dataset, DatasetWithTransformation } from './ngff-types.js';
 import {
   image as imageValidator,
   IMAGE_VERSION_DEFAULT,
@@ -18,6 +17,7 @@ import {
   datasetZattrs,
   zArray,
   ZArray,
+  Dataset,
 } from './ngff-validator.js';
 
 // ends with zarr and optional nested image name like foo.zarr/image1
@@ -70,7 +70,7 @@ const getComposedTransformation = (
 
 export const computeTransform = (
   imageMetadata: NgffImage,
-  datasetMetadata: DatasetWithTransformation,
+  datasetMetadata: Dataset,
   dimCount: number
 ) => {
   const global = getComposedTransformation(imageMetadata, dimCount);
@@ -95,13 +95,9 @@ const ensureScaleTransforms = (
   }>
 ) => {
   const hasDatasetCoordinateTransform = datasetsWithArrayMetadata.some(
-    ({ dataset }) => dataset.coordinateTransformations
+    ({ dataset }) => 'coordinateTransformations' in dataset
   );
-  if (hasDatasetCoordinateTransform)
-    return datasetsWithArrayMetadata as Array<{
-      dataset: DatasetWithTransformation;
-      pixelArrayMetadata: ZArray;
-    }>;
+  if (hasDatasetCoordinateTransform) return datasetsWithArrayMetadata;
 
   const targetSize = datasetsWithArrayMetadata[0].pixelArrayMetadata.shape;
 
@@ -128,7 +124,7 @@ const makeCoords = ({
 }: {
   shape: Array<number>;
   multiscaleImage: NgffImage;
-  dataset: DatasetWithTransformation;
+  dataset: Dataset;
 }) => {
   const axes = getAxisNames(multiscaleImage);
   const coords = new Map(
@@ -195,7 +191,7 @@ const createScaledImageInfo = async ({
   multiscaleSpatialImageVersion,
 }: {
   multiscaleImage: NgffImage;
-  dataset: DatasetWithTransformation;
+  dataset: Dataset;
   pixelArrayMetadata: ZArray;
   dataSource: ZarrStoreParser;
   multiscaleSpatialImageVersion: string;
@@ -229,6 +225,7 @@ const createScaledImageInfo = async ({
     axesNames,
     chunkCount: toDimensionMap(
       dims,
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       dims.map((dim) => Math.ceil(arrayShape.get(dim)! / chunkSize.get(dim)!))
     ),
     chunkSize,

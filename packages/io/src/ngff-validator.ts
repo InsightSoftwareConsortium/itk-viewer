@@ -133,6 +133,8 @@ type Schema = z.infer<(typeof image)['0.1'] | (typeof image)['0.4']>;
 
 export type NgffImage = Schema['multiscales'][number];
 
+export type Dataset = NgffImage['datasets'][number];
+
 // Zarr schemas \\
 
 export const datasetZattrs = z.object({

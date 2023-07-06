@@ -2,6 +2,7 @@ import { Image, setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
 import { ZarrMultiscaleSpatialImage } from './ZarrMultiscaleSpatialImage.js';
 
 const SAMPLE_SIZE = 33;
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const takeSnapshot = ({ data, metadata, ...rest }: Image) => {
   if (!data) return '';
   const innerOffset = data.length / 2;
