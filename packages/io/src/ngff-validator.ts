@@ -1,5 +1,6 @@
 /**
- * Zod schemas started with converter here: https://stefanterdell.github.io/json-schema-to-zod-react/
+ * Zod schemas started with NGFF image.schema file https://github.com/ome/ngff/tree/main/0.4/schemas
+ * and run through converter here: https://stefanterdell.github.io/json-schema-to-zod-react/
  * then manually edited.
  *
  */
