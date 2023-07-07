@@ -1,6 +1,6 @@
 name: Build and test
 
-on: [push, pull_request]
+on: [push, pull_request, workflow_dispatch]
 
 jobs:
   build-test:
@@ -24,12 +24,24 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Test
+      - name: Test with Chrome
         uses: cypress-io/github-action@v5
         with:
           start: pnpm run test:ci
           record: true
           component: true
+          browser: chrome
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test with Firefox
+        uses: cypress-io/github-action@v5
+        with:
+          start: pnpm run test:ci
+          record: true
+          component: true
+          browser: firefox
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
