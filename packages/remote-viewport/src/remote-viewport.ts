@@ -1,4 +1,4 @@
-import { createViewport as rootCreateViewport } from '@itk-viewer/viewer/viewport.js';
+import { createViewport as parentCreateViewport } from '@itk-viewer/viewer/viewport.js';
 
 export const createViewport = ({
   parent,
@@ -9,5 +9,5 @@ export const createViewport = ({
 }) => {
   parent.innerHTML = `<div>Remote viewport at ${address}</div>`;
 
-  return rootCreateViewport();
+  return parentCreateViewport();
 };
