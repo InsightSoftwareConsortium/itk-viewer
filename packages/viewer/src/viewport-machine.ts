@@ -1,32 +1,66 @@
 import { assign, createMachine } from 'xstate';
 
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { Camera } from './camera-machine.js';
+import { ReadonlyMat4 } from 'gl-matrix';
 
-type context = {
+type Context = {
   image: MultiscaleSpatialImage | undefined;
+  camera?: Camera;
+  cameraSubscription?: ReturnType<Camera['subscribe']>;
 };
 
-type setImageEvent = {
+type SetImageEvent = {
   type: 'setImage';
   image: MultiscaleSpatialImage;
 };
 
+type SetCameraEvent = {
+  type: 'setCamera';
+  camera: Camera;
+};
+
+type SetCameraPoseEvent = {
+  type: 'setCameraPose';
+  pose: ReadonlyMat4;
+};
+
 export const viewportMachine = createMachine({
   types: {} as {
-    context: context;
-    events: setImageEvent;
+    context: Context;
+    events: SetImageEvent | SetCameraEvent | SetCameraPoseEvent;
   },
   id: 'viewport',
   initial: 'active',
-  context: { image: undefined },
+  context: { image: undefined, camera: undefined },
   states: {
     active: {
       on: {
         setImage: {
           actions: [
             assign({
-              image: ({ event: { image } }: { event: setImageEvent }) => image,
+              image: ({ event: { image } }: { event: SetImageEvent }) => image,
             }),
+          ],
+        },
+        setCamera: {
+          actions: [
+            assign({
+              camera: ({ event: { camera } }: { event: SetCameraEvent }) =>
+                camera,
+            }),
+            ({ context, self }) => {
+              if (context.cameraSubscription)
+                context.cameraSubscription.unsubscribe();
+              context.cameraSubscription = context.camera?.subscribe(
+                (state) => {
+                  self.send({
+                    type: 'setCameraPose',
+                    pose: state.context.pose,
+                  });
+                }
+              );
+            },
           ],
         },
       },
