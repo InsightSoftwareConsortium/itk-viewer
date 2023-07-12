@@ -16,7 +16,7 @@ export class ItkViewport extends LitElement {
   }
 
   render() {
-    return html` <h1>Viewport</h1> `;
+    return html`<h1>Viewport</h1>`;
   }
 
   static styles = css`
