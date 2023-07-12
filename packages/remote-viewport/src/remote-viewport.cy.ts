@@ -6,11 +6,10 @@ describe('remote-viewport', () => {
 
     cy.get('#viewport')
       .then((parent) => {
-        createViewport({
-          parent: parent[0],
+        const { element } = createViewport({
           address: 'http://localhost:3000',
         });
-        return parent;
+        return parent.append(element);
       })
       .contains('Remote viewport at http://localhost:3000');
   });
