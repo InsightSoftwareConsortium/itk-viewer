@@ -1,13 +1,8 @@
 import { createViewport as parentCreateViewport } from '@itk-viewer/viewer/viewport.js';
 
-export const createViewport = ({
-  parent,
-  address,
-}: {
-  parent: HTMLElement;
-  address: string;
-}) => {
-  parent.innerHTML = `<div>Remote viewport at ${address}</div>`;
+export const createViewport = ({ address }: { address: string }) => {
+  const element = document.createElement('div');
+  element.innerHTML = `Remote viewport at ${address}`;
 
-  return parentCreateViewport();
+  return { actor: parentCreateViewport(), element };
 };
