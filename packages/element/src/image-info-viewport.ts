@@ -1,38 +1,33 @@
 import { css, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 
-import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { SelectorController } from 'xstate-lit/dist/select-controller.js';
+
 import { ItkViewport } from './itk-viewport.js';
 
 @customElement('image-info-viewport')
 export class ImageInfoViewport extends ItkViewport {
-  image?: MultiscaleSpatialImage;
+  image = new SelectorController(
+    this,
+    this.actor,
+    (state) => state?.context.image
+  );
 
-  @property()
-  imageInfo = '';
+  render() {
+    const image = this.image.value;
+    if (!image) return html`<h1>No Image</h1>`;
 
-  @property()
-  imageName = '';
-
-  constructor() {
-    super();
-  }
-
-  setImage(image: MultiscaleSpatialImage) {
-    this.image = image;
-    this.imageName = this.image.name;
-    const { imageType, spatialDims, direction } = this.image;
-    this.imageInfo = `Image Type: ${JSON.stringify(
+    const { name, imageType, spatialDims, direction } = image;
+    const imageInfo = `Image Type: ${JSON.stringify(
       imageType,
       null,
       2
     )}\nSpatial Dimensions: ${spatialDims}\nDirection: ${direction}`;
-  }
 
-  render() {
     return html`
-      <h1>${this.imageName} Information</h1>
-      <pre>${this.imageInfo}</pre>
+      <h1>Image Information</h1>
+      <pre>Name: ${name}</pre>
+      <pre>${imageInfo}</pre>
     `;
   }
 
@@ -46,6 +41,6 @@ export class ImageInfoViewport extends ItkViewport {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'image-info-viewport': ItkViewport;
+    'image-info-viewport': ImageInfoViewport;
   }
 }
