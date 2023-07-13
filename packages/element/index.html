@@ -7,14 +7,14 @@
     <title>itk-viewer</title>
     <link rel="stylesheet" href="./src/index.css" />
     <script type="module" src="/src/image-info-viewport.ts"></script>
-    <script type="module" src="/src/itk-viewport.ts"></script>
+    <script type="module" src="/src/remote-viewport.ts"></script>
     <script type="module" src="/src/itk-viewer-element.ts"></script>
     <script type="module" src="/src/main.ts"></script>
   </head>
   <body>
     <itk-viewer>
       <image-info-viewport id="left-viewport"></image-info-viewport>
-      <itk-viewport id="right-viewport"></itk-viewport>
+      <remote-viewport id="right-viewport" address="asdf"></remote-viewport>
     </itk-viewer>
   </body>
 </html>
