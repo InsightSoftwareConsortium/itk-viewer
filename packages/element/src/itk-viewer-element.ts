@@ -2,14 +2,10 @@ import { LitElement, css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
 import { Viewer, createViewer } from '@itk-viewer/viewer/viewer.js';
-import { ItkViewport } from './itk-viewport.js';
-import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 @customElement('itk-viewer')
 export class ItkViewer extends LitElement {
   viewer = createViewer();
-  image?: MultiscaleSpatialImage;
-  viewports: ItkViewport[] = [];
 
   constructor() {
     super();
