@@ -66,6 +66,9 @@ importers:
       '@itk-viewer/io':
         specifier: workspace:^
         version: link:../io
+      '@itk-viewer/remote-viewport':
+        specifier: workspace:*
+        version: link:../remote-viewport
       '@itk-viewer/viewer':
         specifier: workspace:*
         version: link:../viewer
