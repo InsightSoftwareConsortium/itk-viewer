@@ -7,36 +7,23 @@ import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 @customElement('itk-viewer')
 export class ItkViewer extends LitElement {
-  viewer: Viewer;
+  viewer = createViewer();
   image?: MultiscaleSpatialImage;
   viewports: ItkViewport[] = [];
 
   constructor() {
     super();
-    this.viewer = createViewer();
   }
 
-  distributeImage() {
-    this.viewports.forEach((viewport) => {
-      if (this.image) viewport.setImage(this.image);
-    });
-  }
-
-  addImage(image: MultiscaleSpatialImage) {
-    this.image = image;
-    this.distributeImage();
-  }
-
-  handleSlotChange(e: { target: HTMLSlotElement }) {
-    this.viewports = e.target.assignedElements() as ItkViewport[];
-    this.distributeImage();
+  getActor(): Viewer {
+    return this.viewer;
   }
 
   render() {
     return html`
       <h1>Viewer</h1>
       <div class="viewports">
-        <slot @slotchange=${this.handleSlotChange}></slot>
+        <slot></slot>
       </div>
     `;
   }

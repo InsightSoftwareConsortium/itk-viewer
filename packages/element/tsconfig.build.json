@@ -1,10 +1,17 @@
 {
   "extends": "../../tsconfig.build.json",
-  "compilerOptions": {
-    "outDir": "./types",
-    "emitDeclarationOnly": true
-  },
   "include": ["./src/*.ts"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo"
+  },
+  "exclude": [
+    "./**/dist/",
+    "./**/types/",
+    "./**/*.cy.ts",
+    "./**/vite.config.ts"
+  ],
   "references": [
     { "path": "../viewer/tsconfig.build.json" },
     { "path": "../io/tsconfig.build.json" }
