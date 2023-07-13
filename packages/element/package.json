@@ -1,20 +1,18 @@
 {
-  "name": "itk-viewer-element",
+  "name": "@itk-viewer/element",
   "version": "0.0.1",
   "description": "Web Component for multi-dimensional viewer",
   "type": "module",
-  "main": "dist/itk-viewer.js",
   "exports": {
-    ".": "./dist/itk-viewer.js"
+    "./*": "./dist/*"
   },
-  "types": "types/index.d.ts",
   "files": [
     "dist",
     "types"
   ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc --project tsconfig.build.json && vite build"
+    "build": "tsc --project tsconfig.build.json"
   },
   "repository": {
     "type": "git",
