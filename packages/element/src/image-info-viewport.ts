@@ -5,7 +5,7 @@ import { SelectorController } from 'xstate-lit/dist/select-controller.js';
 
 import { ItkViewport } from './itk-viewport.js';
 
-@customElement('image-info-viewport')
+@customElement('itk-image-info-viewport')
 export class ImageInfoViewport extends ItkViewport {
   image = new SelectorController(
     this,
@@ -41,6 +41,6 @@ export class ImageInfoViewport extends ItkViewport {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'image-info-viewport': ImageInfoViewport;
+    'itk-image-info-viewport': ImageInfoViewport;
   }
 }
