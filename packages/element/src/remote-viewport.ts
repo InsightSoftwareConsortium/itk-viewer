@@ -2,20 +2,22 @@ import { css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { Ref, ref, createRef } from 'lit/directives/ref.js';
 
-import { createViewport } from '@itk-viewer/remote-viewport/remote-viewport.js';
+import { createRemoteViewport } from '@itk-viewer/remote-viewport/remote-viewport.js';
 
 import { ItkViewport } from './itk-viewport.js';
 
-@customElement('remote-viewport')
+@customElement('itk-remote-viewport')
 export class RemoteViewport extends ItkViewport {
-  remoteCanvas: HTMLElement;
+  canvas: HTMLElement;
   canvasContainer: Ref<HTMLElement> = createRef();
 
   constructor() {
     super();
-    const { actor, element } = createViewport({ address: 'localhost:8080' });
+    const { actor, element } = createRemoteViewport({
+      address: 'localhost:8080',
+    });
     this.actor = actor;
-    this.remoteCanvas = element;
+    this.canvas = element;
   }
 
   render() {
@@ -28,7 +30,7 @@ export class RemoteViewport extends ItkViewport {
     if (!canvasContainer) {
       throw new Error('canvasContainer is undefined');
     }
-    canvasContainer.appendChild(this.remoteCanvas);
+    canvasContainer.appendChild(this.canvas);
   }
 
   static styles = css`
@@ -41,6 +43,6 @@ export class RemoteViewport extends ItkViewport {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'remote-viewport': RemoteViewport;
+    'itk-remote-viewport': RemoteViewport;
   }
 }

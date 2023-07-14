@@ -1,4 +1,4 @@
-import { createViewport } from './remote-viewport.js';
+import { createRemoteViewport } from './remote-viewport.js';
 
 describe('remote-viewport', () => {
   it('creates', () => {
@@ -6,7 +6,7 @@ describe('remote-viewport', () => {
 
     cy.get('#viewport')
       .then((parent) => {
-        const { element } = createViewport({
+        const { element } = createRemoteViewport({
           address: 'http://localhost:3000',
         });
         return parent.append(element);

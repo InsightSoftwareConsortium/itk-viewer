@@ -7,7 +7,7 @@ describe('ImageInfoViewport', () => {
   it('mounts', () => {
     cy.mount<'itk-viewer'>(html`
       <itk-viewer>
-        <image-info-viewport></image-info-viewport>
+        <itk-image-info-viewport></itk-image-info-viewport>
       </itk-viewer>
     `);
 
@@ -31,7 +31,7 @@ describe('ImageInfoViewport', () => {
   it('updates image info when image changes', () => {
     cy.mount<'itk-viewer'>(html`
       <itk-viewer>
-        <image-info-viewport></image-info-viewport>
+        <itk-image-info-viewport></itk-image-info-viewport>
       </itk-viewer>
     `);
 
