@@ -25,6 +25,7 @@
     "vite": "^4.3.9"
   },
   "dependencies": {
+    "xstate": "5.0.0-beta.8",
     "@itk-viewer/viewer": "workspace:^"
   }
 }

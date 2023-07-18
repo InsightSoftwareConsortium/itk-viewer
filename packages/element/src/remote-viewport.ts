@@ -1,36 +1,38 @@
-import { css, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { PropertyValues, css, html } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
 import { Ref, ref, createRef } from 'lit/directives/ref.js';
 
-import { createRemoteViewport } from '@itk-viewer/remote-viewport/remote-viewport.js';
+import {
+  Remote,
+  createRemoteViewport,
+} from '@itk-viewer/remote-viewport/remote-viewport.js';
 
 import { ItkViewport } from './itk-viewport.js';
 
 @customElement('itk-remote-viewport')
 export class RemoteViewport extends ItkViewport {
-  canvas: HTMLElement;
-  canvasContainer: Ref<HTMLElement> = createRef();
+  @property({ type: String })
+  address: string | undefined;
+
+  canvas: Ref<HTMLImageElement> = createRef();
+  remote: Remote;
 
   constructor() {
     super();
-    const { actor, element } = createRemoteViewport({
-      address: 'localhost:8080',
-    });
-    this.actor = actor;
-    this.canvas = element;
+    const { remote, viewport } = createRemoteViewport();
+    this.actor = viewport;
+    this.remote = remote;
+  }
+
+  willUpdate(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has('address')) {
+      this.remote.send({ type: 'setAddress', address: this.address });
+    }
   }
 
   render() {
     return html` <h1>Remote viewport</h1>
-      <div ${ref(this.canvasContainer)}></div>`;
-  }
-
-  firstUpdated() {
-    const canvasContainer = this.canvasContainer.value;
-    if (!canvasContainer) {
-      throw new Error('canvasContainer is undefined');
-    }
-    canvasContainer.appendChild(this.canvas);
+      <img ${ref(this.canvas)}></img>`;
   }
 
   static styles = css`

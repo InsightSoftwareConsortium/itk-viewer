@@ -1,8 +1,14 @@
-import { createViewport as parentCreateViewport } from '@itk-viewer/viewer/viewport.js';
+import { createViewport } from '@itk-viewer/viewer/viewport.js';
+import { remoteMachine } from './remote-machine.js';
+import { interpret } from 'xstate';
 
-export const createRemoteViewport = ({ address }: { address: string }) => {
-  const element = document.createElement('div');
-  element.innerHTML = `Remote viewport at ${address}`;
+const createRemote = () => interpret(remoteMachine).start();
 
-  return { actor: parentCreateViewport(), element };
+export type Remote = ReturnType<typeof createRemote>;
+
+export const createRemoteViewport = () => {
+  const viewport = createViewport();
+  const remote = createRemote();
+
+  return { remote, viewport };
 };
