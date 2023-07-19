@@ -1,16 +1,12 @@
-import { createRemoteViewport } from './remote-viewport.js';
+import { createRemoteViewport, createTestActors } from './remote-viewport.js';
 
 describe('remote-viewport', () => {
-  it('creates', () => {
-    cy.mount("<div id='viewport'></div>");
+  it('remote actor saves server address', () => {
+    const { remote } = createRemoteViewport(createTestActors());
 
-    cy.get('#viewport')
-      .then((parent) => {
-        const { element } = createRemoteViewport({
-          address: 'http://localhost:3000',
-        });
-        return parent.append(element);
-      })
-      .contains('Remote viewport at http://localhost:3000');
+    const address = 'foo';
+    remote.send({ type: 'setAddress', address });
+
+    cy.wrap(remote.getSnapshot().context.address).should('equal', address);
   });
 });

@@ -123,8 +123,8 @@ importers:
         specifier: workspace:^
         version: link:../viewer
       xstate:
-        specifier: 5.0.0-beta.8
-        version: 5.0.0-beta.8
+        specifier: 5.0.0-beta.18
+        version: 5.0.0-beta.18
     devDependencies:
       typescript:
         specifier: ^5.1.3
@@ -139,8 +139,8 @@ importers:
         specifier: workspace:^
         version: link:../io
       xstate:
-        specifier: 5.0.0-beta.8
-        version: 5.0.0-beta.8
+        specifier: 5.0.0-beta.18
+        version: 5.0.0-beta.18
     devDependencies:
       typescript:
         specifier: ^5.1.3
@@ -3028,8 +3028,8 @@ packages:
     resolution: {integrity: sha512-1gBUcFWBj/rv/pRcP2Bedl5sNRGX2d36CaOx9z7fE9uSiHaOEHIWzLg1B853q2xdUHUA9pEiWKjLZ3can4SJaQ==}
     dev: false
 
-  /xstate@5.0.0-beta.8:
-    resolution: {integrity: sha512-vxnNy2GaOcK4S1eCJUFAZ3g++HM+E1b0vPqzNYwnJyreJKsrhNCAd5CrmsZSBh96IkvmDD0MBx55VTSKTnUelg==}
+  /xstate@5.0.0-beta.18:
+    resolution: {integrity: sha512-sRRb/8SM6UxeaP1dTdIKZ2Ktk4v9xLbZZ2+xRVCBEWSIfWngpZjGuYq5pIkkXWf1uO/7Fb2eBovM9V+IkEqPXg==}
     dev: false
 
   /yallist@4.0.0:

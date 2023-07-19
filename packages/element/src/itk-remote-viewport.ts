@@ -1,10 +1,12 @@
 import { PropertyValues, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { Ref, ref, createRef } from 'lit/directives/ref.js';
+import { SelectorController } from 'xstate-lit/dist/select-controller.js';
 
 import {
-  Remote,
+  RemoteActor,
   createRemoteViewport,
+  createTestActors,
 } from '@itk-viewer/remote-viewport/remote-viewport.js';
 
 import { ItkViewport } from './itk-viewport.js';
@@ -14,14 +16,24 @@ export class RemoteViewport extends ItkViewport {
   @property({ type: String })
   address: string | undefined;
 
+  remote: RemoteActor;
   canvas: Ref<HTMLImageElement> = createRef();
-  remote: Remote;
+  frame: any;
 
   constructor() {
     super();
-    const { remote, viewport } = createRemoteViewport();
+    const { remote, viewport } = createRemoteViewport(createTestActors());
     this.actor = viewport;
     this.remote = remote;
+    this.frame = new SelectorController(
+      this,
+      this.remote,
+      (state) => state?.context.frame
+    );
+    const p = new Promise((resolve) => setTimeout(resolve, 5000));
+    p.then(() => {
+      this.remote.send({ type: 'render' });
+    });
   }
 
   willUpdate(changedProperties: PropertyValues<this>) {
@@ -31,6 +43,7 @@ export class RemoteViewport extends ItkViewport {
   }
 
   render() {
+    console.log(this.frame.value);
     return html` <h1>Remote viewport</h1>
       <img ${ref(this.canvas)}></img>`;
   }

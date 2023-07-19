@@ -1,4 +1,4 @@
-import { assign, createMachine } from 'xstate';
+import { ActorRef, assign, createMachine } from 'xstate';
 
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera } from './camera-machine.js';
@@ -32,7 +32,11 @@ export const viewportMachine = createMachine({
   },
   id: 'viewport',
   initial: 'active',
-  context: { image: undefined, camera: undefined },
+  context: {
+    image: undefined,
+    camera: undefined,
+    cameraSubscription: undefined,
+  },
   states: {
     active: {
       on: {
@@ -54,7 +58,7 @@ export const viewportMachine = createMachine({
                 context.cameraSubscription.unsubscribe();
               context.cameraSubscription = context.camera?.subscribe(
                 (state) => {
-                  self.send({
+                  (self as ActorRef<SetCameraEvent | SetCameraPoseEvent>).send({
                     type: 'setCameraPose',
                     pose: state.context.pose,
                   });
