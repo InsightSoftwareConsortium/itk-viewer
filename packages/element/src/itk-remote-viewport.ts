@@ -5,14 +5,14 @@ import { SelectorController } from 'xstate-lit/dist/select-controller.js';
 
 import {
   RemoteActor,
+  createHyphaActors,
   createRemoteViewport,
-  createTestActors,
 } from '@itk-viewer/remote-viewport/remote-viewport.js';
 
 import { ItkViewport } from './itk-viewport.js';
 
 @customElement('itk-remote-viewport')
-export class RemoteViewport extends ItkViewport {
+export class ItkRemoteViewport extends ItkViewport {
   @property({ type: String })
   address: string | undefined;
 
@@ -22,7 +22,7 @@ export class RemoteViewport extends ItkViewport {
 
   constructor() {
     super();
-    const { remote, viewport } = createRemoteViewport(createTestActors());
+    const { remote, viewport } = createRemoteViewport(createHyphaActors());
     this.actor = viewport;
     this.remote = remote;
     this.frame = new SelectorController(
@@ -43,9 +43,13 @@ export class RemoteViewport extends ItkViewport {
   }
 
   render() {
-    console.log(this.frame.value);
-    return html` <h1>Remote viewport</h1>
-      <img ${ref(this.canvas)}></img>`;
+    const imageSrc = this.frame.value
+      ? 'data:image/png;base64,' + this.frame.value
+      : '';
+    return html` 
+      <h1>Remote viewport</h1>
+      <img ${ref(this.canvas)} src=${imageSrc}></img>
+      `;
   }
 
   static styles = css`
@@ -58,6 +62,6 @@ export class RemoteViewport extends ItkViewport {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'itk-remote-viewport': RemoteViewport;
+    'itk-remote-viewport': ItkRemoteViewport;
   }
 }

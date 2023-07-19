@@ -60,9 +60,7 @@ export const remoteMachine = createMachine({
           invoke: {
             id: 'render',
             src: 'renderer',
-            input: ({ context }: { context: Context }) => ({
-              server: context.server,
-            }),
+            input: ({ context }: { context: Context }) => context.server,
             onDone: {
               actions: assign({
                 frame: ({ event }) => event.output,
