@@ -33,10 +33,6 @@ export class ItkRemoteViewport extends ItkViewport {
       this.remote,
       (state) => state?.context.frame
     );
-    const p = new Promise((resolve) => setTimeout(resolve, 5000));
-    p.then(() => {
-      this.remote.send({ type: 'render' });
-    });
   }
 
   willUpdate(changedProperties: PropertyValues<this>) {
