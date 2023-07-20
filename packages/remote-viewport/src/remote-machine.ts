@@ -4,11 +4,17 @@ type Context = {
   address: string | undefined;
   server: any | undefined;
   frame: any | undefined;
+  density: number;
 };
 
 type SetAddressEvent = {
   type: 'setAddress';
   address: string | undefined;
+};
+
+type SetDensityEvent = {
+  type: 'setDensity';
+  density: number;
 };
 
 type RenderEvent = {
@@ -18,11 +24,16 @@ type RenderEvent = {
 export const remoteMachine = createMachine({
   types: {} as {
     context: Context;
-    events: SetAddressEvent | RenderEvent;
+    events: SetAddressEvent | SetDensityEvent | RenderEvent;
   },
   id: 'remote',
   initial: 'disconnected',
-  context: { address: undefined, server: undefined, frame: undefined },
+  context: {
+    address: undefined,
+    server: undefined,
+    frame: undefined,
+    density: 30,
+  },
   states: {
     disconnected: {
       on: {
@@ -72,6 +83,27 @@ export const remoteMachine = createMachine({
         idle: {
           on: {
             render: { target: 'render' },
+            setDensity: {
+              actions: [
+                assign({
+                  density: ({ event }) => event.density,
+                }),
+              ],
+              target: 'updating',
+            },
+          },
+        },
+        updating: {
+          invoke: {
+            id: 'updating',
+            src: 'updater',
+            input: ({ context }: { context: Context }) => ({
+              renderer: context.server,
+              density: context.density,
+            }),
+            onDone: {
+              target: 'render',
+            },
           },
         },
       },

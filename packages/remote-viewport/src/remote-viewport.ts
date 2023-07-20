@@ -19,6 +19,9 @@ export const createTestActors: () => RemoteMachineConfig = () => ({
       await new Promise((resolve) => setTimeout(resolve, 1000));
       return { frame: 'new frame here' };
     }),
+    updater: fromPromise(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }),
   },
 });
 
@@ -42,6 +45,9 @@ export const createHyphaActors: () => RemoteMachineConfig = () => ({
       createHyphaRenderer(input.address)
     ),
     renderer: fromPromise(async ({ input: renderer }) => renderer.render()),
+    updater: fromPromise(async ({ input: { renderer, density } }) =>
+      renderer.setDensity(density)
+    ),
   },
 });
 

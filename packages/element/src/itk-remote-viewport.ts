@@ -16,6 +16,9 @@ export class ItkRemoteViewport extends ItkViewport {
   @property({ type: String })
   address: string | undefined;
 
+  @property({ type: Number })
+  density = 30;
+
   remote: RemoteActor;
   canvas: Ref<HTMLImageElement> = createRef();
   frame: any;
@@ -40,6 +43,14 @@ export class ItkRemoteViewport extends ItkViewport {
     if (changedProperties.has('address')) {
       this.remote.send({ type: 'setAddress', address: this.address });
     }
+    if (changedProperties.has('density')) {
+      this.remote.send({ type: 'setDensity', density: this.density });
+    }
+  }
+
+  onDensity(event: Event) {
+    const target = event.target as HTMLInputElement;
+    this.density = target.valueAsNumber;
   }
 
   render() {
@@ -48,7 +59,14 @@ export class ItkRemoteViewport extends ItkViewport {
       : '';
     return html` 
       <h1>Remote viewport</h1>
+      <p>Address: ${this.address}</p>
       <img ${ref(this.canvas)} src=${imageSrc}></img>
+      <div>
+        Density: ${this.density}
+        <input .valueAsNumber=${this.density} @change="${
+      this.onDensity
+    }" type="range" min="1.0" max="70.0" step="1.0" />
+      </div>
       `;
   }
 
