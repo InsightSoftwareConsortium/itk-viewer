@@ -25,7 +25,8 @@
     "vite": "^4.3.9"
   },
   "dependencies": {
-    "xstate": "5.0.0-beta.18",
-    "@itk-viewer/viewer": "workspace:^"
+    "@itk-viewer/viewer": "workspace:^",
+    "imjoy-rpc": "^0.5.42",
+    "xstate": "5.0.0-beta.18"
   }
 }

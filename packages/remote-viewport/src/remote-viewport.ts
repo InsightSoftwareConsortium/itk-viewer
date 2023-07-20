@@ -1,6 +1,7 @@
+import { fromPromise, interpret } from 'xstate';
+import { hyphaWebsocketClient } from 'imjoy-rpc';
 import { createViewport } from '@itk-viewer/viewer/viewport.js';
 import { remoteMachine } from './remote-machine.js';
-import { fromPromise, interpret } from 'xstate';
 
 type RemoteMachineConfig = {
   actors: {
