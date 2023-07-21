@@ -9,12 +9,12 @@ const viewerElement = document.querySelector('itk-viewer');
 if (!viewerElement) throw new Error('Could not find element');
 const viewer = viewerElement.getActor();
 
-const leftViewport = document.querySelector(
-  '#left-viewport'
-) as ItkViewport | null;
-if (!leftViewport) throw new Error('Could not find element');
-const leftV = leftViewport.getActor();
-viewer.send({ type: 'addViewport', viewport: leftV, name: 'left' });
+// const leftViewport = document.querySelector(
+//   '#left-viewport'
+// ) as ItkViewport | null;
+// if (!leftViewport) throw new Error('Could not find element');
+// const leftV = leftViewport.getActor();
+// viewer.send({ type: 'addViewport', viewport: leftV, name: 'left' });
 
 const rightViewport = document.querySelector(
   '#right-viewport'

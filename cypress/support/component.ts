@@ -19,3 +19,8 @@ declare global {
     }
   }
 }
+
+// workaround for error importing imjoy-rpc in remote-viewport.cy.ts
+// Error is in msgpack: Cannot read properties of undefined (reading 'TEXT_ENCODING')
+// @ts-ignore
+process = undefined;

@@ -1,4 +1,4 @@
-import { assign, createMachine } from 'xstate';
+import { ActorRef, assign, createMachine } from 'xstate';
 
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera } from './camera-machine.js';
@@ -20,19 +20,23 @@ type SetCameraEvent = {
   camera: Camera;
 };
 
-type SetCameraPoseEvent = {
-  type: 'setCameraPose';
+type CameraPoseUpdatedEvent = {
+  type: 'cameraPoseUpdated';
   pose: ReadonlyMat4;
 };
 
 export const viewportMachine = createMachine({
   types: {} as {
     context: Context;
-    events: SetImageEvent | SetCameraEvent | SetCameraPoseEvent;
+    events: SetImageEvent | SetCameraEvent | CameraPoseUpdatedEvent;
   },
   id: 'viewport',
   initial: 'active',
-  context: { image: undefined, camera: undefined },
+  context: {
+    image: undefined,
+    camera: undefined,
+    cameraSubscription: undefined,
+  },
   states: {
     active: {
       on: {
@@ -52,11 +56,15 @@ export const viewportMachine = createMachine({
             ({ context, self }) => {
               if (context.cameraSubscription)
                 context.cameraSubscription.unsubscribe();
+
+              // Let observers of Viewport know that camera has updated
               context.cameraSubscription = context.camera?.subscribe(
-                (state) => {
-                  self.send({
-                    type: 'setCameraPose',
-                    pose: state.context.pose,
+                (cameraState) => {
+                  (
+                    self as ActorRef<SetCameraEvent | CameraPoseUpdatedEvent>
+                  ).send({
+                    type: 'cameraPoseUpdated',
+                    pose: cameraState.context.pose,
                   });
                 }
               );
