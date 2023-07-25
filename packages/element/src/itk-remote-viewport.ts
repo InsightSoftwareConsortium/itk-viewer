@@ -1,6 +1,5 @@
 import { PropertyValues, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { Ref, ref, createRef } from 'lit/directives/ref.js';
 import { SelectorController } from 'xstate-lit/dist/select-controller.js';
 
 import {
@@ -20,8 +19,9 @@ export class ItkRemoteViewport extends ItkViewport {
   density = 30;
 
   remote: RemoteActor;
-  canvas: Ref<HTMLImageElement> = createRef();
-  frame: any;
+  frame: SelectorController<RemoteActor, string>;
+  lastFrameValue = '';
+  imageSrc = '';
 
   constructor() {
     super();
@@ -42,6 +42,11 @@ export class ItkRemoteViewport extends ItkViewport {
     if (changedProperties.has('density')) {
       this.remote.send({ type: 'setDensity', density: this.density });
     }
+
+    if (this.frame.value && this.frame.value !== this.lastFrameValue) {
+      this.imageSrc = 'data:image/png;base64,' + this.frame.value;
+      this.lastFrameValue = this.frame.value;
+    }
   }
 
   onDensity(event: Event) {
@@ -50,18 +55,16 @@ export class ItkRemoteViewport extends ItkViewport {
   }
 
   render() {
-    const imageSrc = this.frame.value
-      ? 'data:image/png;base64,' + this.frame.value
-      : '';
     return html` 
       <h1>Remote viewport</h1>
       <p>Address: ${this.address}</p>
-      <img ${ref(this.canvas)} src=${imageSrc}></img>
+      <img src=${this.imageSrc}></img>
       <div>
         Density: ${this.density}
-        <input .valueAsNumber=${this.density} @change="${
-      this.onDensity
-    }" type="range" min="1.0" max="70.0" step="1.0" />
+        <input .valueAsNumber=${this.density} 
+        @change="${this.onDensity}" 
+        type="range" min="1.0" max="70.0" step="1.0" 
+        />
       </div>
       `;
   }
