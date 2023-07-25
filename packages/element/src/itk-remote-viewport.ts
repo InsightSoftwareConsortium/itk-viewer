@@ -9,6 +9,7 @@ import {
 } from '@itk-viewer/remote-viewport/remote-viewport.js';
 
 import { ItkViewport } from './itk-viewport.js';
+import './itk-camera.js';
 
 @customElement('itk-remote-viewport')
 export class ItkRemoteViewport extends ItkViewport {
@@ -19,7 +20,7 @@ export class ItkRemoteViewport extends ItkViewport {
   density = 30;
 
   remote: RemoteActor;
-  frame: SelectorController<RemoteActor, string>;
+  frame: SelectorController<RemoteActor, string | undefined>;
   lastFrameValue = '';
   imageSrc = '';
 
@@ -58,7 +59,9 @@ export class ItkRemoteViewport extends ItkViewport {
     return html` 
       <h1>Remote viewport</h1>
       <p>Address: ${this.address}</p>
-      <img src=${this.imageSrc}></img>
+      <itk-camera .viewport=${this.actor}>
+        <img src=${this.imageSrc}></img>
+      </itk-camera>
       <div>
         Density: ${this.density}
         <input .valueAsNumber=${this.density} 

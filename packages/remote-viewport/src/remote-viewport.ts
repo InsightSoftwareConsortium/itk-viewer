@@ -1,30 +1,14 @@
 import { fromPromise, interpret } from 'xstate';
 import { hyphaWebsocketClient } from 'imjoy-rpc';
-import { createViewport } from '@itk-viewer/viewer/viewport.js';
+import { Viewport, createViewport } from '@itk-viewer/viewer/viewport.js';
 import { remoteMachine } from './remote-machine.js';
 
-type RemoteMachineConfig = {
+export type RemoteMachineActors = {
   actors: {
     connect: ReturnType<typeof fromPromise<any>>;
     renderer: ReturnType<typeof fromPromise<any>>;
   };
 };
-
-export const createTestActors: () => RemoteMachineConfig = () => ({
-  actors: {
-    connect: fromPromise(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return 'aServer';
-    }),
-    renderer: fromPromise(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return { frame: 'new frame here' };
-    }),
-    updater: fromPromise(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }),
-  },
-});
 
 const createHyphaRenderer = async (server_url: string) => {
   const config = {
@@ -40,29 +24,46 @@ const createHyphaRenderer = async (server_url: string) => {
   return renderer;
 };
 
-export const createHyphaActors: () => RemoteMachineConfig = () => ({
+export const createHyphaActors: () => RemoteMachineActors = () => ({
   actors: {
     connect: fromPromise(async ({ input }) =>
       createHyphaRenderer(input.address)
     ),
     renderer: fromPromise(async ({ input: renderer }) => renderer.render()),
-    updater: fromPromise(async ({ input: { renderer, density } }) =>
-      renderer.setDensity(density)
-    ),
+    updater: fromPromise(async ({ input: { renderer, density, camera } }) => {
+      renderer.setDensity(density);
+
+      console.log({ density, camera });
+      // renderer.updateParameters({ density, cameraPose: camera.pose });
+    }),
   },
 });
 
-const createRemote = (config: RemoteMachineConfig) => {
-  const hyphaMachine = remoteMachine.provide(config);
+export type RemoteMachineOptions = {
+  context: {
+    viewport: Viewport;
+  };
+} & RemoteMachineActors;
 
-  return interpret(hyphaMachine).start();
+const createRemote = (config: RemoteMachineOptions) => {
+  const remoteActor = remoteMachine.provide(config);
+
+  return interpret(remoteActor, {
+    input: config.context,
+  }).start();
 };
 
 export type RemoteActor = ReturnType<typeof createRemote>;
 
-export const createRemoteViewport = (config: RemoteMachineConfig) => {
+export const createRemoteViewport = (config: RemoteMachineActors) => {
   const viewport = createViewport();
-  const remote = createRemote(config);
+  const configWithViewport = {
+    ...config,
+    context: {
+      viewport,
+    },
+  };
+  const remote = createRemote(configWithViewport);
 
   return { remote, viewport };
 };
