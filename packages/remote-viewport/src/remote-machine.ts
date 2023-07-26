@@ -1,11 +1,22 @@
-import { Viewport } from '@itk-viewer/viewer/viewport.js';
+import { ReadonlyMat4, mat4 } from 'gl-matrix';
 import { ActorRef, assign, createMachine } from 'xstate';
+
+import { Viewport } from '@itk-viewer/viewer/viewport.js';
+
+type RendererProps = {
+  density: number;
+  cameraPose: ReadonlyMat4;
+};
+
+type RendererPatch = Partial<RendererProps>;
 
 type Context = {
   address: string | undefined;
   server: any | undefined;
   frame: string | undefined;
-  density: number;
+  rendererProps: RendererProps;
+  dirtyRendererProps: RendererPatch;
+  stagedRendererProps: RendererPatch;
   viewport: Viewport;
 };
 
@@ -14,27 +25,19 @@ type SetAddressEvent = {
   address: string | undefined;
 };
 
-type SetDensityEvent = {
-  type: 'setDensity';
-  density: number;
+type UpdateRendererEvent = {
+  type: 'updateRenderer';
+  props: RendererPatch;
 };
 
 type RenderEvent = {
   type: 'render';
 };
 
-type CameraPoseUpdatedEvent = {
-  type: 'cameraPoseUpdated';
-};
-
 export const remoteMachine = createMachine({
   types: {} as {
     context: Context;
-    events:
-      | SetAddressEvent
-      | SetDensityEvent
-      | RenderEvent
-      | CameraPoseUpdatedEvent;
+    events: SetAddressEvent | UpdateRendererEvent | RenderEvent;
   },
   id: 'remote',
   initial: 'disconnected',
@@ -42,16 +45,24 @@ export const remoteMachine = createMachine({
     address: undefined,
     server: undefined,
     frame: undefined,
-    density: 30,
+    rendererProps: { density: 30, cameraPose: mat4.create() },
+    dirtyRendererProps: {},
+    stagedRendererProps: {},
     ...input, // captures injected viewport
   }),
   states: {
     disconnected: {
       entry: ({ context, self }) => {
-        console.log(context);
         context.viewport.subscribe(() => {
-          (self as ActorRef<CameraPoseUpdatedEvent>).send({
-            type: 'cameraPoseUpdated',
+          const cameraPose = context.viewport
+            .getSnapshot()
+            .context.camera?.getSnapshot().context.pose;
+          if (!cameraPose) throw new Error('no camera pose');
+          self.send({
+            type: 'updateRenderer',
+            props: {
+              cameraPose,
+            },
           });
         });
       },
@@ -79,18 +90,57 @@ export const remoteMachine = createMachine({
           actions: assign({
             server: ({ event }) => event.output,
           }),
-          target: 'connected',
+          target: 'rendering',
         },
       },
     },
-    connected: {
+    rendering: {
+      on: {
+        updateRenderer: {
+          actions: [
+            assign({
+              rendererProps: ({ event: { props }, context }) => ({
+                ...context.rendererProps,
+                ...props,
+              }),
+              dirtyRendererProps: ({ event: { props }, context }) => ({
+                ...context.dirtyRendererProps,
+                ...props,
+              }),
+            }),
+            // Trigger a render (if in idle state)
+            ({ self }) => {
+              (self as ActorRef<UpdateRendererEvent | RenderEvent>).send({
+                type: 'render',
+              });
+            },
+          ],
+        },
+      },
       initial: 'render',
       states: {
+        // consumes queue in prep for renderer (as "entry" action happens before "invoke:input")
+        preRender: {
+          entry: assign({
+            stagedRendererProps: ({ context }) => ({
+              ...context.dirtyRendererProps,
+            }),
+            dirtyRendererProps: {},
+          }),
+          always: {
+            target: 'render',
+          },
+        },
         render: {
           invoke: {
             id: 'render',
             src: 'renderer',
-            input: ({ context }: { context: Context }) => context.server,
+            input: ({ context }: { context: Context }) => {
+              return {
+                server: context.server,
+                props: { ...context.stagedRendererProps },
+              };
+            },
             onDone: {
               actions: assign({
                 frame: ({ event }) => event.output,
@@ -100,35 +150,14 @@ export const remoteMachine = createMachine({
           },
         },
         idle: {
-          on: {
-            render: { target: 'render' },
-            setDensity: {
-              actions: [
-                assign({
-                  density: ({ event }) => event.density,
-                }),
-              ],
-              target: 'updating',
-            },
-            cameraPoseUpdated: {
-              target: 'updating',
-            },
+          always: {
+            // Renderer props changed while rendering? Then render.
+            guard: ({ context }) =>
+              Object.keys(context.dirtyRendererProps).length > 0,
+            target: 'preRender',
           },
-        },
-        updating: {
-          invoke: {
-            id: 'updating',
-            src: 'updater',
-            input: ({ context }: { context: Context }) => ({
-              renderer: context.server,
-              density: context.density,
-              camera: context.viewport
-                ?.getSnapshot()
-                .context.camera?.getSnapshot().context,
-            }),
-            onDone: {
-              target: 'render',
-            },
+          on: {
+            render: { target: 'preRender' },
           },
         },
       },

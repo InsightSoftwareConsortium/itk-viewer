@@ -41,12 +41,15 @@ export class ItkRemoteViewport extends ItkViewport {
       this.remote.send({ type: 'setAddress', address: this.address });
     }
     if (changedProperties.has('density')) {
-      this.remote.send({ type: 'setDensity', density: this.density });
+      this.remote.send({
+        type: 'updateRenderer',
+        props: { density: this.density },
+      });
     }
 
     if (this.frame.value && this.frame.value !== this.lastFrameValue) {
-      this.imageSrc = 'data:image/png;base64,' + this.frame.value;
       this.lastFrameValue = this.frame.value;
+      this.imageSrc = 'data:image/png;base64,' + this.frame.value;
     }
   }
 
