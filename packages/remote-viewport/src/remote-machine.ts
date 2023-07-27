@@ -8,15 +8,23 @@ type RendererProps = {
   cameraPose: ReadonlyMat4;
 };
 
-type RendererPatch = Partial<RendererProps>;
+// https://stackoverflow.com/a/74823834
+type Entries<T> = {
+  [K in keyof T]-?: [K, T[K]];
+}[keyof T][];
+
+const getEntries = <T extends object>(obj: T) =>
+  Object.entries(obj) as Entries<T>;
+
+type RendererEntries = Entries<RendererProps>; // [['density', 30], ['cameraPose', mat4.create()]]
 
 type Context = {
   address: string | undefined;
   server: any | undefined;
   frame: string | undefined;
   rendererProps: RendererProps;
-  dirtyRendererProps: RendererPatch;
-  stagedRendererProps: RendererPatch;
+  queuedRendererProps: RendererEntries;
+  stagedRendererProps: RendererEntries;
   viewport: Viewport;
 };
 
@@ -27,7 +35,7 @@ type SetAddressEvent = {
 
 type UpdateRendererEvent = {
   type: 'updateRenderer';
-  props: RendererPatch;
+  props: Partial<RendererProps>;
 };
 
 type RenderEvent = {
@@ -46,13 +54,14 @@ export const remoteMachine = createMachine({
     server: undefined,
     frame: undefined,
     rendererProps: { density: 30, cameraPose: mat4.create() },
-    dirtyRendererProps: {},
-    stagedRendererProps: {},
+    queuedRendererProps: [],
+    stagedRendererProps: [],
     ...input, // captures injected viewport
   }),
   states: {
     disconnected: {
       entry: ({ context, self }) => {
+        // Update camera pose on viewport change
         context.viewport.subscribe(() => {
           const cameraPose = context.viewport
             .getSnapshot()
@@ -60,9 +69,7 @@ export const remoteMachine = createMachine({
           if (!cameraPose) throw new Error('no camera pose');
           self.send({
             type: 'updateRenderer',
-            props: {
-              cameraPose,
-            },
+            props: { cameraPose },
           });
         });
       },
@@ -89,6 +96,9 @@ export const remoteMachine = createMachine({
         onDone: {
           actions: assign({
             server: ({ event }) => event.output,
+            // initially, send all props to renderer
+            queuedRendererProps: ({ context }) =>
+              getEntries(context.rendererProps),
           }),
           target: 'rendering',
         },
@@ -103,10 +113,10 @@ export const remoteMachine = createMachine({
                 ...context.rendererProps,
                 ...props,
               }),
-              dirtyRendererProps: ({ event: { props }, context }) => ({
-                ...context.dirtyRendererProps,
-                ...props,
-              }),
+              queuedRendererProps: ({ event: { props }, context }) => [
+                ...context.queuedRendererProps,
+                ...(getEntries(props) as RendererEntries),
+              ],
             }),
             // Trigger a render (if in idle state)
             ({ self }) => {
@@ -117,15 +127,15 @@ export const remoteMachine = createMachine({
           ],
         },
       },
-      initial: 'render',
+      initial: 'preRender',
       states: {
         // consumes queue in prep for renderer (as "entry" action happens before "invoke:input")
         preRender: {
           entry: assign({
-            stagedRendererProps: ({ context }) => ({
-              ...context.dirtyRendererProps,
-            }),
-            dirtyRendererProps: {},
+            stagedRendererProps: ({ context }) => [
+              ...context.queuedRendererProps,
+            ],
+            queuedRendererProps: [],
           }),
           always: {
             target: 'render',
@@ -135,12 +145,10 @@ export const remoteMachine = createMachine({
           invoke: {
             id: 'render',
             src: 'renderer',
-            input: ({ context }: { context: Context }) => {
-              return {
-                server: context.server,
-                props: { ...context.stagedRendererProps },
-              };
-            },
+            input: ({ context }: { context: Context }) => ({
+              server: context.server,
+              props: [...context.stagedRendererProps],
+            }),
             onDone: {
               actions: assign({
                 frame: ({ event }) => event.output,
@@ -153,7 +161,7 @@ export const remoteMachine = createMachine({
           always: {
             // Renderer props changed while rendering? Then render.
             guard: ({ context }) =>
-              Object.keys(context.dirtyRendererProps).length > 0,
+              Object.keys(context.queuedRendererProps).length > 0,
             target: 'preRender',
           },
           on: {

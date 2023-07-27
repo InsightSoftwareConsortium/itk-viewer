@@ -17,7 +17,7 @@ const createHyphaRenderer = async (server_url: string) => {
     server_url,
   };
   const server = await hyphaWebsocketClient.connectToServer(config);
-  const renderer = await server.getService('test-agave-renderer-paul');
+  const renderer = await server.getService('test-agave-renderer');
   await renderer.setup();
   await renderer.setImage('data/aneurism.ome.tif');
   return renderer;
