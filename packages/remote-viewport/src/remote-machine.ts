@@ -16,15 +16,16 @@ type Entries<T> = {
 const getEntries = <T extends object>(obj: T) =>
   Object.entries(obj) as Entries<T>;
 
-type RendererEntries = Entries<RendererProps>; // [['density', 30], ['cameraPose', mat4.create()]]
+// example: [['density', 30], ['cameraPose', mat4.create()]]
+export type RendererEntries = Entries<RendererProps>;
 
 type Context = {
   address: string | undefined;
   server: any | undefined;
   frame: string | undefined;
   rendererProps: RendererProps;
-  queuedRendererProps: RendererEntries;
-  stagedRendererProps: RendererEntries;
+  queuedRendererEvents: RendererEntries;
+  stagedRendererEvents: RendererEntries;
   viewport: Viewport;
 };
 
@@ -54,8 +55,8 @@ export const remoteMachine = createMachine({
     server: undefined,
     frame: undefined,
     rendererProps: { density: 30, cameraPose: mat4.create() },
-    queuedRendererProps: [],
-    stagedRendererProps: [],
+    queuedRendererEvents: [],
+    stagedRendererEvents: [],
     ...input, // captures injected viewport
   }),
   states: {
@@ -97,14 +98,14 @@ export const remoteMachine = createMachine({
           actions: assign({
             server: ({ event }) => event.output,
             // initially, send all props to renderer
-            queuedRendererProps: ({ context }) =>
+            queuedRendererEvents: ({ context }) =>
               getEntries(context.rendererProps),
           }),
-          target: 'rendering',
+          target: 'online',
         },
       },
     },
-    rendering: {
+    online: {
       on: {
         updateRenderer: {
           actions: [
@@ -113,8 +114,8 @@ export const remoteMachine = createMachine({
                 ...context.rendererProps,
                 ...props,
               }),
-              queuedRendererProps: ({ event: { props }, context }) => [
-                ...context.queuedRendererProps,
+              queuedRendererEvents: ({ event: { props }, context }) => [
+                ...context.queuedRendererEvents,
                 ...(getEntries(props) as RendererEntries),
               ],
             }),
@@ -127,27 +128,15 @@ export const remoteMachine = createMachine({
           ],
         },
       },
-      initial: 'preRender',
+      initial: 'render',
       states: {
-        // consumes queue in prep for renderer (as "entry" action happens before "invoke:input")
-        preRender: {
-          entry: assign({
-            stagedRendererProps: ({ context }) => [
-              ...context.queuedRendererProps,
-            ],
-            queuedRendererProps: [],
-          }),
-          always: {
-            target: 'render',
-          },
-        },
         render: {
           invoke: {
             id: 'render',
             src: 'renderer',
             input: ({ context }: { context: Context }) => ({
               server: context.server,
-              props: [...context.stagedRendererProps],
+              events: [...context.stagedRendererEvents],
             }),
             onDone: {
               actions: assign({
@@ -161,12 +150,19 @@ export const remoteMachine = createMachine({
           always: {
             // Renderer props changed while rendering? Then render.
             guard: ({ context }) =>
-              Object.keys(context.queuedRendererProps).length > 0,
-            target: 'preRender',
+              Object.keys(context.queuedRendererEvents).length > 0,
+            target: 'render',
           },
           on: {
-            render: { target: 'preRender' },
+            render: { target: 'render' },
           },
+          exit: assign({
+            // consumes queue in prep for renderer
+            stagedRendererEvents: ({ context }) => [
+              ...context.queuedRendererEvents,
+            ],
+            queuedRendererEvents: [],
+          }),
         },
       },
     },
