@@ -1,12 +1,13 @@
 import { fromPromise, interpret } from 'xstate';
 import { hyphaWebsocketClient } from 'imjoy-rpc';
 import { Viewport, createViewport } from '@itk-viewer/viewer/viewport.js';
-import { remoteMachine } from './remote-machine.js';
+import { RendererEntries, remoteMachine } from './remote-machine.js';
+import { mat4, vec3 } from 'gl-matrix';
 
 export type RemoteMachineActors = {
   actors: {
-    connect: ReturnType<typeof fromPromise<any>>;
-    renderer: ReturnType<typeof fromPromise<any>>;
+    connect: ReturnType<typeof fromPromise<unknown>>;
+    renderer: ReturnType<typeof fromPromise<string>>;
   };
 };
 
@@ -17,10 +18,9 @@ const createHyphaRenderer = async (server_url: string) => {
     server_url,
   };
   const server = await hyphaWebsocketClient.connectToServer(config);
-  const renderer = await server.getService('test-agave-renderer-paul');
+  const renderer = await server.getService('test-agave-renderer');
   await renderer.setup();
   await renderer.setImage('data/aneurism.ome.tif');
-
   return renderer;
 };
 
@@ -29,13 +29,26 @@ export const createHyphaActors: () => RemoteMachineActors = () => ({
     connect: fromPromise(async ({ input }) =>
       createHyphaRenderer(input.address)
     ),
-    renderer: fromPromise(async ({ input: renderer }) => renderer.render()),
-    updater: fromPromise(async ({ input: { renderer, density, camera } }) => {
-      renderer.setDensity(density);
-
-      console.log({ density, camera });
-      // renderer.updateParameters({ density, cameraPose: camera.pose });
-    }),
+    renderer: fromPromise(
+      async ({
+        input: { server, events },
+      }: {
+        input: {
+          server: { updateRenderer: (events: unknown) => Promise<string> };
+          events: RendererEntries;
+        };
+      }) => {
+        const translatedEvents = events.map(([key, value]) => {
+          if (key === 'cameraPose') {
+            const eye = vec3.create();
+            mat4.getTranslation(eye, value);
+            return ['cameraPose', { eye }];
+          }
+          return [key, value];
+        });
+        return server.updateRenderer(translatedEvents);
+      }
+    ),
   },
 });
 

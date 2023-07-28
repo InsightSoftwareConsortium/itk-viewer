@@ -14,13 +14,14 @@ export class ItkCamera extends LitElement {
 
   constructor() {
     super();
-    this.addEventListener('mousedown', (e: MouseEvent) => {
-      console.log(e.type);
-
-      const targetCameraPose = mat4.fromTranslation(mat4.create(), [1, 2, 3]);
+    this.addEventListener('mousemove', (e: MouseEvent) => {
+      const pose = mat4.create();
+      mat4.copy(pose, this.camera.getSnapshot().context.pose);
+      const dX = e.movementX / 1000;
+      mat4.translate(pose, pose, [dX, 0, 0]);
       this.camera.send({
         type: 'setPose',
-        pose: targetCameraPose,
+        pose,
       });
     });
   }
