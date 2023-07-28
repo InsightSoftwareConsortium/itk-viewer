@@ -149,8 +149,7 @@ export const remoteMachine = createMachine({
         idle: {
           always: {
             // Renderer props changed while rendering? Then render.
-            guard: ({ context }) =>
-              Object.keys(context.queuedRendererEvents).length > 0,
+            guard: ({ context }) => context.queuedRendererEvents.length > 0,
             target: 'render',
           },
           on: {
