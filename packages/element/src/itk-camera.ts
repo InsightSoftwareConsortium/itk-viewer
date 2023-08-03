@@ -4,12 +4,13 @@ import { ReadonlyMat4, mat4 } from 'gl-matrix';
 import createOrbitCamera from 'orbit-camera';
 
 import { Viewport } from '@itk-viewer/viewer/viewport.js';
-import { createCamera } from '@itk-viewer/viewer/camera-machine.js';
+import { Camera, createCamera } from '@itk-viewer/viewer/camera-machine.js';
 import { Ref, createRef, ref } from 'lit/directives/ref.js';
 
 type OrbitCameraController = ReturnType<typeof createOrbitCamera>;
 
 const PAN_SPEED = 1;
+const ZOOM_SPEED = 0.005;
 
 const bindCamera = (
   camera: OrbitCameraController,
@@ -20,6 +21,12 @@ const bindCamera = (
   let height = element.clientHeight;
 
   const view = mat4.create();
+
+  const updateView = () => {
+    camera.view(view);
+    mat4.invert(view, view);
+    onUpdate(view);
+  };
 
   const resizeObserver = new ResizeObserver((entries) => {
     for (const entry of entries) {
@@ -42,10 +49,12 @@ const bindCamera = (
     } else if (e.button === 2) {
       pan = true;
     }
+    return false;
   };
   element.addEventListener('mousedown', onMouseDown);
 
   const onMouseUp = (e: MouseEvent) => {
+    e.preventDefault();
     if (e.button === 0) {
       rotate = false;
     } else if (e.button === 1) {
@@ -53,6 +62,7 @@ const bindCamera = (
     } else if (e.button === 2) {
       pan = false;
     }
+    return false;
   };
   element.addEventListener('mouseup', onMouseUp);
 
@@ -86,16 +96,29 @@ const bindCamera = (
     prevMouseY = mouseY;
 
     if (!rotate && !pan && !scale) return;
-    camera.view(view);
-    onUpdate(view);
+
+    updateView();
   };
   element.addEventListener('mousemove', onMouseMove);
+
+  const onWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    camera.zoom(e.deltaY * ZOOM_SPEED);
+
+    updateView();
+  };
+  element.addEventListener('wheel', onWheel, { passive: false });
+
+  const preventDefault = (e: Event) => e.preventDefault();
+  element.addEventListener('contextmenu', preventDefault);
 
   const unbind = () => {
     resizeObserver.disconnect();
     element.removeEventListener('mousemove', onMouseMove);
     element.removeEventListener('mousedown', onMouseDown);
     element.removeEventListener('mouseup', onMouseUp);
+    element.removeEventListener('wheel', onWheel);
+    element.removeEventListener('contextmenu', preventDefault);
   };
 
   return unbind;
@@ -106,24 +129,36 @@ export class ItkCamera extends LitElement {
   @property({ attribute: false })
   viewport: Viewport | undefined;
 
-  camera = createCamera();
+  camera: Camera;
+  cameraController: OrbitCameraController;
   unbind: (() => unknown) | undefined;
   container: Ref<HTMLElement> = createRef();
 
-  firstUpdated(): void {
-    const cameraController = createOrbitCamera(
+  constructor() {
+    super();
+    this.camera = createCamera();
+
+    this.cameraController = createOrbitCamera(
       [-0.747528, -0.570641, 0.754992],
       [0.5, 0.5, 0.5],
       [-0.505762, 0.408327, -0.759916]
     );
 
+    const pose = this.cameraController.view();
+    this.camera.send({
+      type: 'setPose',
+      pose,
+    });
+  }
+
+  firstUpdated(): void {
     const container = this.container.value;
     if (!container) throw new Error('container not found');
 
-    this.unbind = bindCamera(cameraController, container, (view) => {
+    this.unbind = bindCamera(this.cameraController, container, (pose) => {
       this.camera.send({
         type: 'setPose',
-        pose: view,
+        pose,
       });
     });
   }

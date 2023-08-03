@@ -18,7 +18,7 @@ const createHyphaRenderer = async (server_url: string) => {
     server_url,
   };
   const server = await hyphaWebsocketClient.connectToServer(config);
-  const renderer = await server.getService('test-agave-renderer-paul');
+  const renderer = await server.getService('test-agave-renderer');
   await renderer.setup();
   await renderer.setImage('data/aneurism.ome.tif');
   return renderer;
@@ -42,7 +42,13 @@ export const createHyphaActors: () => RemoteMachineActors = () => ({
           if (key === 'cameraPose') {
             const eye = vec3.create();
             mat4.getTranslation(eye, value);
-            return ['cameraPose', { eye }];
+
+            const target = vec3.fromValues(value[8], value[9], value[10]);
+            vec3.subtract(target, eye, target);
+
+            const up = vec3.fromValues(value[4], value[5], value[6]);
+
+            return ['cameraPose', { eye, up, target }];
           }
           return [key, value];
         });
