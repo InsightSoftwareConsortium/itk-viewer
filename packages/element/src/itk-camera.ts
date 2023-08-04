@@ -14,11 +14,11 @@ const ZOOM_SPEED = 0.005;
 
 const bindCamera = (
   camera: OrbitCameraController,
-  element: HTMLElement,
+  viewport: HTMLElement,
   onUpdate: (view: ReadonlyMat4) => unknown
 ) => {
-  let width = element.clientWidth;
-  let height = element.clientHeight;
+  let width = viewport.clientWidth;
+  let height = viewport.clientHeight;
 
   const view = mat4.create();
 
@@ -34,7 +34,7 @@ const bindCamera = (
       height = entry.contentRect.height;
     }
   });
-  resizeObserver.observe(element);
+  resizeObserver.observe(viewport);
 
   let rotate = false;
   let pan = false;
@@ -49,9 +49,8 @@ const bindCamera = (
     } else if (e.button === 2) {
       pan = true;
     }
-    return false;
   };
-  element.addEventListener('mousedown', onMouseDown);
+  viewport.addEventListener('mousedown', onMouseDown);
 
   const onMouseUp = (e: MouseEvent) => {
     e.preventDefault();
@@ -62,9 +61,8 @@ const bindCamera = (
     } else if (e.button === 2) {
       pan = false;
     }
-    return false;
   };
-  element.addEventListener('mouseup', onMouseUp);
+  window.addEventListener('mouseup', onMouseUp);
 
   let prevMouseX = 0;
   let prevMouseY = 0;
@@ -99,7 +97,7 @@ const bindCamera = (
 
     updateView();
   };
-  element.addEventListener('mousemove', onMouseMove);
+  viewport.addEventListener('mousemove', onMouseMove);
 
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
@@ -107,18 +105,18 @@ const bindCamera = (
 
     updateView();
   };
-  element.addEventListener('wheel', onWheel, { passive: false });
+  viewport.addEventListener('wheel', onWheel, { passive: false });
 
   const preventDefault = (e: Event) => e.preventDefault();
-  element.addEventListener('contextmenu', preventDefault);
+  viewport.addEventListener('contextmenu', preventDefault);
 
   const unbind = () => {
     resizeObserver.disconnect();
-    element.removeEventListener('mousemove', onMouseMove);
-    element.removeEventListener('mousedown', onMouseDown);
-    element.removeEventListener('mouseup', onMouseUp);
-    element.removeEventListener('wheel', onWheel);
-    element.removeEventListener('contextmenu', preventDefault);
+    viewport.removeEventListener('mousedown', onMouseDown);
+    window.removeEventListener('mouseup', onMouseUp);
+    viewport.removeEventListener('mousemove', onMouseMove);
+    viewport.removeEventListener('wheel', onWheel);
+    viewport.removeEventListener('contextmenu', preventDefault);
   };
 
   return unbind;
