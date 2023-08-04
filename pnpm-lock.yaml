@@ -78,6 +78,9 @@ importers:
       lit:
         specifier: ^2.7.4
         version: 2.7.4
+      orbit-camera:
+        specifier: ^1.0.0
+        version: 1.0.0
       xstate-lit:
         specifier: ^1.3.1
         version: 1.3.1(lit@2.7.4)(xstate@4.38.2)
@@ -1786,6 +1789,10 @@ packages:
       assert-plus: 1.0.0
     dev: true
 
+  /gl-matrix@2.8.1:
+    resolution: {integrity: sha512-0YCjVpE3pS5XWlN3J4X7AiAx65+nqAI54LndtVFnQZB6G/FVLkZH8y8V6R3cIoOQR4pUdfwQGd1iwyoXHJ4Qfw==}
+    dev: false
+
   /gl-matrix@3.4.3:
     resolution: {integrity: sha512-wcCp8vu8FT22BnvKVPjXa/ICBWRq/zjFfdofZy1WSpQZpphblv12/bOQLBC1rMM7SGOFS9ltVmKOHil5+Ml7gA==}
     dev: false
@@ -2354,6 +2361,12 @@ packages:
       type-check: 0.4.0
       word-wrap: 1.2.3
     dev: true
+
+  /orbit-camera@1.0.0:
+    resolution: {integrity: sha512-RJ9ywtL3DCDeXFLoGgzDYoJN6PPi6T490r1q6niWzacLaSiY3N8WuhOQ2vEvapMOHKXQl2iCsxBnBSeOHwECyw==}
+    dependencies:
+      gl-matrix: 2.8.1
+    dev: false
 
   /ospath@1.2.2:
     resolution: {integrity: sha512-o6E5qJV5zkAbIDNhGSIlyOhScKXgQrSRMilfph0clDfM0nEnBOlKlH4sWDmG95BW/CvwNz0vmm7dJVtU2KlMiA==}

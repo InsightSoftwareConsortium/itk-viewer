@@ -63,6 +63,7 @@ export const remoteMachine = createMachine({
     disconnected: {
       entry: ({ context, self }) => {
         // Update camera pose on viewport change
+        // FIXME: not capturing initial camera position because updateRender handler not registered before connection
         context.viewport.subscribe(() => {
           const cameraPose = context.viewport
             .getSnapshot()
@@ -98,8 +99,8 @@ export const remoteMachine = createMachine({
           actions: assign({
             server: ({ event }) => event.output,
             // initially, send all props to renderer
-            queuedRendererEvents: ({ context }) =>
-              getEntries(context.rendererProps),
+            // queuedRendererEvents: ({ context }) =>
+            //   getEntries(context.rendererProps),
           }),
           target: 'online',
         },
@@ -110,10 +111,12 @@ export const remoteMachine = createMachine({
         updateRenderer: {
           actions: [
             assign({
-              rendererProps: ({ event: { props }, context }) => ({
-                ...context.rendererProps,
-                ...props,
-              }),
+              rendererProps: ({ event: { props }, context }) => {
+                return {
+                  ...context.rendererProps,
+                  ...props,
+                };
+              },
               queuedRendererEvents: ({ event: { props }, context }) => [
                 ...context.queuedRendererEvents,
                 ...(getEntries(props) as RendererEntries),
@@ -149,8 +152,7 @@ export const remoteMachine = createMachine({
         idle: {
           always: {
             // Renderer props changed while rendering? Then render.
-            guard: ({ context }) =>
-              Object.keys(context.queuedRendererEvents).length > 0,
+            guard: ({ context }) => context.queuedRendererEvents.length > 0,
             target: 'render',
           },
           on: {

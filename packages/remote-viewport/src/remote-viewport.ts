@@ -42,7 +42,13 @@ export const createHyphaActors: () => RemoteMachineActors = () => ({
           if (key === 'cameraPose') {
             const eye = vec3.create();
             mat4.getTranslation(eye, value);
-            return ['cameraPose', { eye }];
+
+            const target = vec3.fromValues(value[8], value[9], value[10]);
+            vec3.subtract(target, eye, target);
+
+            const up = vec3.fromValues(value[4], value[5], value[6]);
+
+            return ['cameraPose', { eye, up, target }];
           }
           return [key, value];
         });
