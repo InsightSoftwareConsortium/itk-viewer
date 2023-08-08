@@ -1,5 +1,13 @@
 # @itk-viewer/blosc-zarr
 
+## 0.1.1
+
+### Patch Changes
+
+- Fix workspace monorepo dependances.
+- Updated dependencies
+  - @itk-viewer/wasm-utils@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
