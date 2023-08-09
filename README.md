@@ -24,3 +24,7 @@ pnpm dev
 ```
 
 Then open `http://localhost:5173/` in browser
+
+### Manual Publish Steps
+
+https://pnpm.io/using-changesets#releasing-changes
