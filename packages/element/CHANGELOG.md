@@ -1,5 +1,13 @@
 # @itk-viewer/element
 
+## 0.1.2
+
+### Patch Changes
+
+- 964a6766: Use canvas element to display remote frame.
+- Updated dependencies [964a6766]
+  - @itk-viewer/remote-viewport@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes
