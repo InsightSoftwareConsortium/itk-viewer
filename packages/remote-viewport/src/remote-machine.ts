@@ -22,7 +22,7 @@ export type RendererEntries = Entries<RendererProps>;
 type Context = {
   address: string | undefined;
   server: any | undefined;
-  frame: string | undefined;
+  frame: ArrayBuffer | undefined;
   rendererProps: RendererProps;
   queuedRendererEvents: RendererEntries;
   stagedRendererEvents: RendererEntries;

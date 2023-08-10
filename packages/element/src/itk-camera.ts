@@ -1,4 +1,4 @@
-import { LitElement, PropertyValues, css, html } from 'lit';
+import { LitElement, PropertyValues, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { ReadonlyMat4, mat4 } from 'gl-matrix';
 import createOrbitCamera from 'orbit-camera';
@@ -174,18 +174,11 @@ export class ItkCamera extends LitElement {
 
   render() {
     return html`
-      <div class="container" ${ref(this.container)}>
+      <div ${ref(this.container)}>
         <slot></slot>
       </div>
     `;
   }
-
-  static styles = css`
-    .container {
-      min-width: 500px;
-      min-height: 400px;
-    }
-  `;
 }
 
 declare global {
