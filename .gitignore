@@ -31,3 +31,4 @@ cypress/videos
 types/
 
 .npmrc
+.pnpm-store

@@ -7,7 +7,6 @@ on:
 
 env:
   CI: true
-  PNPM_CACHE_FOLDER: .pnpm-store
 
 jobs:
   version:
@@ -26,9 +25,6 @@ jobs:
 
       - name: install pnpm
         run: npm i pnpm@latest -g
-
-      - name: setup pnpm config
-        run: pnpm config set store-dir $PNPM_CACHE_FOLDER
 
       - name: install dependencies
         run: pnpm install
