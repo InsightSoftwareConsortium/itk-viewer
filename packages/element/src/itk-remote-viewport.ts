@@ -10,6 +10,10 @@ import {
 
 import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
+import { Ref, createRef, ref } from 'lit/directives/ref.js';
+
+const WIDTH = 500;
+const HEIGHT = 400;
 
 @customElement('itk-remote-viewport')
 export class ItkRemoteViewport extends ItkViewport {
@@ -19,10 +23,12 @@ export class ItkRemoteViewport extends ItkViewport {
   @property({ type: Number })
   density = 30;
 
+  canvas: Ref<HTMLCanvasElement> = createRef();
+  canvasCtx: CanvasRenderingContext2D | null = null;
+
   remote: RemoteActor;
-  frame: SelectorController<RemoteActor, string | undefined>;
-  lastFrameValue = '';
-  imageSrc = '';
+  frame: SelectorController<RemoteActor, ArrayBuffer | undefined>;
+  lastFrameValue = new ArrayBuffer(0);
 
   constructor() {
     super();
@@ -34,6 +40,20 @@ export class ItkRemoteViewport extends ItkViewport {
       this.remote,
       (state) => state?.context.frame
     );
+  }
+
+  putFrame() {
+    if (!this.canvasCtx || !this.frame.value) return;
+
+    const pixels = new Uint8ClampedArray(this.frame.value);
+    const imageData = new ImageData(pixels, WIDTH, HEIGHT);
+    this.canvasCtx.putImageData(imageData, 0, 0);
+  }
+
+  firstUpdated(): void {
+    const canvas = this.canvas.value;
+    if (!canvas) throw new Error('canvas not found');
+    this.canvasCtx = canvas.getContext('2d');
   }
 
   willUpdate(changedProperties: PropertyValues<this>) {
@@ -49,7 +69,7 @@ export class ItkRemoteViewport extends ItkViewport {
 
     if (this.frame.value && this.frame.value !== this.lastFrameValue) {
       this.lastFrameValue = this.frame.value;
-      this.imageSrc = 'data:image/png;base64,' + this.frame.value;
+      this.putFrame();
     }
   }
 
@@ -59,20 +79,24 @@ export class ItkRemoteViewport extends ItkViewport {
   }
 
   render() {
-    return html` 
+    return html`
       <h1>Remote viewport</h1>
       <p>Address: ${this.address}</p>
-      <itk-camera .viewport=${this.actor}>
-        <img src=${this.imageSrc}></img>
-      </itk-camera>
       <div>
         Density: ${this.density}
-        <input .valueAsNumber=${this.density} 
-        @change="${this.onDensity}" 
-        type="range" min="1.0" max="70.0" step="1.0" 
+        <input
+          .valueAsNumber=${this.density}
+          @change="${this.onDensity}"
+          type="range"
+          min="1.0"
+          max="70.0"
+          step="1.0"
         />
       </div>
-      `;
+      <itk-camera .viewport=${this.actor}>
+        <canvas ${ref(this.canvas)} width=${WIDTH} height=${HEIGHT}></canvas>
+      </itk-camera>
+    `;
   }
 
   static styles = css`

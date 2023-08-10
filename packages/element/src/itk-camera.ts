@@ -174,18 +174,11 @@ export class ItkCamera extends LitElement {
 
   render() {
     return html`
-      <div class="container" ${ref(this.container)}>
+      <div ${ref(this.container)}>
         <slot></slot>
       </div>
     `;
   }
-
-  static styles = css`
-    .container {
-      min-width: 500px;
-      min-height: 400px;
-    }
-  `;
 }
 
 declare global {
