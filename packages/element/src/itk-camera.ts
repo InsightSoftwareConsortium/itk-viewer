@@ -1,4 +1,4 @@
-import { LitElement, PropertyValues, css, html } from 'lit';
+import { LitElement, PropertyValues, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { ReadonlyMat4, mat4 } from 'gl-matrix';
 import createOrbitCamera from 'orbit-camera';
