@@ -54,6 +54,13 @@ export class ItkRemoteViewport extends ItkViewport {
     const canvas = this.canvas.value;
     if (!canvas) throw new Error('canvas not found');
     this.canvasCtx = canvas.getContext('2d');
+
+    const render = () => {
+      if (!this.isConnected) return;
+      this.remote.send({ type: 'render' });
+      requestAnimationFrame(render);
+    };
+    requestAnimationFrame(render);
   }
 
   willUpdate(changedProperties: PropertyValues<this>) {

@@ -10,7 +10,7 @@ import { Ref, createRef, ref } from 'lit/directives/ref.js';
 type OrbitCameraController = ReturnType<typeof createOrbitCamera>;
 
 const PAN_SPEED = 1;
-const ZOOM_SPEED = 0.005;
+const ZOOM_SPEED = 0.0002;
 
 const bindCamera = (
   camera: OrbitCameraController,
