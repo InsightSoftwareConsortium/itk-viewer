@@ -1,5 +1,15 @@
 # @itk-viewer/element
 
+## 0.1.3
+
+### Patch Changes
+
+- d1bbabd: Rename remote-machine renderer prop imageFile to image
+- 5a6eb88: Add image attribute to itk-remote-viewport
+- Updated dependencies [d1bbabd]
+- Updated dependencies [5a6eb88]
+  - @itk-viewer/remote-viewport@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
