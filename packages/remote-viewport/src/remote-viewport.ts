@@ -1,58 +1,81 @@
 import { fromPromise, interpret } from 'xstate';
 import { hyphaWebsocketClient } from 'imjoy-rpc';
 import { Viewport, createViewport } from '@itk-viewer/viewer/viewport.js';
-import { RendererEntries, remoteMachine } from './remote-machine.js';
+import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
 import { mat4, vec3 } from 'gl-matrix';
 
 export type RemoteMachineActors = {
   actors: {
     connect: ReturnType<typeof fromPromise<unknown>>;
-    renderer: ReturnType<typeof fromPromise<string>>;
+    renderer: ReturnType<typeof fromPromise<ArrayBuffer>>;
   };
 };
 
-const createHyphaRenderer = async (server_url: string) => {
+const createHyphaRenderer = async (context: Context) => {
+  const {
+    address: server_url,
+    rendererProps: { imageFile },
+  } = context;
+  if (!server_url) {
+    throw new Error('No server url provided');
+  }
+
   const config = {
     client_id: 'remote-renderer-test-client',
     name: 'remote_renderer_client',
     server_url,
   };
-  const server = await hyphaWebsocketClient.connectToServer(config);
-  const renderer = await server.getService('test-agave-renderer');
+  const hypha = await hyphaWebsocketClient.connectToServer(config);
+  const renderer = await hypha.getService('test-agave-renderer');
   await renderer.setup();
-  await renderer.setImage('data/aneurism.ome.tif');
+  await renderer.loadImage(imageFile);
+
   return renderer;
 };
 
 export const createHyphaActors: () => RemoteMachineActors = () => ({
   actors: {
     connect: fromPromise(async ({ input }) =>
-      createHyphaRenderer(input.address)
+      createHyphaRenderer(input.context)
     ),
     renderer: fromPromise(
       async ({
         input: { server, events },
       }: {
         input: {
-          server: { updateRenderer: (events: unknown) => Promise<string> };
+          server: {
+            updateRenderer: (events: unknown) => Promise<ArrayBuffer>;
+            loadImage: (image: string | undefined) => void;
+            render: () => Promise<ArrayBuffer>;
+          };
           events: RendererEntries;
         };
       }) => {
-        const translatedEvents = events.map(([key, value]) => {
-          if (key === 'cameraPose') {
-            const eye = vec3.create();
-            mat4.getTranslation(eye, value);
+        const translatedEvents = events
+          .map(([key, value]) => {
+            if (key === 'cameraPose') {
+              const eye = vec3.create();
+              mat4.getTranslation(eye, value);
 
-            const target = vec3.fromValues(value[8], value[9], value[10]);
-            vec3.subtract(target, eye, target);
+              const target = vec3.fromValues(value[8], value[9], value[10]);
+              vec3.subtract(target, eye, target);
 
-            const up = vec3.fromValues(value[4], value[5], value[6]);
+              const up = vec3.fromValues(value[4], value[5], value[6]);
 
-            return ['cameraPose', { eye, up, target }];
-          }
-          return [key, value];
-        });
-        return server.updateRenderer(translatedEvents);
+              return ['cameraPose', { eye, up, target }];
+            }
+
+            if (key === 'imageFile') {
+              server.loadImage(value);
+              return;
+            }
+
+            return [key, value];
+          })
+          .filter(Boolean);
+
+        server.updateRenderer(translatedEvents);
+        return server.render();
       }
     ),
   },

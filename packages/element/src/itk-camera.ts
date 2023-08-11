@@ -119,6 +119,8 @@ const bindCamera = (
     viewport.removeEventListener('contextmenu', preventDefault);
   };
 
+  updateView();
+
   return unbind;
 };
 
