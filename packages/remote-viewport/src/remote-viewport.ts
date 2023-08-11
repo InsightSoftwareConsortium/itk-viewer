@@ -14,7 +14,7 @@ export type RemoteMachineActors = {
 const createHyphaRenderer = async (context: Context) => {
   const {
     address: server_url,
-    rendererProps: { imageFile },
+    rendererProps: { image },
   } = context;
   if (!server_url) {
     throw new Error('No server url provided');
@@ -28,7 +28,7 @@ const createHyphaRenderer = async (context: Context) => {
   const hypha = await hyphaWebsocketClient.connectToServer(config);
   const renderer = await hypha.getService('test-agave-renderer');
   await renderer.setup();
-  await renderer.loadImage(imageFile);
+  await renderer.loadImage(image);
 
   return renderer;
 };
@@ -65,7 +65,7 @@ export const createHyphaActors: () => RemoteMachineActors = () => ({
               return ['cameraPose', { eye, up, target }];
             }
 
-            if (key === 'imageFile') {
+            if (key === 'image') {
               server.loadImage(value);
               return;
             }

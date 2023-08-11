@@ -78,7 +78,7 @@ export class ItkRemoteViewport extends ItkViewport {
     if (changedProperties.has('image')) {
       this.remote.send({
         type: 'updateRenderer',
-        props: { imageFile: this.image },
+        props: { image: this.image },
       });
     }
     if (changedProperties.has('density')) {

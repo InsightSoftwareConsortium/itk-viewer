@@ -6,7 +6,7 @@ import { Viewport } from '@itk-viewer/viewer/viewport.js';
 type RendererProps = {
   density: number;
   cameraPose: ReadonlyMat4;
-  imageFile: string | undefined;
+  image: string | undefined;
 };
 
 // https://stackoverflow.com/a/74823834
@@ -57,7 +57,7 @@ export const remoteMachine = createMachine({
     rendererProps: {
       density: 30,
       cameraPose: mat4.create(),
-      imageFile: 'data/aneurism.ome.tif',
+      image: 'data/aneurism.ome.tif',
     },
     queuedRendererEvents: [],
     stagedRendererEvents: [],
@@ -98,7 +98,6 @@ export const remoteMachine = createMachine({
         disconnected: {
           entry: ({ context, self }) => {
             // Update camera pose on viewport change
-            // FIXME: not capturing initial camera position because updateRender handler not registered before connection
             context.viewport.subscribe(() => {
               const cameraPose = context.viewport
                 .getSnapshot()
