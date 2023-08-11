@@ -6,6 +6,7 @@ import { Viewport } from '@itk-viewer/viewer/viewport.js';
 type RendererProps = {
   density: number;
   cameraPose: ReadonlyMat4;
+  image: string | undefined;
 };
 
 // https://stackoverflow.com/a/74823834
@@ -19,7 +20,7 @@ const getEntries = <T extends object>(obj: T) =>
 // example: [['density', 30], ['cameraPose', mat4.create()]]
 export type RendererEntries = Entries<RendererProps>;
 
-type Context = {
+export type Context = {
   address: string | undefined;
   server: any | undefined;
   frame: ArrayBuffer | undefined;
@@ -49,64 +50,24 @@ export const remoteMachine = createMachine({
     events: SetAddressEvent | UpdateRendererEvent | RenderEvent;
   },
   id: 'remote',
-  initial: 'disconnected',
   context: ({ input }: { input: { viewport: Viewport } }) => ({
     address: undefined,
     server: undefined,
     frame: undefined,
-    rendererProps: { density: 30, cameraPose: mat4.create() },
+    rendererProps: {
+      density: 30,
+      cameraPose: mat4.create(),
+      image: 'data/aneurism.ome.tif',
+    },
     queuedRendererEvents: [],
     stagedRendererEvents: [],
     ...input, // captures injected viewport
   }),
+
+  initial: 'root',
   states: {
-    disconnected: {
-      entry: ({ context, self }) => {
-        // Update camera pose on viewport change
-        // FIXME: not capturing initial camera position because updateRender handler not registered before connection
-        context.viewport.subscribe(() => {
-          const cameraPose = context.viewport
-            .getSnapshot()
-            .context.camera?.getSnapshot().context.pose;
-          if (!cameraPose) throw new Error('no camera pose');
-          self.send({
-            type: 'updateRenderer',
-            props: { cameraPose },
-          });
-        });
-      },
-      on: {
-        setAddress: {
-          actions: [
-            assign({
-              address: ({ event: { address } }: { event: SetAddressEvent }) => {
-                return address;
-              },
-            }),
-          ],
-          target: 'connecting',
-        },
-      },
-    },
-    connecting: {
-      invoke: {
-        id: 'connect',
-        src: 'connect',
-        input: ({ context }: { context: Context }) => ({
-          address: context.address,
-        }),
-        onDone: {
-          actions: assign({
-            server: ({ event }) => event.output,
-            // initially, send all props to renderer
-            // queuedRendererEvents: ({ context }) =>
-            //   getEntries(context.rendererProps),
-          }),
-          target: 'online',
-        },
-      },
-    },
-    online: {
+    // root state captures initial rendererProps even when disconnected
+    root: {
       on: {
         updateRenderer: {
           actions: [
@@ -122,6 +83,7 @@ export const remoteMachine = createMachine({
                 ...(getEntries(props) as RendererEntries),
               ],
             }),
+
             // Trigger a render (if in idle state)
             ({ self }) => {
               (self as ActorRef<UpdateRendererEvent | RenderEvent>).send({
@@ -131,40 +93,113 @@ export const remoteMachine = createMachine({
           ],
         },
       },
-      initial: 'render',
+      initial: 'disconnected',
       states: {
-        render: {
-          invoke: {
-            id: 'render',
-            src: 'renderer',
-            input: ({ context }: { context: Context }) => ({
-              server: context.server,
-              events: [...context.stagedRendererEvents],
-            }),
-            onDone: {
-              actions: assign({
-                frame: ({ event }) => event.output,
-              }),
-              target: 'idle',
+        disconnected: {
+          entry: ({ context, self }) => {
+            // Update camera pose on viewport change
+            context.viewport.subscribe(() => {
+              const cameraPose = context.viewport
+                .getSnapshot()
+                .context.camera?.getSnapshot().context.pose;
+              if (!cameraPose) throw new Error('no camera pose');
+              self.send({
+                type: 'updateRenderer',
+                props: { cameraPose },
+              });
+            });
+          },
+          on: {
+            setAddress: {
+              actions: [
+                assign({
+                  address: ({
+                    event: { address },
+                  }: {
+                    event: SetAddressEvent;
+                  }) => {
+                    return address;
+                  },
+                }),
+              ],
+              target: 'connecting',
+            },
+
+            updateRenderer: {
+              actions: [
+                assign({
+                  rendererProps: ({ event: { props }, context }) => {
+                    return {
+                      ...context.rendererProps,
+                      ...props,
+                    };
+                  },
+                  queuedRendererEvents: ({ event: { props }, context }) => [
+                    ...context.queuedRendererEvents,
+                    ...(getEntries(props) as RendererEntries),
+                  ],
+                }),
+              ],
             },
           },
         },
-        idle: {
-          always: {
-            // Renderer props changed while rendering? Then render.
-            guard: ({ context }) => context.queuedRendererEvents.length > 0,
-            target: 'render',
+        connecting: {
+          invoke: {
+            id: 'connect',
+            src: 'connect',
+            input: ({ context }: { context: Context }) => ({
+              context,
+            }),
+            onDone: {
+              actions: assign({
+                server: ({ event }) => event.output,
+                // initially, send all props to renderer
+                queuedRendererEvents: ({ context }) =>
+                  getEntries(context.rendererProps),
+              }),
+              target: 'online',
+            },
           },
-          on: {
-            render: { target: 'render' },
+        },
+        online: {
+          initial: 'render',
+          states: {
+            render: {
+              invoke: {
+                id: 'render',
+                src: 'renderer',
+                input: ({ context }: { context: Context }) => ({
+                  server: context.server,
+                  events: [...context.stagedRendererEvents],
+                }),
+                onDone: {
+                  actions: assign({
+                    frame: ({ event }) => {
+                      return event.output;
+                    },
+                  }),
+                  target: 'idle',
+                },
+              },
+            },
+            idle: {
+              always: {
+                // Renderer props changed while rendering? Then render.
+                guard: ({ context }) => context.queuedRendererEvents.length > 0,
+                target: 'render',
+              },
+              on: {
+                render: { target: 'render' },
+              },
+              exit: assign({
+                // consumes queue in prep for renderer
+                stagedRendererEvents: ({ context }) => [
+                  ...context.queuedRendererEvents,
+                ],
+                queuedRendererEvents: [],
+              }),
+            },
           },
-          exit: assign({
-            // consumes queue in prep for renderer
-            stagedRendererEvents: ({ context }) => [
-              ...context.queuedRendererEvents,
-            ],
-            queuedRendererEvents: [],
-          }),
         },
       },
     },

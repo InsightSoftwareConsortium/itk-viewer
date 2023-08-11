@@ -20,6 +20,9 @@ export class ItkRemoteViewport extends ItkViewport {
   @property({ type: String })
   address: string | undefined;
 
+  @property({ type: String })
+  image: string | undefined;
+
   @property({ type: Number })
   density = 30;
 
@@ -50,6 +53,18 @@ export class ItkRemoteViewport extends ItkViewport {
     this.canvasCtx.putImageData(imageData, 0, 0);
   }
 
+  connectedCallback() {
+    super.connectedCallback();
+
+    const render = () => {
+      if (!this.isConnected) return;
+
+      this.remote.send({ type: 'render' });
+      requestAnimationFrame(render);
+    };
+    requestAnimationFrame(render);
+  }
+
   firstUpdated(): void {
     const canvas = this.canvas.value;
     if (!canvas) throw new Error('canvas not found');
@@ -59,6 +74,12 @@ export class ItkRemoteViewport extends ItkViewport {
   willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has('address')) {
       this.remote.send({ type: 'setAddress', address: this.address });
+    }
+    if (changedProperties.has('image')) {
+      this.remote.send({
+        type: 'updateRenderer',
+        props: { image: this.image },
+      });
     }
     if (changedProperties.has('density')) {
       this.remote.send({
