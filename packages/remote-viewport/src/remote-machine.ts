@@ -124,23 +124,6 @@ export const remoteMachine = createMachine({
               ],
               target: 'connecting',
             },
-
-            updateRenderer: {
-              actions: [
-                assign({
-                  rendererProps: ({ event: { props }, context }) => {
-                    return {
-                      ...context.rendererProps,
-                      ...props,
-                    };
-                  },
-                  queuedRendererEvents: ({ event: { props }, context }) => [
-                    ...context.queuedRendererEvents,
-                    ...(getEntries(props) as RendererEntries),
-                  ],
-                }),
-              ],
-            },
           },
         },
         connecting: {
