@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { PropertyValues, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { SelectorController } from 'xstate-lit/dist/select-controller.js';
@@ -14,6 +15,7 @@ import { Ref, createRef, ref } from 'lit/directives/ref.js';
 
 const WIDTH = 500;
 const HEIGHT = 400;
+const SERVICE_ID = import.meta.env.VITE_HYPHA_RENDER_SERVICE_ID;
 
 @customElement('itk-remote-viewport')
 export class ItkRemoteViewport extends ItkViewport {
@@ -35,7 +37,9 @@ export class ItkRemoteViewport extends ItkViewport {
 
   constructor() {
     super();
-    const { remote, viewport } = createRemoteViewport(createHyphaActors());
+    const { remote, viewport } = createRemoteViewport(
+      createHyphaActors(SERVICE_ID)
+    );
     this.actor = viewport;
     this.remote = remote;
     this.frame = new SelectorController(
