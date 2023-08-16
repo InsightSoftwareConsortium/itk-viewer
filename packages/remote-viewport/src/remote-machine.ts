@@ -1,7 +1,8 @@
 import { ReadonlyMat4, mat4 } from 'gl-matrix';
-import { ActorRef, assign, createMachine } from 'xstate';
+import { assign, createMachine, raise, sendTo } from 'xstate';
 
 import { Viewport } from '@itk-viewer/viewer/viewport.js';
+import { fpsWatcher } from '@itk-viewer/viewer/fps-watcher-machine.js';
 
 type RendererProps = {
   density: number;
@@ -21,9 +22,9 @@ const getEntries = <T extends object>(obj: T) =>
 export type RendererEntries = Entries<RendererProps>;
 
 export type Context = {
-  address: string | undefined;
-  server: any | undefined;
-  frame: ArrayBuffer | undefined;
+  address?: string;
+  server?: any;
+  frame?: ArrayBuffer;
   rendererProps: RendererProps;
   queuedRendererEvents: RendererEntries;
   stagedRendererEvents: RendererEntries;
@@ -51,9 +52,6 @@ export const remoteMachine = createMachine({
   },
   id: 'remote',
   context: ({ input }: { input: { viewport: Viewport } }) => ({
-    address: undefined,
-    server: undefined,
-    frame: undefined,
     rendererProps: {
       density: 30,
       cameraPose: mat4.create(),
@@ -85,11 +83,7 @@ export const remoteMachine = createMachine({
             }),
 
             // Trigger a render (if in idle state)
-            ({ self }) => {
-              (self as ActorRef<UpdateRendererEvent | RenderEvent>).send({
-                type: 'render',
-              });
-            },
+            raise({ type: 'render' }),
           ],
         },
       },
@@ -145,42 +139,72 @@ export const remoteMachine = createMachine({
           },
         },
         online: {
-          initial: 'render',
+          type: 'parallel',
           states: {
-            render: {
+            fpsWatcher: {
               invoke: {
-                id: 'render',
-                src: 'renderer',
-                input: ({ context }: { context: Context }) => ({
-                  server: context.server,
-                  events: [...context.stagedRendererEvents],
-                }),
-                onDone: {
-                  actions: assign({
-                    frame: ({ event }) => {
-                      return event.output;
-                    },
-                  }),
-                  target: 'idle',
-                },
+                id: 'fpsWatcher',
+                src: fpsWatcher,
               },
             },
-            idle: {
-              always: {
-                // Renderer props changed while rendering? Then render.
-                guard: ({ context }) => context.queuedRendererEvents.length > 0,
-                target: 'render',
+            renderLoop: {
+              initial: 'render',
+              states: {
+                render: {
+                  invoke: {
+                    id: 'render',
+                    src: 'renderer',
+                    input: ({ context }: { context: Context }) => ({
+                      server: context.server,
+                      events: [...context.stagedRendererEvents],
+                    }),
+                    onDone: {
+                      actions: assign({
+                        frame: ({ event }) => {
+                          return event.output;
+                        },
+                      }),
+                      target: 'sampleFps',
+                    },
+                  },
+                },
+                sampleFps: {
+                  invoke: {
+                    id: 'fetchFps',
+                    src: 'fetchFps',
+                    input: ({ context }: { context: Context }) => context,
+                    onDone: {
+                      actions: [
+                        ({ event }) =>
+                          sendTo('fpsWatcher', {
+                            type: 'newSample',
+                            fps: event.output,
+                          }),
+                        ({ event }) => console.log('sampleFps', event.output),
+                      ],
+                      target: 'idle',
+                    },
+                  },
+                },
+                idle: {
+                  always: {
+                    // Renderer props changed while rendering? Then render.
+                    guard: ({ context }) =>
+                      context.queuedRendererEvents.length > 0,
+                    target: 'render',
+                  },
+                  on: {
+                    render: { target: 'render' },
+                  },
+                  exit: assign({
+                    // consumes queue in prep for renderer
+                    stagedRendererEvents: ({ context }) => [
+                      ...context.queuedRendererEvents,
+                    ],
+                    queuedRendererEvents: [],
+                  }),
+                },
               },
-              on: {
-                render: { target: 'render' },
-              },
-              exit: assign({
-                // consumes queue in prep for renderer
-                stagedRendererEvents: ({ context }) => [
-                  ...context.queuedRendererEvents,
-                ],
-                queuedRendererEvents: [],
-              }),
             },
           },
         },

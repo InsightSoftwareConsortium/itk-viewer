@@ -10,12 +10,13 @@ export const createTestActors: () => RemoteMachineActors = () => ({
       await new Promise((resolve) => setTimeout(resolve, 10));
       return 'aServer';
     }),
+    fetchFps: fromPromise(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return 0.16;
+    }),
     renderer: fromPromise(async () => {
       await new Promise((resolve) => setTimeout(resolve, 10));
-      return { frame: 'new frame here' };
-    }),
-    updater: fromPromise(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 10));
+      return new ArrayBuffer(0);
     }),
   },
 });
