@@ -7,7 +7,7 @@ import { fpsWatcher } from '@itk-viewer/viewer/fps-watcher-machine.js';
 type RendererProps = {
   density: number;
   cameraPose: ReadonlyMat4;
-  image: string | undefined;
+  image?: string;
 };
 
 // https://stackoverflow.com/a/74823834
@@ -55,7 +55,6 @@ export const remoteMachine = createMachine({
     rendererProps: {
       density: 30,
       cameraPose: mat4.create(),
-      image: 'data/aneurism.ome.tif',
     },
     queuedRendererEvents: [],
     stagedRendererEvents: [],
@@ -145,6 +144,7 @@ export const remoteMachine = createMachine({
               invoke: {
                 id: 'fpsWatcher',
                 src: fpsWatcher,
+                onSnapshot: { actions: (e) => console.log('slow', e) },
               },
             },
             renderLoop: {
@@ -175,12 +175,10 @@ export const remoteMachine = createMachine({
                     input: ({ context }: { context: Context }) => context,
                     onDone: {
                       actions: [
-                        ({ event }) =>
-                          sendTo('fpsWatcher', {
-                            type: 'newSample',
-                            fps: event.output,
-                          }),
-                        ({ event }) => console.log('sampleFps', event.output),
+                        sendTo('fpsWatcher', ({ event }) => ({
+                          type: 'newSample',
+                          fps: event.output,
+                        })),
                       ],
                       target: 'idle',
                     },

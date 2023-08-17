@@ -12,10 +12,7 @@ export type RemoteMachineActors = {
 };
 
 const createHyphaRenderer = async (context: Context, serviceId: string) => {
-  const {
-    address: server_url,
-    rendererProps: { image },
-  } = context;
+  const { address: server_url } = context;
   if (!server_url) {
     throw new Error('No server url provided');
   }
@@ -28,7 +25,6 @@ const createHyphaRenderer = async (context: Context, serviceId: string) => {
   const hypha = await hyphaWebsocketClient.connectToServer(config);
   const renderer = await hypha.getService(serviceId);
   await renderer.setup();
-  await renderer.loadImage(image);
 
   return renderer;
 };
