@@ -1,9 +1,9 @@
-import { assign, createMachine } from 'xstate';
+import { assign, createMachine, sendParent } from 'xstate';
 
 const SAMPLE_SIZE = 3;
 
 const SLOW_FPS = 15;
-const FAST_FPS = 60;
+const FAST_FPS = 30;
 const SLOW_FRAME_TIME = 1 / SLOW_FPS;
 const FAST_FRAME_TIME = 1 / FAST_FPS;
 
@@ -57,9 +57,11 @@ export const fpsWatcher = createMachine(
         }),
       },
       slow: {
+        entry: [sendParent({ type: 'slowFps' })],
         always: { target: 'sample' },
       },
       fast: {
+        entry: [sendParent({ type: 'fastFps' })],
         always: { target: 'sample' },
       },
     },
