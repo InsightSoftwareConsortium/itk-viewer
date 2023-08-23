@@ -159,25 +159,15 @@ export const remoteMachine = createMachine({
                       events: [...context.stagedRendererEvents],
                     }),
                     onDone: {
-                      actions: assign({
-                        frame: ({ event }) => {
-                          return event.output;
-                        },
-                      }),
-                      target: 'sampleFps',
-                    },
-                  },
-                },
-                sampleFps: {
-                  invoke: {
-                    id: 'fetchFps',
-                    src: 'fetchFps',
-                    input: ({ context }: { context: Context }) => context,
-                    onDone: {
                       actions: [
+                        assign({
+                          frame: ({ event }) => {
+                            return event.output.frame;
+                          },
+                        }),
                         sendTo('fpsWatcher', ({ event }) => ({
                           type: 'newSample',
-                          fps: event.output,
+                          renderTime: event.output.renderTime,
                         })),
                       ],
                       target: 'idle',

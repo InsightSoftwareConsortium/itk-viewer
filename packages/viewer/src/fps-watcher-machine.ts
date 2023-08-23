@@ -16,7 +16,7 @@ export const fpsWatcher = createMachine(
   {
     types: {} as {
       context: typeof context;
-      events: { type: 'newSample'; fps: number };
+      events: { type: 'newSample'; renderTime: number };
     },
     context,
     id: 'fpsWatcher',
@@ -29,10 +29,10 @@ export const fpsWatcher = createMachine(
             {
               actions: [
                 assign({
-                  samples: ({ event: { fps }, context: { samples } }) => [
-                    ...samples,
-                    fps,
-                  ],
+                  samples: ({
+                    event: { renderTime },
+                    context: { samples },
+                  }) => [...samples, renderTime],
                 }),
               ],
               target: 'sample',

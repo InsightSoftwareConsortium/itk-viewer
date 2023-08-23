@@ -36,7 +36,6 @@ export const createHyphaActors: (serviceId: string) => RemoteMachineActors = (
     connect: fromPromise(async ({ input }) =>
       createHyphaRenderer(input.context, serviceId)
     ),
-    fetchFps: fromPromise(async ({ input }) => input.server.getRenderTime()),
     renderer: fromPromise(
       async ({
         input: { server, events },
