@@ -3,6 +3,7 @@ import { assign, createMachine, raise, sendTo } from 'xstate';
 
 import { Viewport } from '@itk-viewer/viewer/viewport.js';
 import { fpsWatcher } from '@itk-viewer/viewer/fps-watcher-machine.js';
+import { Image } from './types.js';
 
 type MultiscaleImage = {
   scaleCount: number;
@@ -30,7 +31,7 @@ export type RendererEntries = Entries<RendererProps>;
 export type Context = {
   address?: string;
   server?: any;
-  frame?: ArrayBuffer;
+  frame?: Image;
   rendererProps: RendererProps;
   queuedRendererEvents: RendererEntries;
   stagedRendererEvents: RendererEntries;
@@ -175,10 +176,10 @@ export const remoteMachine = createMachine(
           online: {
             on: {
               slowFps: {
-                actions: [() => console.log('slow fps'), 'updateImageScale'],
+                actions: ['updateImageScale'],
               },
               fastFps: {
-                actions: [() => console.log('fast fps'), 'updateImageScale'],
+                actions: ['updateImageScale'],
               },
             },
             type: 'parallel',

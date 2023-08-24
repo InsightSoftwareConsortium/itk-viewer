@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 import { PropertyValues, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { Ref, createRef, ref } from 'lit/directives/ref.js';
 import { SelectorController } from 'xstate-lit/dist/select-controller.js';
 
 import {
@@ -8,10 +9,10 @@ import {
   createHyphaActors,
   createRemoteViewport,
 } from '@itk-viewer/remote-viewport/remote-viewport.js';
+import { Image } from '@itk-viewer/remote-viewport/types.js';
 
 import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
-import { Ref, createRef, ref } from 'lit/directives/ref.js';
 
 const WIDTH = 500;
 const HEIGHT = 400;
@@ -25,8 +26,8 @@ const makeMultiscaleImage = (image: string) => {
     };
   }
   return {
-    scaleCount: 3,
-    scale: 2,
+    scaleCount: 8,
+    scale: 7,
   };
 };
 
@@ -45,8 +46,8 @@ export class ItkRemoteViewport extends ItkViewport {
   canvasCtx: CanvasRenderingContext2D | null = null;
 
   remote: RemoteActor;
-  frame: SelectorController<RemoteActor, ArrayBuffer | undefined>;
-  lastFrameValue = new ArrayBuffer(0);
+  frame: SelectorController<RemoteActor, Image | undefined>;
+  lastFrameValue: Image | undefined = undefined;
 
   constructor() {
     super();
@@ -65,8 +66,10 @@ export class ItkRemoteViewport extends ItkViewport {
   putFrame() {
     if (!this.canvasCtx || !this.frame.value) return;
 
-    const pixels = new Uint8ClampedArray(this.frame.value);
-    const imageData = new ImageData(pixels, WIDTH, HEIGHT);
+    const { size, data } = this.frame.value;
+    const [width, height] = size;
+    const pixels = new Uint8ClampedArray(data);
+    const imageData = new ImageData(pixels, width, height);
     this.canvasCtx.putImageData(imageData, 0, 0);
   }
 
