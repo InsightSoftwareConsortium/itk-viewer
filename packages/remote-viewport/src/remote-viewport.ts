@@ -40,51 +40,59 @@ const createHyphaRenderer = async (context: Context, serviceId: string) => {
 
 export const createHyphaActors: (serviceId: string) => RemoteMachineActors = (
   serviceId
-) => ({
-  actors: {
-    connect: fromPromise(async ({ input }) =>
-      createHyphaRenderer(input.context, serviceId)
-    ),
-    renderer: fromPromise(
-      async ({
-        input: { server, events },
-      }: {
-        input: {
-          server: Renderer;
-          events: RendererEntries;
-        };
-      }) => {
-        const translatedEvents = events
-          .map(([key, value]) => {
-            if (key === 'cameraPose') {
-              const eye = vec3.create();
-              mat4.getTranslation(eye, value);
+) => {
+  let decodeWorker: Worker | null = null;
+  return {
+    actors: {
+      connect: fromPromise(async ({ input }) =>
+        createHyphaRenderer(input.context, serviceId)
+      ),
+      renderer: fromPromise(
+        async ({
+          input: { server, events },
+        }: {
+          input: {
+            server: Renderer;
+            events: RendererEntries;
+          };
+        }) => {
+          const translatedEvents = events
+            .map(([key, value]) => {
+              if (key === 'cameraPose') {
+                const eye = vec3.create();
+                mat4.getTranslation(eye, value);
 
-              const target = vec3.fromValues(value[8], value[9], value[10]);
-              vec3.subtract(target, eye, target);
+                const target = vec3.fromValues(value[8], value[9], value[10]);
+                vec3.subtract(target, eye, target);
 
-              const up = vec3.fromValues(value[4], value[5], value[6]);
+                const up = vec3.fromValues(value[4], value[5], value[6]);
 
-              return ['cameraPose', { eye, up, target }];
-            }
+                return ['cameraPose', { eye, up, target }];
+              }
 
-            if (key === 'image') {
-              server.loadImage(value);
-              return;
-            }
+              if (key === 'image') {
+                server.loadImage(value);
+                return;
+              }
 
-            return [key, value];
-          })
-          .filter(Boolean);
+              return [key, value];
+            })
+            .filter(Boolean);
 
-        server.updateRenderer(translatedEvents);
-        const { frame: encodedImage, renderTime } = await server.render();
-        const { image: frame } = await decode(null, encodedImage);
-        return { frame, renderTime };
-      }
-    ),
-  },
-});
+          server.updateRenderer(translatedEvents);
+          const { frame: encodedImage, renderTime } = await server.render();
+          const { image: frame, webWorker } = await decode(
+            decodeWorker,
+            encodedImage
+          );
+          decodeWorker = webWorker;
+
+          return { frame, renderTime };
+        }
+      ),
+    },
+  };
+};
 
 export type RemoteMachineOptions = {
   context: {
