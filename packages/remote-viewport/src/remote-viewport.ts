@@ -20,16 +20,21 @@ export type RemoteMachineActors = {
   };
 };
 
-const createHyphaRenderer = async (context: Context, serviceId: string) => {
-  const { address: server_url } = context;
-  if (!server_url) {
+type HyphaServiceConfig = {
+  serverUrl: string;
+  serviceId: string;
+};
+
+const createHyphaRenderer = async (context: Context) => {
+  const { serverUrl, serviceId } = context.serverConfig as HyphaServiceConfig;
+  if (!serverUrl) {
     throw new Error('No server url provided');
   }
 
   const config = {
     client_id: 'remote-renderer-test-client',
     name: 'remote_renderer_client',
-    server_url,
+    server_url: serverUrl,
   };
   const hypha = await hyphaWebsocketClient.connectToServer(config);
   const renderer = await hypha.getService(serviceId);
@@ -38,14 +43,13 @@ const createHyphaRenderer = async (context: Context, serviceId: string) => {
   return renderer;
 };
 
-export const createHyphaActors: (serviceId: string) => RemoteMachineActors = (
-  serviceId
-) => {
+export const createHyphaActors: () => RemoteMachineActors = () => {
   let decodeWorker: Worker | null = null;
+
   return {
     actors: {
       connect: fromPromise(async ({ input }) =>
-        createHyphaRenderer(input.context, serviceId)
+        createHyphaRenderer(input.context)
       ),
       renderer: fromPromise(
         async ({

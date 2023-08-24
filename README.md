@@ -27,10 +27,12 @@ Then open `http://localhost:5173/` in browser
 
 ### Publish Steps
 
-1. In the branch that makes the modifications (or in another branch if you forgot) run `pnpm changeset`. Commit the changeset markdown file.
-1. Make a PR on `main` branch and merge.
-1. `release.yml` workflow sees there is a new changeset markdown file and creates a new `chore: update versions` PR.
-1. When ready to publihs, merge the `chore: update version` PR on main and `release.yml` will publish new NPM packages.
+1. In the branch that makes the modifications (or in another branch if you forgot)
+   run `pnpm changeset`. Commit the changeset markdown file.
+1. Make a PR on `main` branch and merge. `release.yml` workflow sees there is
+   a new changeset markdown file and creates a new `chore: update versions` PR.
+1. When ready to publish, merge the `chore: update version` PR on main and `release.yml`
+   will publish new NPM packages.
 
 Recipe that was followed to setup changesets in this repo:
 

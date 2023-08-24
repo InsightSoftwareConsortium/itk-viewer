@@ -14,8 +14,6 @@ import { Image } from '@itk-viewer/remote-viewport/types.js';
 import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
 
-const SERVICE_ID = import.meta.env.VITE_HYPHA_RENDER_SERVICE_ID;
-
 const makeMultiscaleImage = (image: string) => {
   if (image.endsWith('.tif')) {
     return {
@@ -31,8 +29,8 @@ const makeMultiscaleImage = (image: string) => {
 
 @customElement('itk-remote-viewport')
 export class ItkRemoteViewport extends ItkViewport {
-  @property({ type: String })
-  address: string | undefined;
+  @property({ type: Object, attribute: 'server-config' })
+  serverConfig: unknown | undefined;
 
   @property({ type: String })
   image: string | undefined;
@@ -55,9 +53,7 @@ export class ItkRemoteViewport extends ItkViewport {
 
   constructor() {
     super();
-    const { remote, viewport } = createRemoteViewport(
-      createHyphaActors(SERVICE_ID)
-    );
+    const { remote, viewport } = createRemoteViewport(createHyphaActors());
     this.actor = viewport;
     this.remote = remote;
     this.frame = new SelectorController(
@@ -97,10 +93,20 @@ export class ItkRemoteViewport extends ItkViewport {
     this.canvasCtx = canvas.getContext('2d');
   }
 
+  startConnection(): void {
+    if (!this.serverConfig) return;
+
+    this.remote.send({
+      type: 'connect',
+      config: this.serverConfig,
+    });
+  }
+
   willUpdate(changedProperties: PropertyValues<this>) {
-    if (changedProperties.has('address')) {
-      this.remote.send({ type: 'setAddress', address: this.address });
+    if (changedProperties.has('serverConfig')) {
+      this.startConnection();
     }
+
     if (changedProperties.has('image')) {
       if (this.image) {
         const multiscaleImage = makeMultiscaleImage(this.image);
@@ -115,6 +121,7 @@ export class ItkRemoteViewport extends ItkViewport {
         });
       }
     }
+
     if (changedProperties.has('density')) {
       this.remote.send({
         type: 'updateRenderer',
@@ -136,7 +143,8 @@ export class ItkRemoteViewport extends ItkViewport {
   render() {
     return html`
       <h1>Remote viewport</h1>
-      <p>Address: ${this.address}</p>
+      <p>Server Config: ${JSON.stringify(this.serverConfig)}</p>
+      <p>Image: ${this.image}</p>
       <div>
         Density: ${this.density}
         <input

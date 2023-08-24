@@ -29,8 +29,8 @@ const getEntries = <T extends object>(obj: T) =>
 export type RendererEntries = Entries<RendererProps>;
 
 export type Context = {
-  address?: string;
-  server?: any;
+  serverConfig?: unknown;
+  server?: unknown;
   frame?: Image;
   rendererProps: RendererProps;
   queuedRendererEvents: RendererEntries;
@@ -41,9 +41,9 @@ export type Context = {
   image?: MultiscaleImage;
 };
 
-type SetAddressEvent = {
-  type: 'setAddress';
-  address: string | undefined;
+type ConnectEvent = {
+  type: 'connect';
+  config: unknown;
 };
 
 type UpdateRendererEvent = {
@@ -73,7 +73,7 @@ export const remoteMachine = createMachine(
     types: {} as {
       context: Context;
       events:
-        | SetAddressEvent
+        | ConnectEvent
         | UpdateRendererEvent
         | RenderEvent
         | SetMultiscaleImage
@@ -139,15 +139,15 @@ export const remoteMachine = createMachine(
               });
             },
             on: {
-              setAddress: {
+              connect: {
                 actions: [
                   assign({
-                    address: ({
-                      event: { address },
+                    serverConfig: ({
+                      event: { config },
                     }: {
-                      event: SetAddressEvent;
+                      event: ConnectEvent;
                     }) => {
-                      return address;
+                      return config;
                     },
                   }),
                 ],
