@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { PropertyValues, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { SelectorController } from 'xstate-lit/dist/select-controller.js';
@@ -14,6 +15,20 @@ import { Ref, createRef, ref } from 'lit/directives/ref.js';
 
 const WIDTH = 500;
 const HEIGHT = 400;
+const SERVICE_ID = import.meta.env.VITE_HYPHA_RENDER_SERVICE_ID;
+
+const makeMultiscaleImage = (image: string) => {
+  if (image.endsWith('.tif')) {
+    return {
+      scaleCount: 1,
+      scale: 0,
+    };
+  }
+  return {
+    scaleCount: 3,
+    scale: 2,
+  };
+};
 
 @customElement('itk-remote-viewport')
 export class ItkRemoteViewport extends ItkViewport {
@@ -35,7 +50,9 @@ export class ItkRemoteViewport extends ItkViewport {
 
   constructor() {
     super();
-    const { remote, viewport } = createRemoteViewport(createHyphaActors());
+    const { remote, viewport } = createRemoteViewport(
+      createHyphaActors(SERVICE_ID)
+    );
     this.actor = viewport;
     this.remote = remote;
     this.frame = new SelectorController(
@@ -76,10 +93,18 @@ export class ItkRemoteViewport extends ItkViewport {
       this.remote.send({ type: 'setAddress', address: this.address });
     }
     if (changedProperties.has('image')) {
-      this.remote.send({
-        type: 'updateRenderer',
-        props: { image: this.image },
-      });
+      if (this.image) {
+        const multiscaleImage = makeMultiscaleImage(this.image);
+        this.remote.send({
+          type: 'setMultiscaleImage',
+          image: multiscaleImage,
+        });
+
+        this.remote.send({
+          type: 'updateRenderer',
+          props: { image: this.image },
+        });
+      }
     }
     if (changedProperties.has('density')) {
       this.remote.send({
