@@ -1,13 +1,22 @@
 import { fromPromise, interpret } from 'xstate';
 import { hyphaWebsocketClient } from 'imjoy-rpc';
+import { mat4, vec3 } from 'gl-matrix';
+//@ts-expect-error .d.ts file not resolved
+import { decode } from '@itk-wasm/htj2k';
 import { Viewport, createViewport } from '@itk-viewer/viewer/viewport.js';
 import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
-import { mat4, vec3 } from 'gl-matrix';
+import { RenderedFrame } from './types.js';
+
+type Renderer = {
+  updateRenderer: (events: unknown) => unknown;
+  loadImage: (image: string | undefined) => void;
+  render: () => Promise<{ frame: ArrayBuffer; renderTime: number }>;
+};
 
 export type RemoteMachineActors = {
   actors: {
     connect: ReturnType<typeof fromPromise<unknown>>;
-    renderer: ReturnType<typeof fromPromise<ArrayBuffer>>;
+    renderer: ReturnType<typeof fromPromise<RenderedFrame>>;
   };
 };
 
@@ -41,11 +50,7 @@ export const createHyphaActors: (serviceId: string) => RemoteMachineActors = (
         input: { server, events },
       }: {
         input: {
-          server: {
-            updateRenderer: (events: unknown) => Promise<ArrayBuffer>;
-            loadImage: (image: string | undefined) => void;
-            render: () => Promise<ArrayBuffer>;
-          };
+          server: Renderer;
           events: RendererEntries;
         };
       }) => {
@@ -73,7 +78,9 @@ export const createHyphaActors: (serviceId: string) => RemoteMachineActors = (
           .filter(Boolean);
 
         server.updateRenderer(translatedEvents);
-        return server.render();
+        const { frame: encodedImage, renderTime } = await server.render();
+        const { image: frame } = await decode(null, encodedImage);
+        return { frame, renderTime };
       }
     ),
   },
