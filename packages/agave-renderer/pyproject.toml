@@ -24,7 +24,13 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
-dependencies = []
+dependencies = [
+  "agave-pyclient",
+  "hypha",
+  "itkwasm-htj2k",
+  "numpy",
+  "pillow",
+]
 
 [project.urls]
 Documentation = "https://github.com/InsightSoftwareConsortium/itk-viewer/tree/main/packages/agave-renderer#readme"

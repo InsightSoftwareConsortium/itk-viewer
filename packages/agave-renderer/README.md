@@ -3,7 +3,7 @@
 [![PyPI - Version](https://img.shields.io/pypi/v/itk-viewer-agave-renderer.svg)](https://pypi.org/project/itk-viewer-agave-renderer)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/itk-viewer-agave-renderer.svg)](https://pypi.org/project/itk-viewer-agave-renderer)
 
------
+---
 
 **Table of Contents**
 
