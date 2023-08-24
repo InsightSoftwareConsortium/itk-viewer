@@ -26,8 +26,8 @@ const makeMultiscaleImage = (image: string) => {
     };
   }
   return {
-    scaleCount: 3,
-    scale: 2,
+    scaleCount: 8,
+    scale: 7,
   };
 };
 
