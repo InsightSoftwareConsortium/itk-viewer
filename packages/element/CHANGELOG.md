@@ -1,5 +1,17 @@
 # @itk-viewer/element
 
+## 0.2.0
+
+### Minor Changes
+
+- bcf72aa: Add HTJ2K remote-viewport image transfer.
+
+### Patch Changes
+
+- Updated dependencies [bcf72aa]
+  - @itk-viewer/remote-viewport@0.2.0
+  - @itk-viewer/viewer@0.2.0
+
 ## 0.1.3
 
 ### Patch Changes
