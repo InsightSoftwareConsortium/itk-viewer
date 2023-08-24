@@ -1,6 +1,6 @@
 /// <reference types="vite/client" />
 import { PropertyValues, css, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import { Ref, createRef, ref } from 'lit/directives/ref.js';
 import { SelectorController } from 'xstate-lit/dist/select-controller.js';
 
@@ -14,8 +14,6 @@ import { Image } from '@itk-viewer/remote-viewport/types.js';
 import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
 
-const WIDTH = 500;
-const HEIGHT = 400;
 const SERVICE_ID = import.meta.env.VITE_HYPHA_RENDER_SERVICE_ID;
 
 const makeMultiscaleImage = (image: string) => {
@@ -45,6 +43,12 @@ export class ItkRemoteViewport extends ItkViewport {
   canvas: Ref<HTMLCanvasElement> = createRef();
   canvasCtx: CanvasRenderingContext2D | null = null;
 
+  @state()
+  canvasWidth = 0;
+
+  @state()
+  canvasHeight = 0;
+
   remote: RemoteActor;
   frame: SelectorController<RemoteActor, Image | undefined>;
   lastFrameValue: Image | undefined = undefined;
@@ -68,6 +72,8 @@ export class ItkRemoteViewport extends ItkViewport {
 
     const { size, data } = this.frame.value;
     const [width, height] = size;
+    this.canvasWidth = width;
+    this.canvasHeight = height;
     const pixels = new Uint8ClampedArray(data);
     const imageData = new ImageData(pixels, width, height);
     this.canvasCtx.putImageData(imageData, 0, 0);
@@ -143,7 +149,11 @@ export class ItkRemoteViewport extends ItkViewport {
         />
       </div>
       <itk-camera .viewport=${this.actor}>
-        <canvas ${ref(this.canvas)} width=${WIDTH} height=${HEIGHT}></canvas>
+        <canvas
+          ${ref(this.canvas)}
+          width=${this.canvasWidth}
+          height=${this.canvasHeight}
+        ></canvas>
       </itk-camera>
     `;
   }
