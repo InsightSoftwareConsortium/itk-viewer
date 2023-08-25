@@ -16,7 +16,7 @@
     <itk-viewer>
       <itk-remote-viewport
         id="right-viewport"
-        address="%VITE_HYPHA_URL%"
+        server-config='{ "serverUrl": "%VITE_HYPHA_URL%", "serviceId": "%VITE_HYPHA_RENDER_SERVICE_ID%" }'
         image="%VITE_IMAGE%"
       ></itk-remote-viewport>
     </itk-viewer>
