@@ -1,5 +1,14 @@
 # @itk-viewer/element
 
+## 0.2.1
+
+### Patch Changes
+
+- 50d1b90: Add server config attribute to itk-remote-viewport.
+- Updated dependencies [761780f]
+- Updated dependencies [50d1b90]
+  - @itk-viewer/remote-viewport@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes

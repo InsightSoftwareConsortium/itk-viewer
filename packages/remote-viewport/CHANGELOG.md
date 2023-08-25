@@ -1,5 +1,12 @@
 # @itk-viewer/remote-viewport
 
+## 0.2.1
+
+### Patch Changes
+
+- 761780f: Fix out of memory error with many render calls.
+- 50d1b90: Add server config attribute to itk-remote-viewport.
+
 ## 0.2.0
 
 ### Minor Changes
