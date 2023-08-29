@@ -44,11 +44,11 @@ class Renderer():
 
     async def setup(self):
         # Note: the agave websocket server needs to be running
-        self.r = AgaveRendererMemoryRedraw()
-        self.r.set_resolution(self.width, self.height)
+        self.agave = AgaveRendererMemoryRedraw()
+        self.agave.set_resolution(self.width, self.height)
 
     async def render(self):
-        r = self.r
+        r = self.agave
         start_time = time.time()
         rgba = r.memory_redraw()
         image_type = ImageType(dimension=2, componentType=IntTypes.UInt8, pixelType=PixelTypes.RGBA, components=4)
@@ -57,12 +57,12 @@ class Renderer():
         image.data = np.frombuffer(rgba, dtype=np.uint8)
         # lossless
         # rgba_encoded = encode(image)
-        rgba_encoded = encode(image, not_reverible=True, quantization_step=0.08)
+        rgba_encoded = encode(image, not_reversible=True, quantization_step=0.02)
         elapsed = time.time() - start_time
         return { "frame": rgba_encoded, "renderTime": elapsed }
 
     def update_renderer(self, events):
-        r = self.r
+        r = self.agave
 
         for [event_type, payload] in events:
            match event_type:
@@ -89,7 +89,7 @@ class Renderer():
             case UnknownEventAction.IGNORE:
                 pass
 
-    async def start_renderer(self, hypha_server_url, load_image_into_agave_fn, visibility="public"):
+    async def connect(self, hypha_server_url, load_image_into_agave_fn, visibility="public", identifier="agave-renderer"):
         server = await connect_to_server(
             {
               "name": "agave-renderer-client",
@@ -99,7 +99,7 @@ class Renderer():
 
         await server.register_service({
             "name": "Agave Renderer",
-            "id": "agave-renderer",
+            "id": identifier,
             "config": {
                 "visibility": visibility,
                 "require_context": False,
@@ -108,9 +108,9 @@ class Renderer():
 
             "setup": self.setup,
 
-            "loadImage": functools.partial(load_image_into_agave_fn, renderer),
+            "loadImage": functools.partial(load_image_into_agave_fn, self),
 
-            "render": renderer.render,
-            "updateRenderer": renderer.update_renderer,
+            "render": self.render,
+            "updateRenderer": self.update_renderer,
         })
         print("Renderer is ready to receive request!",  server.config, flush=True)
