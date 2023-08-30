@@ -1,8 +1,8 @@
-import { interpret } from 'xstate';
+import { createActor } from 'xstate';
 import { viewportMachine } from './viewport-machine.js';
 
 export const createViewport = () => {
-  return interpret(viewportMachine).start();
+  return createActor(viewportMachine).start();
 };
 
 export type Viewport = ReturnType<typeof createViewport>;

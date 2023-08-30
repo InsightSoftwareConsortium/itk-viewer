@@ -1,5 +1,5 @@
 import { ReadonlyMat4, mat4 } from 'gl-matrix';
-import { assign, createMachine, interpret } from 'xstate';
+import { assign, createActor, createMachine, } from 'xstate';
 
 type context = {
   pose: ReadonlyMat4;
@@ -34,7 +34,7 @@ const cameraMachine = createMachine({
 });
 
 export const createCamera = () => {
-  return interpret(cameraMachine).start();
+  return createActor(cameraMachine).start();
 };
 
 export type Camera = ReturnType<typeof createCamera>;

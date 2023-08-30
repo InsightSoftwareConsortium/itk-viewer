@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "ESNext",
+    "module": "NodeNext",
     "lib": ["ES2019", "DOM", "DOM.Iterable"],
     "target": "ES2019",
     "declaration": true,
@@ -9,7 +9,7 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "nodenext",
+    "moduleResolution": "NodeNext",
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,

@@ -1,4 +1,4 @@
-import { fromPromise, interpret } from 'xstate';
+import { createActor, fromPromise } from 'xstate';
 import { hyphaWebsocketClient } from 'imjoy-rpc';
 import { mat4, vec3 } from 'gl-matrix';
 //@ts-expect-error .d.ts file not resolved
@@ -13,10 +13,17 @@ type Renderer = {
   render: () => Promise<{ frame: ArrayBuffer; renderTime: number }>;
 };
 
+type RendererInput = {
+  server: Renderer;
+  events: RendererEntries;
+};
+
+type ConnectInput = { context: Context };
+
 export type RemoteMachineActors = {
   actors: {
-    connect: ReturnType<typeof fromPromise<unknown>>;
-    renderer: ReturnType<typeof fromPromise<RenderedFrame>>;
+    connect: ReturnType<typeof fromPromise<unknown, ConnectInput>>;
+    renderer: ReturnType<typeof fromPromise<RenderedFrame, RendererInput>>;
   };
 };
 
@@ -48,18 +55,11 @@ export const createHyphaActors: () => RemoteMachineActors = () => {
 
   return {
     actors: {
-      connect: fromPromise(async ({ input }) =>
+      connect: fromPromise(async ({ input }: { input: ConnectInput }) =>
         createHyphaRenderer(input.context)
       ),
       renderer: fromPromise(
-        async ({
-          input: { server, events },
-        }: {
-          input: {
-            server: Renderer;
-            events: RendererEntries;
-          };
-        }) => {
+        async ({ input: { server, events } }: { input: RendererInput }) => {
           const translatedEvents = events
             .map(([key, value]) => {
               if (key === 'cameraPose') {
@@ -107,7 +107,7 @@ export type RemoteMachineOptions = {
 const createRemote = (config: RemoteMachineOptions) => {
   const remoteActor = remoteMachine.provide(config);
 
-  return interpret(remoteActor, {
+  return createActor(remoteActor, {
     input: config.context,
   }).start();
 };

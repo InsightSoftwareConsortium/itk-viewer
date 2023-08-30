@@ -265,5 +265,5 @@ export const remoteMachine = createMachine(
         }
       },
     },
-  }
+  },
 );
