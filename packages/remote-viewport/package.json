@@ -25,6 +25,7 @@
     "vite": "^4.4.9"
   },
   "dependencies": {
+    "@itk-viewer/io": "workspace:^",
     "@itk-viewer/viewer": "workspace:^",
     "@itk-wasm/htj2k": "^1.0.0",
     "gl-matrix": "^3.4.3",

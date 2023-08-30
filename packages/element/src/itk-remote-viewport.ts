@@ -15,19 +15,6 @@ import { Image } from '@itk-viewer/remote-viewport/types.js';
 import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
 
-const makeMultiscaleImage = (image: string) => {
-  if (image.endsWith('.tif')) {
-    return {
-      scaleCount: 1,
-      scale: 0,
-    };
-  }
-  return {
-    scaleCount: 8,
-    scale: 7,
-  };
-};
-
 @customElement('itk-remote-viewport')
 export class ItkRemoteViewport extends ItkViewport {
   @property({ type: Object, attribute: 'server-config' })
@@ -125,21 +112,6 @@ export class ItkRemoteViewport extends ItkViewport {
   willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has('serverConfig')) {
       this.startConnection();
-    }
-
-    if (changedProperties.has('image')) {
-      if (this.image) {
-        const multiscaleImage = makeMultiscaleImage(this.image);
-        this.remote.send({
-          type: 'setMultiscaleImage',
-          image: multiscaleImage,
-        });
-
-        this.remote.send({
-          type: 'updateRenderer',
-          props: { image: this.image },
-        });
-      }
     }
 
     if (changedProperties.has('density')) {

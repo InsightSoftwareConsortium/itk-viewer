@@ -16,6 +16,7 @@
     "forceConsistentCasingInFileNames": true,
     "useDefineForClassFields": false,
     "skipLibCheck": true,
+    "sourceMap": true,
     "allowJs": true
   }
 }

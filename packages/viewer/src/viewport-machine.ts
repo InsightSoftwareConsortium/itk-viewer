@@ -1,4 +1,4 @@
-import { ActorRef, assign, createMachine } from 'xstate';
+import { ActorRef, assign, createMachine, sendParent } from 'xstate';
 
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera } from './camera-machine.js';
@@ -45,6 +45,9 @@ export const viewportMachine = createMachine({
             assign({
               image: ({ event: { image } }: { event: SetImageEvent }) => image,
             }),
+            sendParent(({ event }) => {
+              return event;
+            }),
           ],
         },
         setCamera: {
@@ -66,9 +69,16 @@ export const viewportMachine = createMachine({
                     type: 'cameraPoseUpdated',
                     pose: cameraState.context.pose,
                   });
-                }
+                },
               );
             },
+          ],
+        },
+        cameraPoseUpdated: {
+          actions: [
+            sendParent(({ event }) => {
+              return event;
+            }),
           ],
         },
       },

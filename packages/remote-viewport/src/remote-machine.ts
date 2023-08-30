@@ -1,14 +1,11 @@
 import { ReadonlyMat4, mat4 } from 'gl-matrix';
-import { assign, createMachine, raise, sendTo } from 'xstate';
+import { ActorRefFrom, assign, createMachine, raise, sendTo } from 'xstate';
 
 import { Viewport } from '@itk-viewer/viewer/viewport.js';
 import { fpsWatcher } from '@itk-viewer/viewer/fps-watcher-machine.js';
 import { Image } from './types.js';
-
-type MultiscaleImage = {
-  scaleCount: number;
-  scale: number;
-};
+import { viewportMachine } from '@itk-viewer/viewer/viewport-machine.js';
+import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 type RendererProps = {
   density: number;
@@ -35,10 +32,7 @@ export type Context = {
   rendererProps: RendererProps;
   queuedRendererEvents: RendererEntries;
   stagedRendererEvents: RendererEntries;
-  viewport: Viewport;
-
-  // TODO: move to viewport machine
-  image?: MultiscaleImage;
+  viewport: ActorRefFrom<typeof viewportMachine>;
 };
 
 type ConnectEvent = {
@@ -55,9 +49,9 @@ type RenderEvent = {
   type: 'render';
 };
 
-type SetMultiscaleImage = {
-  type: 'setMultiscaleImage';
-  image: MultiscaleImage;
+type SetImage = {
+  type: 'setImage';
+  image: MultiscaleSpatialImage;
 };
 
 type SlowFps = {
@@ -68,6 +62,11 @@ type FastFps = {
   type: 'fastFps';
 };
 
+type CameraPoseUpdated = {
+  type: 'cameraPoseUpdated';
+  pose: ReadonlyMat4;
+};
+
 export const remoteMachine = createMachine(
   {
     types: {} as {
@@ -76,9 +75,10 @@ export const remoteMachine = createMachine(
         | ConnectEvent
         | UpdateRendererEvent
         | RenderEvent
-        | SetMultiscaleImage
+        | SetImage
         | SlowFps
-        | FastFps;
+        | FastFps
+        | CameraPoseUpdated;
     },
     id: 'remote',
     context: ({ input }: { input: { viewport: Viewport } }) => ({
@@ -90,11 +90,15 @@ export const remoteMachine = createMachine(
       stagedRendererEvents: [],
       ...input, // captures injected viewport
     }),
-
     initial: 'root',
     states: {
       // root state captures initial rendererProps even when disconnected
       root: {
+        entry: [
+          assign({
+            viewport: ({ spawn }) => spawn(viewportMachine, { id: 'viewport' }),
+          }),
+        ],
         on: {
           updateRenderer: {
             actions: [
@@ -114,10 +118,27 @@ export const remoteMachine = createMachine(
               raise({ type: 'render' }),
             ],
           },
-          setMultiscaleImage: {
+          setImage: {
             actions: [
-              assign({
-                image: ({ event: { image } }) => image,
+              raise(({ event }) => {
+                const image = event.image;
+                return {
+                  type: 'updateRenderer' as const,
+                  props: {
+                    image: image.name,
+                    imageScale: image.scaleInfos.length - 1,
+                  },
+                };
+              }),
+            ],
+          },
+          cameraPoseUpdated: {
+            actions: [
+              raise(({ event }) => {
+                return {
+                  type: 'updateRenderer' as const,
+                  props: { cameraPose: event.pose },
+                };
               }),
             ],
           },
@@ -125,19 +146,6 @@ export const remoteMachine = createMachine(
         initial: 'disconnected',
         states: {
           disconnected: {
-            entry: ({ context, self }) => {
-              // Update camera pose on viewport change
-              context.viewport.subscribe(() => {
-                const cameraPose = context.viewport
-                  .getSnapshot()
-                  .context.camera?.getSnapshot().context.pose;
-                if (!cameraPose) throw new Error('no camera pose');
-                self.send({
-                  type: 'updateRenderer',
-                  props: { cameraPose },
-                });
-              });
-            },
             on: {
               connect: {
                 actions: [
@@ -251,9 +259,11 @@ export const remoteMachine = createMachine(
   {
     actions: {
       updateImageScale: ({ event, context, self }) => {
-        if (!context.image) throw new Error('no scaleImage');
+        const image = context.viewport.getSnapshot().context.image;
+        if (!image || context.rendererProps.imageScale === undefined) return;
 
-        const { scaleCount, scale } = context.image;
+        const scaleCount = image.scaleInfos.length - 1;
+        const scale = context.rendererProps.imageScale;
         const { type } = event;
 
         const scaleChange = type === 'slowFps' ? 1 : -1;
@@ -261,7 +271,6 @@ export const remoteMachine = createMachine(
         const newScale = Math.max(0, Math.min(scaleCount - 1, targetScale));
 
         if (newScale !== scale) {
-          context.image.scale = newScale;
           self.send({
             type: 'updateRenderer',
             props: { imageScale: newScale },
