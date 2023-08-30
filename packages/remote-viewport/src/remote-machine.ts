@@ -188,7 +188,6 @@ export const remoteMachine = createMachine(
                 invoke: {
                   id: 'fpsWatcher',
                   src: fpsWatcher,
-                  onSnapshot: { actions: (e) => console.log('slow', e) },
                 },
               },
               renderLoop: {
@@ -215,6 +214,11 @@ export const remoteMachine = createMachine(
                           })),
                         ],
                         target: 'idle',
+                      },
+                      onError: {
+                        actions: (e) =>
+                          console.error('Error while updating render', e),
+                        target: 'idle', // soldier on
                       },
                     },
                   },
