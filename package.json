@@ -8,6 +8,7 @@
     "dev": "pnpm -r --parallel run dev",
     "build": "pnpm -r build",
     "lint": "pnpm prettier --check . && pnpm eslint .",
+    "lint:fix": "pnpm prettier --write . && pnpm eslint --fix .",
     "test": "pnpm test:downloadData && pnpm cy:component",
     "test:ci": "pnpm test:downloadData && pnpm cy:component:ci",
     "test:downloadData": "node test/downloadData.mjs",
