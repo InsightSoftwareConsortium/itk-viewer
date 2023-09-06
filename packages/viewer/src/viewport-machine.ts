@@ -25,63 +25,69 @@ type CameraPoseUpdatedEvent = {
   pose: ReadonlyMat4;
 };
 
-export const viewportMachine = createMachine({
-  types: {} as {
-    context: Context;
-    events: SetImageEvent | SetCameraEvent | CameraPoseUpdatedEvent;
-  },
-  id: 'viewport',
-  initial: 'active',
-  context: {
-    image: undefined,
-    camera: undefined,
-    cameraSubscription: undefined,
-  },
-  states: {
-    active: {
-      on: {
-        setImage: {
-          actions: [
-            assign({
-              image: ({ event: { image } }: { event: SetImageEvent }) => image,
-            }),
-            sendParent(({ event }) => {
-              return event;
-            }),
-          ],
-        },
-        setCamera: {
-          actions: [
-            assign({
-              camera: ({ event: { camera } }: { event: SetCameraEvent }) =>
-                camera,
-            }),
-            ({ context, self }) => {
-              if (context.cameraSubscription)
-                context.cameraSubscription.unsubscribe();
+type Events = SetImageEvent | SetCameraEvent | CameraPoseUpdatedEvent;
 
-              // Let observers of Viewport know that camera has updated
-              context.cameraSubscription = context.camera?.subscribe(
-                (cameraState) => {
-                  (
-                    self as ActorRef<SetCameraEvent | CameraPoseUpdatedEvent>
-                  ).send({
-                    type: 'cameraPoseUpdated',
-                    pose: cameraState.context.pose,
-                  });
-                },
-              );
-            },
-          ],
-        },
-        cameraPoseUpdated: {
-          actions: [
-            sendParent(({ event }) => {
-              return event;
-            }),
-          ],
+export const viewportMachine = createMachine(
+  {
+    types: {} as {
+      context: Context;
+      events: Events;
+    },
+    id: 'viewport',
+    initial: 'active',
+    context: {
+      image: undefined,
+      camera: undefined,
+      cameraSubscription: undefined,
+    },
+    states: {
+      active: {
+        on: {
+          setImage: {
+            actions: [
+              assign({
+                image: ({ event: { image } }: { event: SetImageEvent }) =>
+                  image,
+              }),
+              'forwardToParent',
+            ],
+          },
+          setCamera: {
+            actions: [
+              assign({
+                camera: ({ event: { camera } }: { event: SetCameraEvent }) =>
+                  camera,
+              }),
+              ({ context, self }) => {
+                if (context.cameraSubscription)
+                  context.cameraSubscription.unsubscribe();
+
+                // Let observers of Viewport know that camera has updated
+                context.cameraSubscription = context.camera?.subscribe(
+                  (cameraState) => {
+                    (
+                      self as ActorRef<SetCameraEvent | CameraPoseUpdatedEvent>
+                    ).send({
+                      type: 'cameraPoseUpdated',
+                      pose: cameraState.context.pose,
+                    });
+                  },
+                );
+              },
+            ],
+          },
+          cameraPoseUpdated: {
+            actions: ['forwardToParent'],
+          },
         },
       },
     },
   },
-});
+  {
+    actions: {
+      forwardToParent: sendParent<Context, Events, undefined>(({ event }) => {
+        return event;
+      }),
+    },
+  },
+);
