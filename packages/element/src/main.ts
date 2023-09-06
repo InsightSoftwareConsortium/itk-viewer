@@ -1,23 +1,23 @@
-import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
+import { makePlaceholderMultiscaleImage } from '@itk-viewer/io/makePlaceholderMultiscaleImage.js';
 import { ItkViewport } from './itk-viewport.js';
 
-const imagePath = '/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr';
-const url = new URL(imagePath, document.location.origin);
-const image = await ZarrMultiscaleSpatialImage.fromUrl(url);
+// Remote image placeholders for FPS pyramid-scale switching
+const makeMultiscaleImage = (image: string) => {
+  if (image.endsWith('.tif')) {
+    return makePlaceholderMultiscaleImage(image, 1);
+  }
+  return makePlaceholderMultiscaleImage(image, 8);
+};
+
+const imagePath = import.meta.env.VITE_IMAGE;
+const image = makeMultiscaleImage(imagePath);
 
 const viewerElement = document.querySelector('itk-viewer');
 if (!viewerElement) throw new Error('Could not find element');
 const viewer = viewerElement.getActor();
 
-// const leftViewport = document.querySelector(
-//   '#left-viewport'
-// ) as ItkViewport | null;
-// if (!leftViewport) throw new Error('Could not find element');
-// const leftV = leftViewport.getActor();
-// viewer.send({ type: 'addViewport', viewport: leftV, name: 'left' });
-
 const rightViewport = document.querySelector(
-  '#right-viewport'
+  '#right-viewport',
 ) as ItkViewport | null;
 if (!rightViewport) throw new Error('Could not find element');
 const rightV = rightViewport.getActor();

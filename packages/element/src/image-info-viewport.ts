@@ -10,7 +10,7 @@ export class ImageInfoViewport extends ItkViewport {
   image = new SelectorController(
     this,
     this.actor,
-    (state) => state?.context.image
+    (state) => state?.context.image,
   );
 
   render() {
@@ -21,7 +21,7 @@ export class ImageInfoViewport extends ItkViewport {
     const imageInfo = `Image Type: ${JSON.stringify(
       imageType,
       null,
-      2
+      2,
     )}\nSpatial Dimensions: ${spatialDims}\nDirection: ${direction}`;
 
     return html`

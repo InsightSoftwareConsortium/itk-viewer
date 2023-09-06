@@ -19,13 +19,13 @@ registerWebworker().operation(
     const len = values.length;
     for (let i = offset; i < len; i += step) {
       const idx = Math.floor(
-        ((numberOfBins - 1) * (Number(values[i]) - min)) / delta
+        ((numberOfBins - 1) * (Number(values[i]) - min)) / delta,
       );
       histogram[idx] += 1;
     }
 
     return Promise.resolve(
-      new registerWebworker.TransferableResponse(histogram, [histogram.buffer])
+      new registerWebworker.TransferableResponse(histogram, [histogram.buffer]),
     );
-  }
+  },
 );

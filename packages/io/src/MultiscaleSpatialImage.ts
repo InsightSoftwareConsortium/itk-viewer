@@ -23,10 +23,10 @@ import { ReadonlyMat4 } from 'gl-matrix';
 
 const imageDataFromChunksWorker = new Worker(
   new URL('./ImageDataFromChunks.worker.js', import.meta.url),
-  { type: 'module' }
+  { type: 'module' },
 );
 const imageDataFromChunksWorkerPromise = new WebworkerPromise(
-  imageDataFromChunksWorker
+  imageDataFromChunksWorker,
 );
 
 function inflate(bounds: Bounds, delta: number) {
@@ -93,7 +93,7 @@ const ensure3dDirection = (d: Float64Array): ReadonlyMat3 => {
       d[5],
       d[6],
       d[7],
-      d[8]
+      d[8],
     );
   }
   // Pad 2D with Z dimension
@@ -164,7 +164,7 @@ export const worldBoundsToIndexBounds = ({
   const fullIndexBoundsWithZCT = ensuredDims(
     [0, 1] as [number, number],
     CXYZT,
-    fullIndexBounds
+    fullIndexBounds,
   );
   if (!bounds) {
     // no bounds, return full image
@@ -187,14 +187,14 @@ export const worldBoundsToIndexBounds = ({
     ] as const;
   });
   const ctBounds = (['c', 't'] as const).map(
-    (dim) => [dim, fullIndexBoundsWithZCT.get(dim)!] as const
+    (dim) => [dim, fullIndexBoundsWithZCT.get(dim)!] as const,
   );
   return new Map([...spaceBounds, ...ctBounds]);
 };
 
 function isContained(
   benchmarkBounds: ReadOnlyDimensionBounds,
-  testedBounds: ReadOnlyDimensionBounds
+  testedBounds: ReadOnlyDimensionBounds,
 ) {
   return Array.from(benchmarkBounds).every(
     ([dim, [benchmarkMin, benchmarkMax]]) => {
@@ -202,7 +202,7 @@ function isContained(
       if (!testDimBounds) throw new Error('Dimension not found');
       const [testedMin, testedMax] = testDimBounds;
       return benchmarkMin <= testedMin && testedMax <= benchmarkMax;
-    }
+    },
   );
 }
 
@@ -222,7 +222,7 @@ function findImageInBounds({
 }) {
   const imagesAtScale = cache.get(scale) ?? [];
   return imagesAtScale.find(({ bounds: cachedBounds }) =>
-    isContained(cachedBounds, bounds)
+    isContained(cachedBounds, bounds),
   )?.image;
 }
 
@@ -254,7 +254,7 @@ class MultiscaleSpatialImage {
   constructor(
     scaleInfos: Array<ScaleInfo>,
     imageType: ImageType,
-    name = 'Image'
+    name = 'Image',
   ) {
     this.scaleInfos = scaleInfos;
     this.name = name;
@@ -267,7 +267,7 @@ class MultiscaleSpatialImage {
     this.pixelArrayType = pixelType;
     this.spatialDims = ['x', 'y', 'z'].slice(
       0,
-      imageType.dimension
+      imageType.dimension,
     ) as SpatialDimensions;
     this.cachedImages = new Map();
   }
@@ -332,7 +332,7 @@ class MultiscaleSpatialImage {
             dimension,
             d1,
             d2,
-            infoDirection[di1][di2]
+            infoDirection[di1][di2],
           );
         }
       }
@@ -347,15 +347,15 @@ class MultiscaleSpatialImage {
 
   /* Return a promise that provides the requested chunk at a given scale and
    * chunk index. */
-  async getChunks(scale: number, cxyztArray: Array<Array<number>>) {
+  protected async getChunks(scale: number, cxyztArray: Array<Array<number>>) {
     return this.getChunksImpl(scale, cxyztArray);
   }
 
-  async getChunksImpl(
+  protected async getChunksImpl(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _scale: number,
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _cxyztArray: Array<Array<number>>
+    _cxyztArray: Array<Array<number>>,
   ): Promise<Array<ArrayBuffer>> {
     console.error('Override me in a derived class');
     return [];
@@ -370,23 +370,23 @@ class MultiscaleSpatialImage {
     ]);
 
     const start = new Map(
-      CXYZT.map((dim) => [dim, indexBounds.get(dim)?.[0] ?? 0])
+      CXYZT.map((dim) => [dim, indexBounds.get(dim)?.[0] ?? 0]),
     );
     const end = new Map(
-      CXYZT.map((dim) => [dim, (indexBounds.get(dim)?.[1] ?? 0) + 1])
+      CXYZT.map((dim) => [dim, (indexBounds.get(dim)?.[1] ?? 0) + 1]),
     );
 
     const arrayShape = new Map(
-      CXYZT.map((dim) => [dim, end.get(dim)! - start.get(dim)!])
+      CXYZT.map((dim) => [dim, end.get(dim)! - start.get(dim)!]),
     );
 
     const startXYZ = new Float32Array(
-      (['x', 'y', 'z'] as const).map((dim) => start.get(dim)!)
+      (['x', 'y', 'z'] as const).map((dim) => start.get(dim)!),
     );
     const origin = Array.from(
       vec3
         .transformMat4(vec3.create(), startXYZ, indexToWorld)
-        .slice(0, this.imageType.dimension)
+        .slice(0, this.imageType.dimension),
     );
 
     const chunkSizeWith1 = ensuredDims(1, CXYZT, chunkSize);
@@ -430,7 +430,7 @@ class MultiscaleSpatialImage {
     };
     const { pixelArray, ranges } = await imageDataFromChunksWorkerPromise.exec(
       'imageDataFromChunks',
-      args
+      args,
     );
 
     const size = (['x', 'y', 'z'] as const)
@@ -483,7 +483,7 @@ class MultiscaleSpatialImage {
         bounds: worldBounds,
         fullIndexBounds: this.getIndexBounds(scale),
         worldToIndex: mat4.invert(mat4.create(), indexToWorld),
-      })
+      }),
     );
 
     const cachedImage = findImageInBounds({
@@ -501,7 +501,10 @@ class MultiscaleSpatialImage {
   getIndexBounds(scale: number) {
     const { arrayShape } = this.scaleInfos[scale];
     return new Map(
-      Array.from(arrayShape).map(([dim, size]) => [dim, [0, size - 1] as const])
+      Array.from(arrayShape).map(([dim, size]) => [
+        dim,
+        [0, size - 1] as const,
+      ]),
     );
   }
 
@@ -515,10 +518,10 @@ class MultiscaleSpatialImage {
     const imageBounds = ensuredDims(
       [0, 1],
       ['x', 'y', 'z'],
-      this.getIndexBounds(scale)
+      this.getIndexBounds(scale),
     );
     const bounds = (['x', 'y', 'z'] as const).flatMap((dim) =>
-      imageBounds.get(dim)
+      imageBounds.get(dim),
     ) as Bounds;
     inflate(bounds, 0.5);
     return extentToBounds(bounds, indexToWorld);

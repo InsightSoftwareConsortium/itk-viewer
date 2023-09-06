@@ -14,7 +14,7 @@ const computeRangeWorkerPool = webWorkerPromiseWorkerPool(
     new Worker(new URL('./ComputeRanges.worker.js', import.meta.url), {
       type: 'module',
     }),
-  'computeRanges'
+  'computeRanges',
 );
 
 export async function computeRanges(values, numberOfComponents = 1) {

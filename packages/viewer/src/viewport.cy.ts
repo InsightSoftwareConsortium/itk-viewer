@@ -14,7 +14,7 @@ describe('Viewport', () => {
 
     const storeURL = new URL(
       '/ome-ngff-prototypes/single_image/v0.4/yx.ome.zarr',
-      document.location.origin
+      document.location.origin,
     );
     const image = await ZarrMultiscaleSpatialImage.fromUrl(storeURL);
 
@@ -31,7 +31,7 @@ describe('Viewport', () => {
     viewport.send({ type: 'setCamera', camera });
 
     cy.wrap(
-      viewport.getSnapshot().context.camera?.getSnapshot().context.pose
+      viewport.getSnapshot().context.camera?.getSnapshot().context.pose,
     ).should('deep.equal', camera.getSnapshot().context.pose);
 
     let cameraPose = undefined;

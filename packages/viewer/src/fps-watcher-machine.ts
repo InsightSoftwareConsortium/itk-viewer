@@ -73,5 +73,5 @@ export const fpsWatcher = createMachine(
       checkSlow: ({ context: { average } }) => average < SLOW_FRAME_TIME,
       checkFast: ({ context: { average } }) => average > FAST_FRAME_TIME,
     },
-  }
+  },
 );

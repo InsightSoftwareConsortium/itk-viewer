@@ -1,12 +1,14 @@
-import { assign, createMachine } from 'xstate';
+import { ActorRefFrom, assign, createMachine } from 'xstate';
 
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { Viewport } from './viewport.js';
+import { viewportMachine } from './viewport-machine.js';
+
+type ViewportActor = ActorRefFrom<typeof viewportMachine>;
 
 type addViewportEvent = {
   type: 'addViewport';
   name: string;
-  viewport: Viewport;
+  viewport: ViewportActor;
 };
 
 type addImageEvent = {
@@ -16,7 +18,7 @@ type addImageEvent = {
 };
 
 type context = {
-  viewports: Record<string, Viewport>;
+  viewports: Record<string, ViewportActor>;
   images: Record<string, MultiscaleSpatialImage>;
 };
 

@@ -3,6 +3,7 @@ import { PropertyValues, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { Ref, createRef, ref } from 'lit/directives/ref.js';
 import { SelectorController } from 'xstate-lit/dist/select-controller.js';
+import { ActorStatus } from 'xstate';
 
 import {
   RemoteActor,
@@ -13,19 +14,6 @@ import { Image } from '@itk-viewer/remote-viewport/types.js';
 
 import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
-
-const makeMultiscaleImage = (image: string) => {
-  if (image.endsWith('.tif')) {
-    return {
-      scaleCount: 1,
-      scale: 0,
-    };
-  }
-  return {
-    scaleCount: 8,
-    scale: 7,
-  };
-};
 
 @customElement('itk-remote-viewport')
 export class ItkRemoteViewport extends ItkViewport {
@@ -48,6 +36,11 @@ export class ItkRemoteViewport extends ItkViewport {
   canvasHeight = 0;
 
   remote: RemoteActor;
+
+  remoteOnline: SelectorController<RemoteActor, boolean>;
+  lastRemoteOnlineValue = false;
+  renderLoopRunning = false;
+
   frame: SelectorController<RemoteActor, Image | undefined>;
   lastFrameValue: Image | undefined = undefined;
 
@@ -56,10 +49,15 @@ export class ItkRemoteViewport extends ItkViewport {
     const { remote, viewport } = createRemoteViewport(createHyphaActors());
     this.actor = viewport;
     this.remote = remote;
+    this.remoteOnline = new SelectorController(
+      this,
+      this.remote,
+      (state) => state?.matches('root.online') ?? false,
+    );
     this.frame = new SelectorController(
       this,
       this.remote,
-      (state) => state?.context.frame
+      (state) => state?.context.frame,
     );
   }
 
@@ -75,11 +73,15 @@ export class ItkRemoteViewport extends ItkViewport {
     this.canvasCtx.putImageData(imageData, 0, 0);
   }
 
-  connectedCallback() {
-    super.connectedCallback();
+  startRenderLoop() {
+    if (this.renderLoopRunning || !this.remoteOnline.value) return;
+    this.renderLoopRunning = true;
 
     const render = () => {
-      if (!this.isConnected) return;
+      if (!this.isConnected || this.remote.status === ActorStatus.Stopped) {
+        this.renderLoopRunning = false;
+        return;
+      }
 
       this.remote.send({ type: 'render' });
       requestAnimationFrame(render);
@@ -87,7 +89,12 @@ export class ItkRemoteViewport extends ItkViewport {
     requestAnimationFrame(render);
   }
 
-  firstUpdated(): void {
+  connectedCallback() {
+    super.connectedCallback();
+    this.startRenderLoop();
+  }
+
+  firstUpdated() {
     const canvas = this.canvas.value;
     if (!canvas) throw new Error('canvas not found');
     this.canvasCtx = canvas.getContext('2d');
@@ -107,21 +114,6 @@ export class ItkRemoteViewport extends ItkViewport {
       this.startConnection();
     }
 
-    if (changedProperties.has('image')) {
-      if (this.image) {
-        const multiscaleImage = makeMultiscaleImage(this.image);
-        this.remote.send({
-          type: 'setMultiscaleImage',
-          image: multiscaleImage,
-        });
-
-        this.remote.send({
-          type: 'updateRenderer',
-          props: { image: this.image },
-        });
-      }
-    }
-
     if (changedProperties.has('density')) {
       this.remote.send({
         type: 'updateRenderer',
@@ -132,6 +124,13 @@ export class ItkRemoteViewport extends ItkViewport {
     if (this.frame.value && this.frame.value !== this.lastFrameValue) {
       this.lastFrameValue = this.frame.value;
       this.putFrame();
+    }
+
+    if (this.remoteOnline.value !== this.lastRemoteOnlineValue) {
+      this.lastRemoteOnlineValue = this.remoteOnline.value;
+      if (this.remoteOnline.value) {
+        this.startRenderLoop();
+      }
     }
   }
 

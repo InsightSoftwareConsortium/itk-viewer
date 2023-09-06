@@ -1,10 +1,12 @@
+import { viewportMachine } from '@itk-viewer/viewer/viewport-machine.js';
 import { createViewport } from '@itk-viewer/viewer/viewport.js';
 import { LitElement, css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
+import { ActorRefFrom } from 'xstate';
 
 @customElement('itk-viewport')
 export class ItkViewport extends LitElement {
-  actor = createViewport();
+  actor: ActorRefFrom<typeof viewportMachine> = createViewport();
 
   constructor() {
     super();
