@@ -2,20 +2,19 @@ import { LitElement, PropertyValues, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { ReadonlyMat4, mat4 } from 'gl-matrix';
 import createOrbitCamera from 'orbit-camera';
+import type { OrbitCamera } from 'orbit-camera';
 
 import { Viewport } from '@itk-viewer/viewer/viewport.js';
 import { Camera, createCamera } from '@itk-viewer/viewer/camera-machine.js';
 import { Ref, createRef, ref } from 'lit/directives/ref.js';
 
-type OrbitCameraController = ReturnType<typeof createOrbitCamera>;
-
 const PAN_SPEED = 1;
 const ZOOM_SPEED = 0.0002;
 
 const bindCamera = (
-  camera: OrbitCameraController,
+  camera: OrbitCamera,
   viewport: HTMLElement,
-  onUpdate: (view: ReadonlyMat4) => unknown
+  onUpdate: (view: ReadonlyMat4) => unknown,
 ) => {
   let width = viewport.clientWidth;
   let height = viewport.clientHeight;
@@ -74,7 +73,7 @@ const bindCamera = (
     if (rotate) {
       camera.rotate(
         [mouseX / width - 0.5, mouseY / height - 0.5],
-        [prevMouseX / width - 0.5, prevMouseY / height - 0.5]
+        [prevMouseX / width - 0.5, prevMouseY / height - 0.5],
       );
     }
 
@@ -130,7 +129,7 @@ export class ItkCamera extends LitElement {
   viewport: Viewport | undefined;
 
   camera: Camera;
-  cameraController: OrbitCameraController;
+  cameraController: OrbitCamera;
   unbind: (() => unknown) | undefined;
   container: Ref<HTMLElement> = createRef();
 
@@ -141,7 +140,7 @@ export class ItkCamera extends LitElement {
     this.cameraController = createOrbitCamera(
       [-0.747528, -0.570641, 0.754992],
       [0.5, 0.5, 0.5],
-      [-0.505762, 0.408327, -0.759916]
+      [-0.505762, 0.408327, -0.759916],
     );
 
     const pose = this.cameraController.view();

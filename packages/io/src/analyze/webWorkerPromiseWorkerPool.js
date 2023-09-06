@@ -5,7 +5,7 @@ import WebworkerPromise from 'webworker-promise';
 function webWorkerPromiseWorkerPool(
   numberOfWorkers,
   makeWorker,
-  operationName
+  operationName,
 ) {
   const createWorker = (existingWorker) => {
     if (existingWorker) {

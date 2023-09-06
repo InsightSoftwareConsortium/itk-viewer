@@ -1,5 +1,5 @@
 import { ReadonlyMat4, mat4 } from 'gl-matrix';
-import { assign, createActor, createMachine, } from 'xstate';
+import { assign, createActor, createMachine } from 'xstate';
 
 type context = {
   pose: ReadonlyMat4;

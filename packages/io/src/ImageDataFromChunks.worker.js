@@ -14,7 +14,7 @@ const haveSharedArrayBuffer = typeof self.SharedArrayBuffer === 'function';
 const validateIndices = ({ chunkStart, chunkEnd, roiStart, roiEnd }) => {
   if (
     ['x', 'y', 'z'].some(
-      (dim) => chunkStart[dim] > roiEnd[dim] || chunkEnd[dim] < roiStart[dim]
+      (dim) => chunkStart[dim] > roiEnd[dim] || chunkEnd[dim] < roiStart[dim],
     )
   ) {
     // We should never get here...
@@ -40,7 +40,7 @@ const makeImageDataFromChunks = ({
   const pixelArrayType = componentTypeToTypedArray.get(imageType.componentType);
   let pixelArray = null;
   const pixelArrayElements = Array.from(info.arrayShape.values()).reduce(
-    (a, b) => a * b
+    (a, b) => a * b,
   );
   if (haveSharedArrayBuffer) {
     const pixelArrayBytes =
@@ -69,7 +69,7 @@ const makeImageDataFromChunks = ({
         { [dim]: size, ...strides },
         size * dimSize,
       ],
-      [{}, 1]
+      [{}, 1],
     );
 
   for (let index = 0; index < chunkIndices.length; index++) {
@@ -108,7 +108,7 @@ const makeImageDataFromChunks = ({
     // write pixels at the start of the output image, not where they start in source image
     const roiStartPixelOffset = Object.keys(pixelStrides).reduce(
       (offset, dim) => offset + pixelStrides[dim] * roiStart[dim],
-      0
+      0,
     );
 
     // Does input data group component(s) with each pixel?
@@ -135,7 +135,7 @@ const makeImageDataFromChunks = ({
             zChunkOffset;
           const subarray = typedChunk.subarray(
             yChunkOffset,
-            yChunkOffset + itEnd.c * (itEnd.x - itStart.x)
+            yChunkOffset + itEnd.c * (itEnd.x - itStart.x),
           );
           const pixelOffset =
             itStart.x * pixelStrides.x + // chunk's x index mapped to image's x index
@@ -160,7 +160,7 @@ const makeImageDataFromChunks = ({
             const yPixelOffset = yy * pixelStrides.y + zPixelOffset;
             for (let xx = itStart.x; xx < itEnd.x; xx++) {
               pixelArray[xx * pixelStrides.x + yPixelOffset] = getChunkElement(
-                (xx - x * chunkSize.x) * chunkStrides.x + yChunkOffset
+                (xx - x * chunkSize.x) * chunkStrides.x + yChunkOffset,
               );
             } // column
           } // row
@@ -179,7 +179,7 @@ registerWebworker().operation('imageDataFromChunks', async (chunkInfo) => {
     ? (
         await computeRanges(
           pixelArray,
-          chunkInfo.scaleInfo.arrayShape.get('c') ?? 1
+          chunkInfo.scaleInfo.arrayShape.get('c') ?? 1,
         )
       ).map(({ min, max }) => [min, max])
     : undefined;

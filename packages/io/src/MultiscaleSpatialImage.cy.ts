@@ -132,8 +132,8 @@ describe(`MultiscaleSpatialImage`, () => {
       return cy
         .wrap(
           ZarrMultiscaleSpatialImage.fromUrl(
-            new URL(path, document.location.origin)
-          )
+            new URL(path, document.location.origin),
+          ),
         )
         .then((zarrImage) => {
           return zarrImage.getImage(zarrImage.scaleInfos.length - 1, bounds);

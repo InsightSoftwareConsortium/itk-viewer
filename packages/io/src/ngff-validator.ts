@@ -58,14 +58,14 @@ export const image = {
                 z.object({
                   path: z.string(),
                   coordinateTransformations: coordinateTransformations,
-                })
+                }),
               )
               .min(1),
             version: z.enum(['0.4']).optional(),
             axes: z.array(axis).min(2).max(5),
             coordinateTransformations: coordinateTransformations.optional(),
             ...customNgffProperties,
-          })
+          }),
         )
         .min(1)
         .describe('The multiscale datasets for this image'),
@@ -83,7 +83,7 @@ export const image = {
               family: z.string().optional(),
               color: z.string(),
               active: z.boolean().optional(),
-            })
+            }),
           ),
         })
         .optional(),
@@ -104,7 +104,7 @@ export const image = {
               })
               .optional(),
             ...customNgffProperties,
-          })
+          }),
         )
         .min(1)
         .describe('The multiscale datasets for this image'),
@@ -122,7 +122,7 @@ export const image = {
               family: z.string().optional(),
               color: z.string(),
               active: z.boolean().optional(),
-            })
+            }),
           ),
         })
         .optional(),

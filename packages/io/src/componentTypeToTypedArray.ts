@@ -14,7 +14,7 @@ const componentTypeToTypedArray = new Map<componentType, TypedArrayConstructor>(
     [IntTypes.UInt32, Uint32Array],
     [FloatTypes.Float32, Float32Array],
     [FloatTypes.Float64, Float64Array],
-  ]
+  ],
 );
 
 export default componentTypeToTypedArray;

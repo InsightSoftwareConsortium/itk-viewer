@@ -26,11 +26,11 @@ const dtypeUtils = Array.from(
 
     ['f4', [Float32Array, 'getFloat32', FloatTypes.Float32]],
     ['f8', [Float64Array, 'getFloat64', FloatTypes.Float64]],
-  ])
+  ]),
 ).reduce(
   (map, [dtype, [TypedArray, dataViewGetter, itkComponent]]) =>
     map.set(dtype, { TypedArray, dataViewGetter, itkComponent }),
-  new Map()
+  new Map(),
 );
 
 const getType = (dtype) => dtype.replace(/^(<|>|=|\|)/, ''); // remove starting < > = | endianness
@@ -59,7 +59,7 @@ export const ElementGetter = (dtype, buffer) => {
 
 export const getDtype = (typedArrayConstructor, endianness = '<') => {
   const typedArrayToDtype = new Map(
-    Array.from(dtypeUtils).map(([key, { TypedArray }]) => [TypedArray, key])
+    Array.from(dtypeUtils).map(([key, { TypedArray }]) => [TypedArray, key]),
   );
   return `${endianness}${typedArrayToDtype.get(typedArrayConstructor)}`;
 };

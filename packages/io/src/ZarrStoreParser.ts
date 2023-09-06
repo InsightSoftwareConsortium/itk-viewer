@@ -4,7 +4,7 @@ interface Store {
 
 const isMetadata = (item: string) =>
   ['.zattrs', '.zgroup', '.zarray'].some((knownMetadataFile) =>
-    item.endsWith(knownMetadataFile)
+    item.endsWith(knownMetadataFile),
   );
 
 export class ZarrStoreParser implements Store {

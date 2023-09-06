@@ -24,7 +24,7 @@ function computeCornerPoints(bounds: Bounds, point1: Vector3, point2: Vector3) {
 function computeBoundsFromPoints(
   point1: Array<number>,
   point2: vec3,
-  bounds: Bounds
+  bounds: Bounds,
 ): Bounds {
   bounds[0] = Math.min(point1[0], point2[0]);
   bounds[1] = Math.max(point1[0], point2[0]);
@@ -37,7 +37,7 @@ function computeBoundsFromPoints(
 
 export const transformBounds = (
   transformingMat4: ReadonlyMat4,
-  bounds: Bounds
+  bounds: Bounds,
 ) => {
   const in1: Vector3 = Array(3) as Vector3;
   const in2: Vector3 = Array(3) as Vector3;

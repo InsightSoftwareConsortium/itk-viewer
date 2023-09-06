@@ -5,16 +5,16 @@ export const CXYZT = Object.freeze(['c', 'x', 'y', 'z', 't'] as const); // viewe
 export const ensuredDims = <T>(
   defaultValue: T,
   ensuredDims: ReadonlyArray<Dimension>,
-  dimMap: ReadonlyMap<Dimension, T>
+  dimMap: ReadonlyMap<Dimension, T>,
 ) =>
   ensuredDims.reduce(
     (map, dim) => map.set(dim, map.get(dim) ?? defaultValue),
-    new Map(dimMap)
+    new Map(dimMap),
   );
 
 export const toDimensionMap = <T>(
   dims: ReadonlyArray<Dimension>,
-  array: Array<T>
+  array: Array<T>,
 ) => new Map(dims.map((dim, i) => [dim, array[i]]));
 
 // example: orderBy(['y', 'x'])(new Map([['x', 1], ['y', 2], ['z', 3]])) -> Map([['y', 2], ['x', 1]])
@@ -27,7 +27,7 @@ export const orderBy =
         const value = map.get(dim);
         if (!value) throw new Error(`Dimension ${dim} not found in map ${map}`);
         return [dim, value];
-      })
+      }),
     );
 
 export const chunkArray = <T>(chunkSize: number, array: Array<T>) => {
