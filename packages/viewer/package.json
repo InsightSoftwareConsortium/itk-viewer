@@ -1,6 +1,6 @@
 {
   "name": "@itk-viewer/viewer",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Multi-dimensional web-based image, mesh, and point set viewer",
   "type": "module",
   "exports": {
