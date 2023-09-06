@@ -1,5 +1,15 @@
 # @itk-viewer/element
 
+## 0.2.2
+
+### Patch Changes
+
+- b85a579: Route MultiscaleSpatialImages through Viewport actor to RemoteViewport actor.
+- Updated dependencies [b85a579]
+  - @itk-viewer/remote-viewport@0.2.2
+  - @itk-viewer/viewer@0.2.1
+  - @itk-viewer/io@0.1.2
+
 ## 0.2.1
 
 ### Patch Changes

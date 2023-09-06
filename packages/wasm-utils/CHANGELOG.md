@@ -1,5 +1,11 @@
 # @itk-viewer/wasm-utils
 
+## 0.1.2
+
+### Patch Changes
+
+- b85a579: Route MultiscaleSpatialImages through Viewport actor to RemoteViewport actor.
+
 ## 0.1.1
 
 ### Patch Changes
