@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "itk-viewer-agave-renderer"
+name = "itk-viewer-remote-image"
 dynamic = ["version"]
 description = ''
 readme = "README.md"
@@ -12,6 +12,7 @@ license = "Apache-2.0"
 keywords = []
 authors = [
   { name = "Matt McCormick", email = "matt.mccormick@kitware.com" },
+  { name = "Paul Elliott", email = "paul.elliott@kitware.com" },
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -27,20 +28,18 @@ classifiers = [
 dependencies = [
   "ngff-zarr[dask-image]",
   "zarr",
-  "agave-pyclient",
   "hypha",
-  "itkwasm-htj2k",
   "numpy",
   "pillow",
 ]
 
 [project.urls]
-Documentation = "https://github.com/InsightSoftwareConsortium/itk-viewer/tree/main/packages/agave-renderer#readme"
+Documentation = "https://github.com/InsightSoftwareConsortium/itk-viewer/tree/main/packages/remote-images#readme"
 Issues = "https://github.com/InsightSoftwareConsortium/itk-viewer/issues"
 Source = "https://github.com/InsightSoftwareConsortium/itk-viewer"
 
 [tool.hatch.version]
-path = "itk_viewer_agave_renderer/__about__.py"
+path = "itk_viewer_remote_image/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
@@ -70,7 +69,7 @@ dependencies = [
   "ruff>=0.0.243",
 ]
 [tool.hatch.envs.lint.scripts]
-typing = "mypy --install-types --non-interactive {args:itk_viewer_agave_renderer tests}"
+typing = "mypy --install-types --non-interactive {args:itk_viewer_remote_image tests}"
 style = [
   "ruff {args:.}",
   "black --check --diff {args:.}",
@@ -136,7 +135,7 @@ unfixable = [
 ]
 
 [tool.ruff.isort]
-known-first-party = ["itk_viewer_agave_renderer"]
+known-first-party = ["itk_viewer_remote_image"]
 
 [tool.ruff.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -146,15 +145,15 @@ ban-relative-imports = "all"
 "tests/**/*" = ["PLR2004", "S101", "TID252"]
 
 [tool.coverage.run]
-source_pkgs = ["itk_viewer_agave_renderer", "tests"]
+source_pkgs = ["itk_viewer_remote_image", "tests"]
 branch = true
 parallel = true
 omit = [
-  "itk_viewer_agave_renderer/__about__.py",
+  "itk_viewer_remote_image/__about__.py",
 ]
 
 [tool.coverage.paths]
-itk_viewer_agave_renderer = ["itk_viewer_agave_renderer", "*/itk-viewer-agave-renderer/itk_viewer_agave_renderer"]
+itk_viewer_remote_image = ["itk_viewer_remote_image", "*/itk-viewer-agave-renderer/itk_viewer_remote_image"]
 tests = ["tests", "*/itk-viewer-agave-renderer/tests"]
 
 [tool.coverage.report]
