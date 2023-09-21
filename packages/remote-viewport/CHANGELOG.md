@@ -1,5 +1,11 @@
 # @itk-viewer/remote-viewport
 
+## 0.2.3
+
+### Patch Changes
+
+- 619b5f7: Upgrade version of @itk-wasm/htj2k
+
 ## 0.2.2
 
 ### Patch Changes
