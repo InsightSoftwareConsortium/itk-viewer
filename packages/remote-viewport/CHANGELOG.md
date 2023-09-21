@@ -1,5 +1,11 @@
 # @itk-viewer/remote-viewport
 
+## 0.2.4
+
+### Patch Changes
+
+- bd7b09f: Bump remote-viewport publish
+
 ## 0.2.3
 
 ### Patch Changes
