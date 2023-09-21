@@ -9,8 +9,8 @@ import {
   RemoteActor,
   createHyphaActors,
   createRemoteViewport,
+  Image,
 } from '@itk-viewer/remote-viewport/remote-viewport.js';
-import { Image } from '@itk-viewer/remote-viewport/types.js';
 
 import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
@@ -65,6 +65,7 @@ export class ItkRemoteViewport extends ItkViewport {
     if (!this.canvasCtx || !this.frame.value) return;
 
     const { size, data } = this.frame.value;
+    if (!data) throw new Error('No data in frame');
     const [width, height] = size;
     this.canvasWidth = width;
     this.canvasHeight = height;

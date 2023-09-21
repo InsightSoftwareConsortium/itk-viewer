@@ -1,15 +1,20 @@
 import { createActor, fromPromise } from 'xstate';
 import { hyphaWebsocketClient } from 'imjoy-rpc';
 import { mat4, vec3 } from 'gl-matrix';
-//@ts-expect-error .d.ts file not resolved
-import { decode } from '@itk-wasm/htj2k';
+import { decode, Image } from '@itk-wasm/htj2k';
 import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
-import { RenderedFrame } from './types.js';
+
+export type { Image } from '@itk-wasm/htj2k';
+
+type RenderedFrame = {
+  frame: Image;
+  renderTime: number;
+};
 
 type Renderer = {
   updateRenderer: (events: unknown) => unknown;
   loadImage: (image: string | undefined) => void;
-  render: () => Promise<{ frame: ArrayBuffer; renderTime: number }>;
+  render: () => Promise<{ frame: Uint8Array; renderTime: number }>;
 };
 
 type RendererInput = {

@@ -1,9 +1,9 @@
 import { ReadonlyMat4, mat4 } from 'gl-matrix';
 import { ActorRefFrom, assign, createMachine, raise, sendTo } from 'xstate';
+import type { Image } from '@itk-wasm/htj2k';
 
 import { Viewport } from '@itk-viewer/viewer/viewport.js';
 import { fpsWatcher } from '@itk-viewer/viewer/fps-watcher-machine.js';
-import { Image } from './types.js';
 import { viewportMachine } from '@itk-viewer/viewer/viewport-machine.js';
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
