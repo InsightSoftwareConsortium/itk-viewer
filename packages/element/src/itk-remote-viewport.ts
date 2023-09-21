@@ -9,8 +9,9 @@ import {
   RemoteActor,
   createHyphaActors,
   createRemoteViewport,
-  Image,
 } from '@itk-viewer/remote-viewport/remote-viewport.js';
+
+import type { Image } from '@itk-viewer/remote-viewport/remote-viewport.js';
 
 import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
@@ -19,9 +20,6 @@ import './itk-camera.js';
 export class ItkRemoteViewport extends ItkViewport {
   @property({ type: Object, attribute: 'server-config' })
   serverConfig: unknown | undefined;
-
-  @property({ type: String })
-  image: string | undefined;
 
   @property({ type: Number })
   density = 30;
@@ -144,7 +142,6 @@ export class ItkRemoteViewport extends ItkViewport {
     return html`
       <h1>Remote viewport</h1>
       <p>Server Config: ${JSON.stringify(this.serverConfig)}</p>
-      <p>Image: ${this.image}</p>
       <div>
         Density: ${this.density}
         <input
