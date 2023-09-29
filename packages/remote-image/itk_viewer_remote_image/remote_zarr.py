@@ -59,6 +59,7 @@ class RemoteZarr:
         if backend is ConversionBackend.NGFF_ZARR:
             return zarr.storage.DirectoryStore(mapped_path)
 
+        # TODO: code below does not work yet
         image = cli_input_to_ngff_image(backend, [mapped_path])
         multiscales = to_multiscales(image, method=Methods.DASK_IMAGE_GAUSSIAN)
         store, chunk_store = _make_multiscale_store()

@@ -7,7 +7,7 @@ HYPHA_SERVER_URL = "https://hypha.website"
 remoteZarr = RemoteZarr()
 
 
-def map_path(image_path):
+def map_path(image_path) -> str:
     return f"../../../test/data/input/{image_path}"
 
 

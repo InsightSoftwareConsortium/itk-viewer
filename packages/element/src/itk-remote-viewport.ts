@@ -7,7 +7,7 @@ import { ActorStatus } from 'xstate';
 
 import {
   RemoteActor,
-  createHyphaActors,
+  createHyphaMachineConfig,
   createRemoteViewport,
 } from '@itk-viewer/remote-viewport/remote-viewport.js';
 
@@ -44,7 +44,9 @@ export class ItkRemoteViewport extends ItkViewport {
 
   constructor() {
     super();
-    const { remote, viewport } = createRemoteViewport(createHyphaActors());
+    const { remote, viewport } = createRemoteViewport(
+      createHyphaMachineConfig(),
+    );
     this.actor = viewport;
     this.remote = remote;
     this.remoteOnline = new SelectorController(
