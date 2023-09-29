@@ -33,6 +33,7 @@ export type Context = {
   queuedRendererEvents: RendererEntries;
   stagedRendererEvents: RendererEntries;
   viewport: ActorRefFrom<typeof viewportMachine>;
+  toRendererCoordinateSystem: ReadonlyMat4;
 };
 
 type ConnectEvent = {
@@ -88,10 +89,59 @@ export const remoteMachine = createMachine(
       },
       queuedRendererEvents: [],
       stagedRendererEvents: [],
+      toRendererCoordinateSystem: mat4.create(),
       ...input, // captures injected viewport
     }),
-    initial: 'root',
+    type: 'parallel',
     states: {
+      // imageProcessor computes toRendererCoordinateSystem.
+      // Needs to be a service because MultiscaleSpatialImage.scaleIndexToWorld is async due to coords
+      imageProcessor: {
+        initial: 'idle',
+        states: {
+          idle: {
+            on: {
+              setImage: 'processing',
+            },
+          },
+          processing: {
+            invoke: {
+              id: 'imageProcessor',
+              src: 'imageProcessor',
+              input: ({ event }) => ({
+                event,
+              }),
+              onDone: {
+                actions: [
+                  assign({
+                    toRendererCoordinateSystem: ({
+                      event: {
+                        output: { toRendererCoordinateSystem },
+                      },
+                    }) => toRendererCoordinateSystem,
+                  }),
+                  raise(
+                    ({
+                      event: {
+                        output: { image },
+                      },
+                    }) => {
+                      return {
+                        type: 'updateRenderer' as const,
+                        props: {
+                          image: image.name,
+                          imageScale: image.scaleInfos.length - 1,
+                        },
+                      };
+                    },
+                  ),
+                ],
+                target: 'idle',
+              },
+            },
+          },
+        },
+      },
       // root state captures initial rendererProps even when disconnected
       root: {
         entry: [
@@ -116,20 +166,6 @@ export const remoteMachine = createMachine(
               }),
               // Trigger a render (if in idle state)
               raise({ type: 'render' }),
-            ],
-          },
-          setImage: {
-            actions: [
-              raise(({ event }) => {
-                const image = event.image;
-                return {
-                  type: 'updateRenderer' as const,
-                  props: {
-                    image: image.name,
-                    imageScale: image.scaleInfos.length - 1,
-                  },
-                };
-              }),
             ],
           },
           cameraPoseUpdated: {
@@ -208,6 +244,8 @@ export const remoteMachine = createMachine(
                       input: ({ context }: { context: Context }) => ({
                         server: context.server,
                         events: [...context.stagedRendererEvents],
+                        toRendererCoordinateSystem:
+                          context.toRendererCoordinateSystem,
                       }),
                       onDone: {
                         actions: [

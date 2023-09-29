@@ -6,6 +6,7 @@ declare module 'orbit-camera' {
     rotate: (da: ReadonlyVec2, db: ReadonlyVec2) => void;
     pan: (dpan: ReadonlyVec2 | ReadonlyVec3) => void;
     zoom: (delta: number) => void;
+    lookAt: (eye: ReadonlyVec3, target: ReadonlyVec3, up: ReadonlyVec3) => void;
     distance: number;
   };
 

@@ -1,16 +1,5 @@
-import { makePlaceholderMultiscaleImage } from '@itk-viewer/io/makePlaceholderMultiscaleImage.js';
+import { makeZarrImage } from '@itk-viewer/remote-viewport/remote-image.js';
 import { ItkViewport } from './itk-viewport.js';
-
-// Remote image placeholders for FPS pyramid-scale switching
-const makeMultiscaleImage = (image: string) => {
-  if (image.endsWith('.tif')) {
-    return makePlaceholderMultiscaleImage(image, 1);
-  }
-  return makePlaceholderMultiscaleImage(image, 8);
-};
-
-const imagePath = import.meta.env.VITE_IMAGE;
-const image = makeMultiscaleImage(imagePath);
 
 const viewerElement = document.querySelector('itk-viewer');
 if (!viewerElement) throw new Error('Could not find element');
@@ -23,4 +12,18 @@ if (!rightViewport) throw new Error('Could not find element');
 const rightV = rightViewport.getActor();
 viewer.send({ type: 'addViewport', viewport: rightV, name: 'right' });
 
-viewer.send({ type: 'addImage', image, name: image.name });
+const serverUrl = import.meta.env.VITE_HYPHA_URL;
+const ngffServiceId = import.meta.env.VITE_HYPHA_NGFF_SERVICE_ID;
+
+const imagePath = import.meta.env.VITE_IMAGE;
+
+const setImage = async (imagePath: string) => {
+  const image = await makeZarrImage({
+    imagePath,
+    serverUrl,
+    serviceId: ngffServiceId,
+  });
+  viewer.send({ type: 'addImage', image, name: 'image' });
+};
+
+setImage(imagePath);

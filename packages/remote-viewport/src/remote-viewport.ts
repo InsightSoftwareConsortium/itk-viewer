@@ -1,6 +1,6 @@
 import { createActor, fromPromise } from 'xstate';
 import { hyphaWebsocketClient } from 'imjoy-rpc';
-import { mat4, vec3 } from 'gl-matrix';
+import { ReadonlyMat4, mat4, vec3 } from 'gl-matrix';
 import { decode, Image } from '@itk-wasm/htj2k';
 import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
 
@@ -20,6 +20,7 @@ type Renderer = {
 type RendererInput = {
   server: Renderer;
   events: RendererEntries;
+  toRendererCoordinateSystem: ReadonlyMat4;
 };
 
 type ConnectInput = { context: Context };
@@ -52,56 +53,104 @@ const createHyphaRenderer = async (context: Context) => {
   return renderer;
 };
 
-export const createHyphaActors: () => RemoteMachineActors = () => {
+export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
   let decodeWorker: Worker | null = null;
 
   return {
-    connect: fromPromise(async ({ input }: { input: ConnectInput }) =>
-      createHyphaRenderer(input.context),
-    ),
-    renderer: fromPromise(
-      async ({ input: { server, events } }: { input: RendererInput }) => {
-        const translatedEvents = events
-          .map(([key, value]) => {
-            if (key === 'cameraPose') {
-              const eye = vec3.create();
-              mat4.getTranslation(eye, value);
+    actors: {
+      connect: fromPromise(async ({ input }: { input: ConnectInput }) =>
+        createHyphaRenderer(input.context),
+      ),
+      renderer: fromPromise(
+        async ({
+          input: { server, events, toRendererCoordinateSystem },
+        }: {
+          input: RendererInput;
+        }) => {
+          const translatedEvents = events
+            .map(([key, value]) => {
+              if (key === 'cameraPose') {
+                const transform = mat4.create();
+                mat4.multiply(transform, toRendererCoordinateSystem, value);
 
-              const target = vec3.fromValues(value[8], value[9], value[10]);
-              vec3.subtract(target, eye, target);
+                const eye = vec3.create();
+                mat4.getTranslation(eye, transform);
 
-              const up = vec3.fromValues(value[4], value[5], value[6]);
+                const target = vec3.fromValues(
+                  transform[8],
+                  transform[9],
+                  transform[10],
+                );
+                vec3.subtract(target, eye, target);
 
-              return ['cameraPose', { eye, up, target }];
-            }
+                const up = vec3.fromValues(
+                  transform[4],
+                  transform[5],
+                  transform[6],
+                );
 
-            if (key === 'image') {
-              console.log('loading image', value);
-              server.loadImage(value);
-              return;
-            }
+                return ['cameraPose', { eye, up, target }];
+              }
 
-            return [key, value];
-          })
-          .filter(Boolean);
+              if (key === 'image') {
+                server.loadImage(value);
+                return;
+              }
 
-        server.updateRenderer(translatedEvents);
-        const { frame: encodedImage, renderTime } = await server.render();
-        const { image: frame, webWorker } = await decode(
-          decodeWorker,
-          encodedImage,
-        );
-        decodeWorker = webWorker;
+              return [key, value];
+            })
+            .filter(Boolean);
 
-        return { frame, renderTime };
-      },
-    ),
+          server.updateRenderer(translatedEvents);
+          const { frame: encodedImage, renderTime } = await server.render();
+          const { image: frame, webWorker } = await decode(
+            decodeWorker,
+            encodedImage,
+          );
+          decodeWorker = webWorker;
+
+          return { frame, renderTime };
+        },
+      ),
+      imageProcessor: fromPromise(
+        async ({
+          input: {
+            event: { image },
+          },
+        }) => {
+          // compute toRendererCoordinateSystem
+          const imageScale = image.coarsestScale;
+          await image.scaleIndexToWorld(imageScale); // initializes indexToWorld matrix for getWorldBounds
+          const bounds = image.getWorldBounds(imageScale);
+
+          // match Agave by normalizing to largest dim
+          const wx = bounds[1] - bounds[0];
+          const wy = bounds[3] - bounds[2];
+          const wz = bounds[5] - bounds[4];
+          const maxDim = Math.max(wx, wy, wz);
+
+          const scale = vec3.fromValues(maxDim, maxDim, maxDim);
+          vec3.inverse(scale, scale);
+
+          // Move to Agave origin
+          const transform = mat4.fromScaling(mat4.create(), scale);
+          mat4.translate(
+            transform,
+            transform,
+            vec3.fromValues(
+              -bounds[0] / maxDim,
+              -bounds[2] / maxDim,
+              -bounds[4] / maxDim,
+            ),
+          );
+          return { toRendererCoordinateSystem: transform, image };
+        },
+      ),
+    },
   };
 };
 
-export type RemoteMachineOptions = {
-  actors: RemoteMachineActors;
-};
+export type RemoteMachineOptions = Parameters<typeof remoteMachine.provide>[0];
 
 const createRemote = (config: RemoteMachineOptions) => {
   const remoteActor = remoteMachine.provide(config);
@@ -111,10 +160,7 @@ const createRemote = (config: RemoteMachineOptions) => {
 
 export type RemoteActor = ReturnType<typeof createRemote>;
 
-export const createRemoteViewport = (actors: RemoteMachineActors) => {
-  const config = {
-    actors,
-  };
+export const createRemoteViewport = (config: RemoteMachineOptions) => {
   const remote = createRemote(config);
   const viewport = remote.getSnapshot().context.viewport;
 

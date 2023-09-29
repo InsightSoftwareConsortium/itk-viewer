@@ -5,8 +5,13 @@ import createOrbitCamera from 'orbit-camera';
 import type { OrbitCamera } from 'orbit-camera';
 
 import { Viewport } from '@itk-viewer/viewer/viewport.js';
-import { Camera, createCamera } from '@itk-viewer/viewer/camera-machine.js';
+import {
+  Camera,
+  LookAtParams,
+  createCamera,
+} from '@itk-viewer/viewer/camera-machine.js';
 import { Ref, createRef, ref } from 'lit/directives/ref.js';
+import { SelectorController } from 'xstate-lit/dist/select-controller.js';
 
 const PAN_SPEED = 1;
 const ZOOM_SPEED = 0.0002;
@@ -100,8 +105,8 @@ const bindCamera = (
 
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
-    camera.zoom(e.deltaY * ZOOM_SPEED);
 
+    camera.zoom(ZOOM_SPEED * camera.distance * e.deltaY);
     updateView();
   };
   viewport.addEventListener('wheel', onWheel, { passive: false });
@@ -129,6 +134,9 @@ export class ItkCamera extends LitElement {
   viewport: Viewport | undefined;
 
   camera: Camera;
+
+  lookAt: SelectorController<Camera, LookAtParams>;
+
   cameraController: OrbitCamera;
   unbind: (() => unknown) | undefined;
   container: Ref<HTMLElement> = createRef();
@@ -136,6 +144,12 @@ export class ItkCamera extends LitElement {
   constructor() {
     super();
     this.camera = createCamera();
+
+    this.lookAt = new SelectorController(
+      this,
+      this.camera,
+      (state) => state?.context.lookAt,
+    );
 
     this.cameraController = createOrbitCamera(
       [-0.747528, -0.570641, 0.754992],
@@ -171,6 +185,14 @@ export class ItkCamera extends LitElement {
     if (changedProperties.has('viewport')) {
       this.viewport?.send({ type: 'setCamera', camera: this.camera });
     }
+
+    const { eye, target, up } = this.lookAt.value;
+    this.cameraController.lookAt(eye, target, up);
+    const pose = this.cameraController.view();
+    this.camera.send({
+      type: 'setPose',
+      pose,
+    });
   }
 
   render() {
