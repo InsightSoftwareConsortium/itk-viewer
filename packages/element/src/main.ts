@@ -13,7 +13,7 @@ const rightV = rightViewport.getActor();
 viewer.send({ type: 'addViewport', viewport: rightV, name: 'right' });
 
 const serverUrl = import.meta.env.VITE_HYPHA_URL;
-const ngffServiceId = import.meta.env.VITE_HYPHA_NGFF_SERVICE_ID;
+const remoteZarrServiceId = import.meta.env.VITE_HYPHA_REMOTE_ZARR_SERVICE_ID;
 
 const imagePath = import.meta.env.VITE_IMAGE;
 
@@ -21,7 +21,7 @@ const setImage = async (imagePath: string) => {
   const image = await makeZarrImage({
     imagePath,
     serverUrl,
-    serviceId: ngffServiceId,
+    serviceId: remoteZarrServiceId,
   });
   viewer.send({ type: 'addImage', image, name: 'image' });
 };
