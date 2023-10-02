@@ -93,7 +93,7 @@ export const viewportMachine = createMachine(
       resetCameraPose: async ({ context: { image, camera } }) => {
         if (!image || !camera) return;
 
-        const scale = 3; // image.coarsestScale
+        const scale = image.coarsestScale;
         await image.scaleIndexToWorld(scale); // initializes indexToWorld matrix for getWorldBounds
         const bounds = image.getWorldBounds(scale);
 

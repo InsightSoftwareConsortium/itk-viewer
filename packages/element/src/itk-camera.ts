@@ -151,11 +151,7 @@ export class ItkCamera extends LitElement {
       (state) => state?.context.lookAt,
     );
 
-    this.cameraController = createOrbitCamera(
-      [-0.747528, -0.570641, 0.754992],
-      [0.5, 0.5, 0.5],
-      [-0.505762, 0.408327, -0.759916],
-    );
+    this.cameraController = createOrbitCamera([0, 0, -1], [0, 0, 0], [0, 1, 0]);
 
     const pose = this.cameraController.view();
     this.camera.send({

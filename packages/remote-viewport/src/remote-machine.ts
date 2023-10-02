@@ -130,7 +130,7 @@ export const remoteMachine = createMachine(
                         type: 'updateRenderer' as const,
                         props: {
                           image: image.name,
-                          imageScale: image.scaleInfos.length - 1,
+                          imageScale: image.coarsestScale,
                         },
                       };
                     },
@@ -263,7 +263,7 @@ export const remoteMachine = createMachine(
                       },
                       onError: {
                         actions: (e) =>
-                          console.error('Error while updating render', e),
+                          console.error('Error while updating render', e.event),
                         target: 'idle', // soldier on
                       },
                     },

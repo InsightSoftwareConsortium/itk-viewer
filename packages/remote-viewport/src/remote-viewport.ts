@@ -93,8 +93,7 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
               }
 
               if (key === 'image') {
-                server.loadImage(value);
-                return;
+                return ['loadImage', value];
               }
 
               return [key, value];
