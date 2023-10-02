@@ -1,5 +1,11 @@
 # @itk-viewer/viewer
 
+## 0.2.2
+
+### Patch Changes
+
+- e187ce4: Remote-Zarr service from remote-image package returns a Zarr store to create a ZarrMultiscaleSpatialImage for use by remote-viewport. Adds reset camera logic in viewport actor.
+
 ## 0.2.1
 
 ### Patch Changes
