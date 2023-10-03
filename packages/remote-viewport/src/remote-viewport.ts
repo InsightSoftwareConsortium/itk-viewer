@@ -1,6 +1,6 @@
 import { createActor, fromPromise } from 'xstate';
 import { hyphaWebsocketClient } from 'imjoy-rpc';
-import { mat4, vec3 } from 'gl-matrix';
+import { ReadonlyMat4, mat4, vec3 } from 'gl-matrix';
 import { decode, Image } from '@itk-wasm/htj2k';
 import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
 
@@ -53,6 +53,27 @@ const createHyphaRenderer = async (context: Context) => {
   return renderer;
 };
 
+const mat4ToLookAt = (transform: ReadonlyMat4) => {
+  const eye = vec3.create();
+  mat4.getTranslation(eye, transform);
+
+  const target = vec3.fromValues(transform[8], transform[9], transform[10]);
+  vec3.subtract(target, eye, target);
+
+  const up = vec3.fromValues(transform[4], transform[5], transform[6]);
+
+  return { eye, up, target };
+};
+
+const makeCameraPoseCommand = (
+  toRendererCoordinateSystem: ReadonlyMat4,
+  cameraPose: ReadonlyMat4,
+) => {
+  const transform = mat4.create();
+  mat4.multiply(transform, toRendererCoordinateSystem, cameraPose);
+  return ['cameraPose', mat4ToLookAt(transform)];
+};
+
 export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
   let decodeWorker: Worker | null = null;
 
@@ -63,56 +84,52 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
       ),
       renderer: fromPromise(
         async ({ input: { context, events } }: { input: RendererInput }) => {
-          const translatedEvents = events.map(([key, value]) => {
-            if (key === 'cameraPose') {
-              const transform = mat4.create();
-              mat4.multiply(
-                transform,
-                context.toRendererCoordinateSystem,
-                value,
-              );
+          const commands = events
+            .map(([key, value]) => {
+              if (key === 'cameraPose') {
+                return makeCameraPoseCommand(
+                  context.toRendererCoordinateSystem,
+                  value,
+                );
+              }
 
-              const eye = vec3.create();
-              mat4.getTranslation(eye, transform);
+              if (key === 'image') {
+                const { imageScale: multiresolution_level } =
+                  context.rendererProps;
+                return [
+                  'loadImage',
+                  { image_path: value, multiresolution_level },
+                ];
+              }
 
-              const target = vec3.fromValues(
-                transform[8],
-                transform[9],
-                transform[10],
-              );
-              vec3.subtract(target, eye, target);
+              if (key === 'imageScale') {
+                const { image: image_path } = context.rendererProps;
+                return [
+                  'loadImage',
+                  { image_path, multiresolution_level: value },
+                ];
+              }
 
-              const up = vec3.fromValues(
-                transform[4],
-                transform[5],
-                transform[6],
-              );
-
-              return ['cameraPose', { eye, up, target }];
-            }
-
-            if (key === 'image') {
-              const { imageScale: multiresolution_level } =
-                context.rendererProps;
-              return [
-                'loadImage',
-                { image_path: value, multiresolution_level },
-              ];
-            }
-
-            if (key === 'imageScale') {
-              const { image: image_path } = context.rendererProps;
-              return [
-                'loadImage',
-                { image_path, multiresolution_level: value },
-              ];
-            }
-
-            return [key, value];
-          });
+              return [key, value];
+            })
+            .flatMap((event) => {
+              const [type] = event;
+              if (type === 'loadImage') {
+                // Resend camera pose after load image.
+                // Camera is reset by Agave after load image?
+                return [
+                  event,
+                  makeCameraPoseCommand(
+                    context.toRendererCoordinateSystem,
+                    context.rendererProps.cameraPose,
+                  ),
+                ];
+              }
+              return [event];
+            });
 
           const { server } = context;
-          server.updateRenderer(translatedEvents);
+          server.updateRenderer(commands);
           const { frame: encodedImage, renderTime } = await server.render();
           const { image: frame, webWorker } = await decode(
             decodeWorker,
@@ -129,9 +146,13 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
             event: { image },
           },
         }) => {
+          // initializes indexToWorld matrix for getWorldBounds and checkMemory guard
+          for (let i = 0; i < image.scaleInfos.length; i++) {
+            await image.scaleIndexToWorld(i);
+          }
+
           // compute toRendererCoordinateSystem
           const imageScale = image.coarsestScale;
-          await image.scaleIndexToWorld(imageScale); // initializes indexToWorld matrix for getWorldBounds
           const bounds = image.getWorldBounds(imageScale);
 
           // match Agave by normalizing to largest dim

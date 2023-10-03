@@ -5,7 +5,13 @@ import type { Image } from '@itk-wasm/htj2k';
 import { Viewport } from '@itk-viewer/viewer/viewport.js';
 import { fpsWatcher } from '@itk-viewer/viewer/fps-watcher-machine.js';
 import { viewportMachine } from '@itk-viewer/viewer/viewport-machine.js';
-import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import {
+  MultiscaleSpatialImage,
+  getVoxelCount,
+  getBytes,
+} from '@itk-viewer/io/MultiscaleSpatialImage.js';
+
+const MAX_IMAGE_BYTES_DEFAULT = 4000 * 1000 * 1000; // 4000 MB
 
 type RendererProps = {
   density: number;
@@ -34,6 +40,7 @@ export type Context = {
   stagedRendererEvents: RendererEntries;
   viewport: ActorRefFrom<typeof viewportMachine>;
   toRendererCoordinateSystem: ReadonlyMat4;
+  maxImageBytes: number;
 };
 
 type ConnectEvent = {
@@ -68,18 +75,57 @@ type CameraPoseUpdated = {
   pose: ReadonlyMat4;
 };
 
+type Event =
+  | ConnectEvent
+  | UpdateRendererEvent
+  | RenderEvent
+  | SetImage
+  | SlowFps
+  | FastFps
+  | CameraPoseUpdated;
+
+type ActionArgs = { event: Event; context: Context };
+
+const getTargetScale = ({ event, context }: ActionArgs) => {
+  const image = context.viewport.getSnapshot().context.image;
+  if (!image || context.rendererProps.imageScale === undefined)
+    throw new Error('image or imageScale not found');
+
+  const currentScale = context.rendererProps.imageScale;
+  const { type } = event;
+
+  const scaleChange = type === 'slowFps' ? 1 : -1;
+  const targetScale = currentScale + scaleChange;
+  return Math.max(0, Math.min(image.coarsestScale, targetScale));
+};
+
+const checkTargetScaleExists = ({ event, context }: ActionArgs) => {
+  const image = context.viewport.getSnapshot().context.image;
+  if (!image || context.rendererProps.imageScale === undefined)
+    throw new Error('image or imageScale not found');
+
+  const targetScale = getTargetScale({ event, context });
+  const currentScale = context.rendererProps.imageScale;
+  return targetScale !== currentScale;
+};
+
+// Assumes image.scaleIndexToWorld has been called with target scale
+const checkMemory = ({ event, context }: ActionArgs) => {
+  const image = context.viewport.getSnapshot().context.image;
+  if (!image) throw new Error('image found');
+
+  const targetScale = getTargetScale({ event, context });
+  const voxelCount = getVoxelCount(image, targetScale);
+  const imageBytes = getBytes(image, voxelCount);
+
+  return imageBytes < context.maxImageBytes;
+};
+
 export const remoteMachine = createMachine(
   {
     types: {} as {
       context: Context;
-      events:
-        | ConnectEvent
-        | UpdateRendererEvent
-        | RenderEvent
-        | SetImage
-        | SlowFps
-        | FastFps
-        | CameraPoseUpdated;
+      events: Event;
     },
     id: 'remote',
     context: ({ input }: { input: { viewport: Viewport } }) => ({
@@ -90,6 +136,7 @@ export const remoteMachine = createMachine(
       queuedRendererEvents: [],
       stagedRendererEvents: [],
       toRendererCoordinateSystem: mat4.create(),
+      maxImageBytes: MAX_IMAGE_BYTES_DEFAULT,
       ...input, // captures injected viewport
     }),
     type: 'parallel',
@@ -262,7 +309,7 @@ export const remoteMachine = createMachine(
                       onError: {
                         actions: (e) =>
                           console.error(
-                            `Error while updating render: ${e.event}`,
+                            `Error while updating render: ${e.event.data}`,
                           ),
                         target: 'idle', // soldier on
                       },
@@ -298,22 +345,19 @@ export const remoteMachine = createMachine(
     actions: {
       updateImageScale: ({ event, context, self }) => {
         const image = context.viewport.getSnapshot().context.image;
-        if (!image || context.rendererProps.imageScale === undefined) return;
+        if (!image) return; // may be rendering without image
 
-        const scaleCount = image.scaleInfos.length - 1;
-        const scale = context.rendererProps.imageScale;
-        const { type } = event;
+        if (context.rendererProps.imageScale === undefined)
+          throw new Error('imageScale not found');
 
-        const scaleChange = type === 'slowFps' ? 1 : -1;
-        const targetScale = scale + scaleChange;
-        const newScale = Math.max(0, Math.min(scaleCount - 1, targetScale));
+        if (!checkTargetScaleExists({ event, context })) return;
+        if (!checkMemory({ event, context })) return;
 
-        if (newScale !== scale) {
-          self.send({
-            type: 'updateRenderer',
-            props: { imageScale: newScale },
-          });
-        }
+        const targetScale = getTargetScale({ event, context });
+        self.send({
+          type: 'updateRenderer',
+          props: { imageScale: targetScale },
+        });
       },
     },
   },

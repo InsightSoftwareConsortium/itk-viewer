@@ -1,4 +1,4 @@
-import { Dimension } from './types.js';
+import { Dimension, SpatialDimensions } from './types.js';
 
 export const CXYZT = Object.freeze(['c', 'x', 'y', 'z', 't'] as const); // viewer indexing
 
@@ -37,3 +37,9 @@ export const chunkArray = <T>(chunkSize: number, array: Array<T>) => {
   }
   return chunks;
 };
+
+export const nonNullable = <T>(value: T): value is NonNullable<T> => {
+  return value != null;
+};
+
+export const xyz = ['x', 'y', 'z'] as SpatialDimensions;

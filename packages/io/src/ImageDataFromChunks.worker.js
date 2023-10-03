@@ -1,6 +1,6 @@
 import registerWebworker from 'webworker-promise/lib/register';
 import { computeRanges } from './analyze/computeRanges';
-import componentTypeToTypedArray from './componentTypeToTypedArray';
+import { componentTypeToTypedArray } from './componentTypeToTypedArray';
 import { CXYZT, ensuredDims } from './dimensionUtils';
 import {
   getTypedArray,
