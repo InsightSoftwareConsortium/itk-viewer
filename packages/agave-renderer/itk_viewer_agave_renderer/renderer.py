@@ -67,7 +67,7 @@ class Renderer():
         for [event_type, payload] in events:
            match event_type:
                 case 'loadImage':
-                    await self.load_image(payload)
+                    await self.load_image(**payload)
                 case 'density':
                     r.density(payload)
                 case 'cameraPose':

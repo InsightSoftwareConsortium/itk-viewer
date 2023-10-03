@@ -1,6 +1,6 @@
 import { createActor, fromPromise } from 'xstate';
 import { hyphaWebsocketClient } from 'imjoy-rpc';
-import { ReadonlyMat4, mat4, vec3 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 import { decode, Image } from '@itk-wasm/htj2k';
 import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
 
@@ -13,14 +13,14 @@ type RenderedFrame = {
 
 type Renderer = {
   updateRenderer: (events: unknown) => unknown;
-  loadImage: (image: string | undefined) => void;
   render: () => Promise<{ frame: Uint8Array; renderTime: number }>;
 };
 
+type MachineContext = Omit<Context, 'server'> & { server: Renderer };
+
 type RendererInput = {
-  server: Renderer;
+  context: MachineContext;
   events: RendererEntries;
-  toRendererCoordinateSystem: ReadonlyMat4;
 };
 
 type ConnectInput = { context: Context };
@@ -62,44 +62,56 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
         createHyphaRenderer(input.context),
       ),
       renderer: fromPromise(
-        async ({
-          input: { server, events, toRendererCoordinateSystem },
-        }: {
-          input: RendererInput;
-        }) => {
-          const translatedEvents = events
-            .map(([key, value]) => {
-              if (key === 'cameraPose') {
-                const transform = mat4.create();
-                mat4.multiply(transform, toRendererCoordinateSystem, value);
+        async ({ input: { context, events } }: { input: RendererInput }) => {
+          const translatedEvents = events.map(([key, value]) => {
+            if (key === 'cameraPose') {
+              const transform = mat4.create();
+              mat4.multiply(
+                transform,
+                context.toRendererCoordinateSystem,
+                value,
+              );
 
-                const eye = vec3.create();
-                mat4.getTranslation(eye, transform);
+              const eye = vec3.create();
+              mat4.getTranslation(eye, transform);
 
-                const target = vec3.fromValues(
-                  transform[8],
-                  transform[9],
-                  transform[10],
-                );
-                vec3.subtract(target, eye, target);
+              const target = vec3.fromValues(
+                transform[8],
+                transform[9],
+                transform[10],
+              );
+              vec3.subtract(target, eye, target);
 
-                const up = vec3.fromValues(
-                  transform[4],
-                  transform[5],
-                  transform[6],
-                );
+              const up = vec3.fromValues(
+                transform[4],
+                transform[5],
+                transform[6],
+              );
 
-                return ['cameraPose', { eye, up, target }];
-              }
+              return ['cameraPose', { eye, up, target }];
+            }
 
-              if (key === 'image') {
-                return ['loadImage', value];
-              }
+            if (key === 'image') {
+              const { imageScale: multiresolution_level } =
+                context.rendererProps;
+              return [
+                'loadImage',
+                { image_path: value, multiresolution_level },
+              ];
+            }
 
-              return [key, value];
-            })
-            .filter(Boolean);
+            if (key === 'imageScale') {
+              const { image: image_path } = context.rendererProps;
+              return [
+                'loadImage',
+                { image_path, multiresolution_level: value },
+              ];
+            }
 
+            return [key, value];
+          });
+
+          const { server } = context;
           server.updateRenderer(translatedEvents);
           const { frame: encodedImage, renderTime } = await server.render();
           const { image: frame, webWorker } = await decode(

@@ -242,10 +242,8 @@ export const remoteMachine = createMachine(
                       id: 'render',
                       src: 'renderer',
                       input: ({ context }: { context: Context }) => ({
-                        server: context.server,
                         events: [...context.stagedRendererEvents],
-                        toRendererCoordinateSystem:
-                          context.toRendererCoordinateSystem,
+                        context,
                       }),
                       onDone: {
                         actions: [
@@ -263,7 +261,9 @@ export const remoteMachine = createMachine(
                       },
                       onError: {
                         actions: (e) =>
-                          console.error('Error while updating render', e.event),
+                          console.error(
+                            `Error while updating render: ${e.event}`,
+                          ),
                         target: 'idle', // soldier on
                       },
                     },
