@@ -5,8 +5,15 @@ import WebworkerPromise from 'webworker-promise';
 
 import { getDtype } from '@itk-viewer/wasm-utils/dtypeUtils.js';
 
-import componentTypeToTypedArray from './componentTypeToTypedArray.js';
-import { chunkArray, CXYZT, ensuredDims, orderBy } from './dimensionUtils.js';
+import { componentTypeToTypedArray } from './componentTypeToTypedArray.js';
+import {
+  chunkArray,
+  CXYZT,
+  ensuredDims,
+  nonNullable,
+  orderBy,
+  xyz,
+} from './dimensionUtils.js';
 import { transformBounds } from './transformBounds.js';
 import {
   Bounds,
@@ -240,7 +247,7 @@ export function storeImage({
   cache.set(scale, [{ bounds, image }]);
 }
 
-class MultiscaleSpatialImage {
+export class MultiscaleSpatialImage {
   // Every element corresponds to a pyramid scale
   // Lower scales, corresponds to a higher index, correspond to a lower
   // resolution.
@@ -529,3 +536,45 @@ class MultiscaleSpatialImage {
 }
 
 export default MultiscaleSpatialImage;
+
+// bounds defaults to whole image if undefined
+export const getVoxelCount = (
+  image: MultiscaleSpatialImage,
+  scale: number,
+  bounds: Bounds | undefined = undefined,
+) => {
+  const scaleInfo = image.scaleInfos[scale];
+
+  if (!bounds) {
+    return xyz
+      .map((dim) => scaleInfo.arrayShape.get(dim))
+      .filter(nonNullable) // may not have z dim
+      .reduce((voxels, dimSize) => voxels * dimSize, 1);
+  }
+
+  // assumes image.scaleIndexToWorld(scale) completed to populate indexToWorld
+  const indexToWorld = image.scaleInfos[scale].indexToWorld;
+  if (!indexToWorld) throw new Error('indexToWorld is undefined');
+
+  const fullIndexBounds = image.getIndexBounds(scale);
+  const indexBounds = worldBoundsToIndexBounds({
+    bounds,
+    fullIndexBounds,
+    worldToIndex: mat4.invert(mat4.create(), indexToWorld),
+  });
+  return xyz
+    .map((dim) => {
+      const [start, end] = indexBounds.get(dim)!;
+      return end - start + 1; // plus 1 as bounds are inclusive
+    })
+    .reduce((voxels, dimSize) => voxels * dimSize, 1);
+};
+
+export const getBytes = (
+  { imageType: { componentType, components } }: MultiscaleSpatialImage,
+  voxelCount: number,
+) => {
+  const bytesPerElement =
+    componentTypeToTypedArray.get(componentType)!.prototype.BYTES_PER_ELEMENT;
+  return bytesPerElement * components * voxelCount;
+};

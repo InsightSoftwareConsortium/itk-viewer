@@ -1,6 +1,7 @@
 import { mat4 } from 'gl-matrix';
 import { TypedArray } from 'itk-wasm';
 
+export type ValueOf<T> = T[keyof T];
 export type Awaitable<T> = Promise<T> | T;
 
 export type Bounds = [number, number, number, number, number, number];

@@ -61,11 +61,13 @@ class Renderer():
         elapsed = time.time() - start_time
         return { "frame": rgba_encoded, "renderTime": elapsed }
 
-    def update_renderer(self, events):
+    async def update_renderer(self, events):
         r = self.agave
 
         for [event_type, payload] in events:
            match event_type:
+                case 'loadImage':
+                    await self.load_image(**payload)
                 case 'density':
                     r.density(payload)
                 case 'cameraPose':
@@ -97,6 +99,8 @@ class Renderer():
             }
         )
 
+        self.load_image = functools.partial(load_image_into_agave_fn, self)
+
         await server.register_service({
             "name": "Agave Renderer",
             "id": identifier,
@@ -108,7 +112,7 @@ class Renderer():
 
             "setup": self.setup,
 
-            "loadImage": functools.partial(load_image_into_agave_fn, self),
+            "loadImage": self.load_image,
 
             "render": self.render,
             "updateRenderer": self.update_renderer,
