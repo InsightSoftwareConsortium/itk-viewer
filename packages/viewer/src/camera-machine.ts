@@ -7,9 +7,10 @@ export type LookAtParams = {
   up: ReadonlyVec3;
 };
 
-type context = {
+type Context = {
   pose: ReadonlyMat4;
   lookAt: LookAtParams;
+  verticalFieldOfView: number;
 };
 
 type SetPoseEvent = {
@@ -24,7 +25,7 @@ type LookAtEvent = {
 
 const cameraMachine = createMachine({
   types: {} as {
-    context: context;
+    context: Context;
     events: SetPoseEvent | LookAtEvent;
   },
   id: 'camera',
@@ -32,6 +33,7 @@ const cameraMachine = createMachine({
   context: {
     pose: mat4.create(),
     lookAt: { eye: [0, 0, 0], target: [0, 0, 1], up: [0, 1, 0] },
+    verticalFieldOfView: 50,
   },
   states: {
     active: {
