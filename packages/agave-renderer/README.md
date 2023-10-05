@@ -9,6 +9,7 @@
 
 - [Installation](#installation)
 - [License](#license)
+- [Publishing](#publishing)
 
 ## Installation
 
@@ -19,3 +20,11 @@ pip install itk-viewer-agave-renderer
 ## License
 
 `itk-viewer-agave-renderer` is distributed under the terms of the [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html) license.
+
+## Publishing
+
+```console
+hatch version patch
+hatch build
+hatch publish
+```
