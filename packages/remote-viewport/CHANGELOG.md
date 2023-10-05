@@ -1,5 +1,14 @@
 # @itk-viewer/remote-viewport
 
+## 0.2.6
+
+### Patch Changes
+
+- 6191b9a: Change remote image scale based on fpsWatcher. Includes image memory size check.
+- Updated dependencies [6191b9a]
+  - @itk-viewer/viewer@0.2.3
+  - @itk-viewer/io@0.1.3
+
 ## 0.2.5
 
 ### Patch Changes
