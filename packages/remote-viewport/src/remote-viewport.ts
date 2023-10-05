@@ -140,20 +140,14 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
           return { frame, renderTime };
         },
       ),
+      // compute toRendererCoordinateSystem
       imageProcessor: fromPromise(
         async ({
           input: {
             event: { image },
           },
         }) => {
-          // initializes indexToWorld matrix for getWorldBounds and checkMemory guard
-          for (let i = 0; i < image.scaleInfos.length; i++) {
-            await image.scaleIndexToWorld(i);
-          }
-
-          // compute toRendererCoordinateSystem
-          const imageScale = image.coarsestScale;
-          const bounds = image.getWorldBounds(imageScale);
+          const bounds = await image.getWorldBounds(image.coarsestScale);
 
           // match Agave by normalizing to largest dim
           const wx = bounds[1] - bounds[0];

@@ -93,9 +93,10 @@ export const viewportMachine = createMachine(
       resetCameraPose: async ({ context: { image, camera } }) => {
         if (!image || !camera) return;
 
-        const scale = image.coarsestScale;
-        await image.scaleIndexToWorld(scale); // initializes indexToWorld matrix for getWorldBounds
-        const bounds = image.getWorldBounds(scale);
+        const { pose: currentPose, verticalFieldOfView } =
+          camera.getSnapshot().context;
+
+        const bounds = await image.getWorldBounds(image.coarsestScale);
 
         const center = vec3.fromValues(
           (bounds[0] + bounds[1]) / 2.0,
@@ -115,10 +116,8 @@ export const viewportMachine = createMachine(
         // compute the radius of the enclosing sphere
         radius = Math.sqrt(radius) * 0.5;
 
-        const angle = 55 * (Math.PI / 180); // to radians
+        const angle = verticalFieldOfView * (Math.PI / 180); // to radians
         const distance = radius / Math.sin(angle * 0.5);
-
-        const currentPose = camera.getSnapshot().context.pose;
 
         const forward = [currentPose[8], currentPose[9], currentPose[10]];
         const up = vec3.fromValues(

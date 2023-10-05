@@ -515,13 +515,8 @@ export class MultiscaleSpatialImage {
     );
   }
 
-  // indexToWorld will be undefined if getImage() not completed on scale first
-  getWorldBounds(requestedScale: number) {
-    // clap scale same as getImage for when comparing images
-    const scale = Math.min(requestedScale, this.scaleInfos.length - 1);
-    const { indexToWorld } = this.scaleInfos[scale];
-    if (!indexToWorld)
-      throw new Error('getImage() must be called before getWorldBounds()');
+  async getWorldBounds(scale: number) {
+    const indexToWorld = await this.scaleIndexToWorld(scale);
     const imageBounds = ensuredDims(
       [0, 1],
       ['x', 'y', 'z'],
@@ -538,7 +533,7 @@ export class MultiscaleSpatialImage {
 export default MultiscaleSpatialImage;
 
 // bounds defaults to whole image if undefined
-export const getVoxelCount = (
+export const getVoxelCount = async (
   image: MultiscaleSpatialImage,
   scale: number,
   bounds: Bounds | undefined = undefined,
@@ -552,8 +547,7 @@ export const getVoxelCount = (
       .reduce((voxels, dimSize) => voxels * dimSize, 1);
   }
 
-  // assumes image.scaleIndexToWorld(scale) completed to populate indexToWorld
-  const indexToWorld = image.scaleInfos[scale].indexToWorld;
+  const indexToWorld = await image.scaleIndexToWorld(scale);
   if (!indexToWorld) throw new Error('indexToWorld is undefined');
 
   const fullIndexBounds = image.getIndexBounds(scale);
