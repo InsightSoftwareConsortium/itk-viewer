@@ -157,9 +157,9 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
 
           const scale = vec3.fromValues(maxDim, maxDim, maxDim);
           vec3.inverse(scale, scale);
+          const transform = mat4.fromScaling(mat4.create(), scale);
 
           // Move to Agave origin
-          const transform = mat4.fromScaling(mat4.create(), scale);
           mat4.translate(
             transform,
             transform,

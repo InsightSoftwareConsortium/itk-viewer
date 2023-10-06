@@ -1,13 +1,14 @@
 import { ActorRef, assign, createMachine, sendParent } from 'xstate';
 
-import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera } from './camera-machine.js';
 import { ReadonlyMat4, vec3 } from 'gl-matrix';
 
 type Context = {
-  image: MultiscaleSpatialImage | undefined;
+  image?: MultiscaleSpatialImage;
   camera?: Camera;
   cameraSubscription?: ReturnType<Camera['subscribe']>;
+  resolution: [number, number];
 };
 
 type SetImageEvent = {
@@ -25,7 +26,11 @@ type CameraPoseUpdatedEvent = {
   pose: ReadonlyMat4;
 };
 
-type Events = SetImageEvent | SetCameraEvent | CameraPoseUpdatedEvent;
+type Events =
+  | SetImageEvent
+  | SetCameraEvent
+  | CameraPoseUpdatedEvent
+  | { type: 'setResolution'; resolution: [number, number] };
 
 export const viewportMachine = createMachine(
   {
@@ -39,6 +44,7 @@ export const viewportMachine = createMachine(
       image: undefined,
       camera: undefined,
       cameraSubscription: undefined,
+      resolution: [0, 0],
     },
     states: {
       active: {
@@ -80,6 +86,14 @@ export const viewportMachine = createMachine(
           },
           cameraPoseUpdated: {
             actions: ['forwardToParent'],
+          },
+          setResolution: {
+            actions: [
+              assign({
+                resolution: ({ event: { resolution } }) => resolution,
+              }),
+              'forwardToParent',
+            ],
           },
         },
       },

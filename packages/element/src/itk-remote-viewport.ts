@@ -44,11 +44,14 @@ export class ItkRemoteViewport extends ItkViewport {
     if (!entries.length) return;
 
     const { width, height } = entries[0].contentRect;
-    const size = [width, height].map(this.cleanDimension) as [number, number];
+    const resolution = [width, height].map(this.cleanDimension) as [
+      number,
+      number,
+    ];
 
-    this.remote.send({
-      type: 'updateRenderer',
-      props: { size },
+    this.actor.send({
+      type: 'setResolution',
+      resolution,
     });
   });
 

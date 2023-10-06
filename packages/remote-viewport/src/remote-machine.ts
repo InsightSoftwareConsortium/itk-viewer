@@ -91,7 +91,8 @@ type Event =
   | SlowFps
   | FastFps
   | CameraPoseUpdated
-  | { type: 'done.invoke.updateImageScale'; output: number };
+  | { type: 'done.invoke.updateImageScale'; output: number }
+  | { type: 'setResolution'; resolution: [number, number] };
 
 type ActionArgs = { event: Event; context: Context };
 
@@ -230,6 +231,16 @@ export const remoteMachine = createMachine({
               return {
                 type: 'updateRenderer' as const,
                 props: { cameraPose: event.pose },
+              };
+            }),
+          ],
+        },
+        setResolution: {
+          actions: [
+            raise(({ event }) => {
+              return {
+                type: 'updateRenderer' as const,
+                props: { size: event.resolution },
               };
             }),
           ],
