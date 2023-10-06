@@ -148,7 +148,7 @@ export const viewportMachine = createMachine(
 
         camera.send({
           type: 'lookAt',
-          lookAt: { eye, target: center, up },
+          lookAt: { eye, center: center, up },
         });
       },
     },

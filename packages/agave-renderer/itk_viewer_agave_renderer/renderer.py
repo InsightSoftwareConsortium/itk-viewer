@@ -80,7 +80,7 @@ class Renderer():
                    r.eye(eye[0], eye[1], eye[2])
                    up = payload['up']
                    r.up(up[0], up[1], up[2])
-                   target = payload['target']
+                   target = payload['center']
                    r.target(target[0], target[1], target[2])
                 case 'size':
                     self.set_size(payload[0], payload[1])

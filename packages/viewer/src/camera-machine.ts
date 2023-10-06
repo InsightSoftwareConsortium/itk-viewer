@@ -3,7 +3,7 @@ import { assign, createActor, createMachine } from 'xstate';
 
 export type LookAtParams = {
   eye: ReadonlyVec3;
-  target: ReadonlyVec3;
+  center: ReadonlyVec3;
   up: ReadonlyVec3;
 };
 
@@ -32,7 +32,7 @@ const cameraMachine = createMachine({
   initial: 'active',
   context: {
     pose: mat4.create(),
-    lookAt: { eye: [0, 0, 0], target: [0, 0, 1], up: [0, 1, 0] },
+    lookAt: { eye: [0, 0, 0], center: [0, 0, 1], up: [0, 1, 0] },
     verticalFieldOfView: 50,
   },
   states: {
@@ -50,10 +50,8 @@ const cameraMachine = createMachine({
             assign({
               lookAt: ({ event: { lookAt } }) => lookAt,
               pose: ({ event: { lookAt } }) => {
-                const { eye, target, up } = lookAt;
-                const pose = mat4.create();
-                mat4.lookAt(pose, eye, target, up);
-                return pose;
+                const { eye, center, up } = lookAt;
+                return mat4.lookAt(mat4.create(), eye, center, up);
               },
             }),
           ],

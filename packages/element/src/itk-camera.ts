@@ -26,9 +26,7 @@ const bindCamera = (
   const view = mat4.create();
 
   const updateView = () => {
-    camera.view(view);
-    mat4.invert(view, view);
-    onUpdate(view);
+    onUpdate(camera.view(view));
   };
 
   const resizeObserver = new ResizeObserver((entries) => {
@@ -114,7 +112,7 @@ const bindCamera = (
   const preventDefault = (e: Event) => e.preventDefault();
   viewport.addEventListener('contextmenu', preventDefault);
 
-  const unbind = () => {
+  const unBind = () => {
     resizeObserver.disconnect();
     viewport.removeEventListener('pointerdown', onPointerDown);
     window.removeEventListener('pointerup', onPointerUp);
@@ -125,7 +123,7 @@ const bindCamera = (
 
   updateView();
 
-  return unbind;
+  return unBind;
 };
 
 @customElement('itk-camera')
@@ -135,10 +133,11 @@ export class ItkCamera extends LitElement {
 
   camera: Camera;
 
+  oldLookAt: LookAtParams | undefined;
   lookAt: SelectorController<Camera, LookAtParams>;
 
   cameraController: OrbitCamera;
-  unbind: (() => unknown) | undefined;
+  unBind: (() => unknown) | undefined;
 
   constructor() {
     super();
@@ -151,16 +150,10 @@ export class ItkCamera extends LitElement {
     );
 
     this.cameraController = createOrbitCamera([0, 0, -1], [0, 0, 0], [0, 1, 0]);
-
-    const pose = this.cameraController.view();
-    this.camera.send({
-      type: 'setPose',
-      pose,
-    });
   }
 
   firstUpdated(): void {
-    this.unbind = bindCamera(this.cameraController, this, (pose) => {
+    this.unBind = bindCamera(this.cameraController, this, (pose) => {
       this.camera.send({
         type: 'setPose',
         pose,
@@ -170,7 +163,7 @@ export class ItkCamera extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.unbind?.();
+    this.unBind?.();
   }
 
   willUpdate(changedProperties: PropertyValues<this>) {
@@ -178,17 +171,15 @@ export class ItkCamera extends LitElement {
       this.viewport?.send({ type: 'setCamera', camera: this.camera });
     }
 
-    const { eye, target, up } = this.lookAt.value;
-    this.cameraController.lookAt(eye, target, up);
-    const pose = this.cameraController.view();
-    this.camera.send({
-      type: 'setPose',
-      pose,
-    });
+    if (this.lookAt.value !== this.oldLookAt) {
+      this.oldLookAt = this.lookAt.value;
+      const { eye, center, up } = this.lookAt.value;
+      this.cameraController.lookAt(eye, center, up);
+    }
   }
 
   render() {
-    return html` <slot></slot> `;
+    return html`<slot></slot>`;
   }
 }
 
