@@ -140,7 +140,7 @@ export const remoteMachine = createMachine({
     rendererProps: {
       density: 30,
       cameraPose: mat4.create(),
-      size: [0, 0] as [number, number],
+      size: [1, 1] as [number, number],
     },
     queuedRendererEvents: [],
     stagedRendererEvents: [],

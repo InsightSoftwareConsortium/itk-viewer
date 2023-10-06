@@ -75,9 +75,6 @@ importers:
       '@itk-viewer/viewer':
         specifier: workspace:^
         version: link:../viewer
-      '@lit-labs/observers':
-        specifier: ^2.0.0
-        version: 2.0.0
       gl-matrix:
         specifier: ^3.4.3
         version: 3.4.3
@@ -750,12 +747,6 @@ packages:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.1
       '@jridgewell/sourcemap-codec': 1.4.15
-    dev: false
-
-  /@lit-labs/observers@2.0.0:
-    resolution: {integrity: sha512-NMbCjJEqp8V9TpTtt8HhzFVymx/WGpTD7iU+FMKSis4u3iBWwu2UYh6KChwFTEPW9xMum70r2IBnaViBINaGTA==}
-    dependencies:
-      '@lit/reactive-element': 1.6.3
     dev: false
 
   /@lit-labs/ssr-dom-shim@1.1.1:

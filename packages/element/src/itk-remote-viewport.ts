@@ -1,8 +1,7 @@
 /// <reference types="vite/client" />
 import { PropertyValues, css, html } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { Ref, createRef, ref } from 'lit/directives/ref.js';
-import { ResizeController } from '@lit-labs/observers/resize-controller.js';
 import { SelectorController } from 'xstate-lit/dist/select-controller.js';
 import { ActorStatus } from 'xstate';
 
@@ -28,11 +27,6 @@ export class ItkRemoteViewport extends ItkViewport {
   canvas: Ref<HTMLCanvasElement> = createRef();
   canvasCtx: CanvasRenderingContext2D | null = null;
 
-  @state()
-  canvasWidth = 0;
-  @state()
-  canvasHeight = 0;
-
   camera: Ref<HTMLElement> = createRef();
 
   remote: RemoteActor;
@@ -44,20 +38,18 @@ export class ItkRemoteViewport extends ItkViewport {
   frame: SelectorController<RemoteActor, Image | undefined>;
   lastFrameValue: Image | undefined = undefined;
 
-  _resizeController = new ResizeController(this, {
-    callback: (entries: Array<ResizeObserverEntry>) => {
-      // first entry is component host, second is canvas
-      if (entries.length !== 2) return;
-      const { width, height } = entries[1].contentRect;
-      const size = [width, height].map((v) => Math.floor(v)) as [
-        number,
-        number,
-      ];
-      this.remote.send({
-        type: 'updateRenderer',
-        props: { size },
-      });
-    },
+  cleanDimension = (v: number) => Math.max(1, Math.floor(v));
+
+  _resizer = new ResizeObserver((entries: Array<ResizeObserverEntry>) => {
+    if (!entries.length) return;
+
+    const { width, height } = entries[0].contentRect;
+    const size = [width, height].map(this.cleanDimension) as [number, number];
+
+    this.remote.send({
+      type: 'updateRenderer',
+      props: { size },
+    });
   });
 
   constructor() {
@@ -85,8 +77,10 @@ export class ItkRemoteViewport extends ItkViewport {
     const { size, data } = this.frame.value;
     if (!data) throw new Error('No data in frame');
     const [width, height] = size;
-    this.canvasWidth = width;
-    this.canvasHeight = height;
+    if (this.canvas.value) {
+      this.canvas.value.width = width;
+      this.canvas.value.height = height;
+    }
     const pixels = new Uint8ClampedArray(data);
     const imageData = new ImageData(pixels, width, height);
     this.canvasCtx.putImageData(imageData, 0, 0);
@@ -117,7 +111,7 @@ export class ItkRemoteViewport extends ItkViewport {
     const canvas = this.canvas.value;
     if (!canvas) throw new Error('canvas not found');
     this.canvasCtx = canvas.getContext('2d');
-    this._resizeController.observe(canvas);
+    this._resizer.observe(canvas);
   }
 
   startConnection(): void {
@@ -175,12 +169,7 @@ export class ItkRemoteViewport extends ItkViewport {
         />
       </div>
       <itk-camera ${ref(this.camera)} .viewport=${this.actor} class="camera">
-        <canvas
-          width=${this.canvasWidth}
-          height=${this.canvasHeight}
-          ${ref(this.canvas)}
-          class="canvas"
-        ></canvas>
+        <canvas ${ref(this.canvas)} class="canvas"></canvas>
       </itk-camera>
     `;
   }
