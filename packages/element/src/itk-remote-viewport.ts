@@ -2,6 +2,7 @@
 import { PropertyValues, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { Ref, createRef, ref } from 'lit/directives/ref.js';
+import { ResizeController } from '@lit-labs/observers/resize-controller.js';
 import { SelectorController } from 'xstate-lit/dist/select-controller.js';
 import { ActorStatus } from 'xstate';
 
@@ -29,9 +30,10 @@ export class ItkRemoteViewport extends ItkViewport {
 
   @state()
   canvasWidth = 0;
-
   @state()
   canvasHeight = 0;
+
+  camera: Ref<HTMLElement> = createRef();
 
   remote: RemoteActor;
 
@@ -41,6 +43,22 @@ export class ItkRemoteViewport extends ItkViewport {
 
   frame: SelectorController<RemoteActor, Image | undefined>;
   lastFrameValue: Image | undefined = undefined;
+
+  _resizeController = new ResizeController(this, {
+    callback: (entries: Array<ResizeObserverEntry>) => {
+      // first entry is component host, second is canvas
+      if (entries.length !== 2) return;
+      const { width, height } = entries[1].contentRect;
+      const size = [width, height].map((v) => Math.floor(v)) as [
+        number,
+        number,
+      ];
+      this.remote.send({
+        type: 'updateRenderer',
+        props: { size },
+      });
+    },
+  });
 
   constructor() {
     super();
@@ -99,6 +117,7 @@ export class ItkRemoteViewport extends ItkViewport {
     const canvas = this.canvas.value;
     if (!canvas) throw new Error('canvas not found');
     this.canvasCtx = canvas.getContext('2d');
+    this._resizeController.observe(canvas);
   }
 
   startConnection(): void {
@@ -155,11 +174,12 @@ export class ItkRemoteViewport extends ItkViewport {
           step="1.0"
         />
       </div>
-      <itk-camera .viewport=${this.actor}>
+      <itk-camera ${ref(this.camera)} .viewport=${this.actor} class="camera">
         <canvas
-          ${ref(this.canvas)}
           width=${this.canvasWidth}
           height=${this.canvasHeight}
+          ${ref(this.canvas)}
+          class="canvas"
         ></canvas>
       </itk-camera>
     `;
@@ -167,9 +187,19 @@ export class ItkRemoteViewport extends ItkViewport {
 
   static styles = css`
     :host {
-      margin: 0 auto;
-      padding: 2rem;
+      display: flex;
+      flex-direction: column;
     }
+
+    .camera {
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .canvas {
+      width: 100%;
+      height: 100%;
   `;
 }
 

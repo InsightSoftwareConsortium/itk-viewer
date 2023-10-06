@@ -47,6 +47,14 @@ class Renderer():
         self.agave = AgaveRendererMemoryRedraw()
         self.agave.set_resolution(self.width, self.height)
 
+    def set_size(self, width, height):
+        self.width = width
+        self.height = height
+        try:
+            self.agave.set_resolution(width, height)
+        except:
+            pass
+
     async def render(self):
         r = self.agave
         start_time = time.time()
@@ -55,8 +63,7 @@ class Renderer():
         image = Image(image_type)
         image.size = [self.width, self.height]
         image.data = np.frombuffer(rgba, dtype=np.uint8)
-        # lossless
-        # rgba_encoded = encode(image)
+        # rgba_encoded = encode(image) # lossless
         rgba_encoded = encode(image, not_reversible=True, quantization_step=0.02)
         elapsed = time.time() - start_time
         return { "frame": rgba_encoded, "renderTime": elapsed }
@@ -68,8 +75,6 @@ class Renderer():
            match event_type:
                 case 'loadImage':
                     await self.load_image(**payload)
-                case 'density':
-                    r.density(payload)
                 case 'cameraPose':
                    eye = payload['eye']
                    r.eye(eye[0], eye[1], eye[2])
@@ -77,6 +82,10 @@ class Renderer():
                    r.up(up[0], up[1], up[2])
                    target = payload['target']
                    r.target(target[0], target[1], target[2])
+                case 'size':
+                    self.set_size(payload[0], payload[1])
+                case 'density':
+                    r.density(payload)
                 case 'renderIterations':
                    r.render_iterations(payload)
                 case _:

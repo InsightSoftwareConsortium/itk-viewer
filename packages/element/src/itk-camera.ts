@@ -10,7 +10,6 @@ import {
   LookAtParams,
   createCamera,
 } from '@itk-viewer/viewer/camera-machine.js';
-import { Ref, createRef, ref } from 'lit/directives/ref.js';
 import { SelectorController } from 'xstate-lit/dist/select-controller.js';
 
 const PAN_SPEED = 1;
@@ -139,7 +138,6 @@ export class ItkCamera extends LitElement {
 
   cameraController: OrbitCamera;
   unbind: (() => unknown) | undefined;
-  container: Ref<HTMLElement> = createRef();
 
   constructor() {
     super();
@@ -161,10 +159,7 @@ export class ItkCamera extends LitElement {
   }
 
   firstUpdated(): void {
-    const container = this.container.value;
-    if (!container) throw new Error('container not found');
-
-    this.unbind = bindCamera(this.cameraController, container, (pose) => {
+    this.unbind = bindCamera(this.cameraController, this, (pose) => {
       this.camera.send({
         type: 'setPose',
         pose,
@@ -192,11 +187,7 @@ export class ItkCamera extends LitElement {
   }
 
   render() {
-    return html`
-      <div ${ref(this.container)}>
-        <slot></slot>
-      </div>
-    `;
+    return html` <slot></slot> `;
   }
 }
 

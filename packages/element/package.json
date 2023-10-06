@@ -52,6 +52,7 @@
     "@itk-viewer/io": "workspace:^",
     "@itk-viewer/remote-viewport": "workspace:^",
     "@itk-viewer/viewer": "workspace:^",
+    "@lit-labs/observers": "^2.0.0",
     "gl-matrix": "^3.4.3",
     "lit": "^2.8.0",
     "orbit-camera": "^1.0.0",

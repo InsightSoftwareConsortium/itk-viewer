@@ -25,6 +25,7 @@ type RendererProps = {
   cameraPose: ReadonlyMat4;
   image?: string;
   imageScale?: number;
+  size: [number, number];
 };
 
 // https://stackoverflow.com/a/74823834
@@ -139,12 +140,13 @@ export const remoteMachine = createMachine({
     rendererProps: {
       density: 30,
       cameraPose: mat4.create(),
+      size: [0, 0] as [number, number],
     },
     queuedRendererEvents: [],
     stagedRendererEvents: [],
     toRendererCoordinateSystem: mat4.create(),
     maxImageBytes: MAX_IMAGE_BYTES_DEFAULT,
-    ...input, // captures injected viewport
+    ...input,
   }),
   type: 'parallel',
   states: {

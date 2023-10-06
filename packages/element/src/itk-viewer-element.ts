@@ -1,4 +1,4 @@
-import { LitElement, css, html } from 'lit';
+import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
 import { Viewer, createViewer } from '@itk-viewer/viewer/viewer.js';
@@ -18,24 +18,9 @@ export class ItkViewer extends LitElement {
   render() {
     return html`
       <h1>Viewer</h1>
-      <div class="viewports">
-        <slot></slot>
-      </div>
+      <slot></slot>
     `;
   }
-
-  static styles = css`
-    :host {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 2rem;
-    }
-
-    .viewports {
-      display: flex;
-      place-items: center;
-    }
-  `;
 }
 
 declare global {
