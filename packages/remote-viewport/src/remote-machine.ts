@@ -25,7 +25,7 @@ type RendererProps = {
   cameraPose: ReadonlyMat4;
   image?: string;
   imageScale?: number;
-  size: [number, number];
+  renderSize: [number, number];
 };
 
 // https://stackoverflow.com/a/74823834
@@ -141,7 +141,7 @@ export const remoteMachine = createMachine({
     rendererProps: {
       density: 30,
       cameraPose: mat4.create(),
-      size: [1, 1] as [number, number],
+      renderSize: [1, 1] as [number, number],
     },
     queuedRendererEvents: [],
     stagedRendererEvents: [],
@@ -240,7 +240,7 @@ export const remoteMachine = createMachine({
             raise(({ event }) => {
               return {
                 type: 'updateRenderer' as const,
-                props: { size: event.resolution },
+                props: { renderSize: event.resolution },
               };
             }),
           ],

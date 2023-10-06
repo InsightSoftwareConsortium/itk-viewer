@@ -47,13 +47,10 @@ class Renderer():
         self.agave = AgaveRendererMemoryRedraw()
         self.agave.set_resolution(self.width, self.height)
 
-    def set_size(self, width, height):
+    def set_render_size(self, width, height):
         self.width = width
         self.height = height
-        try:
-            self.agave.set_resolution(width, height)
-        except:
-            pass
+        self.agave.set_resolution(width, height)
 
     async def render(self):
         r = self.agave
@@ -82,8 +79,8 @@ class Renderer():
                    r.up(up[0], up[1], up[2])
                    target = payload['center']
                    r.target(target[0], target[1], target[2])
-                case 'size':
-                    self.set_size(payload[0], payload[1])
+                case 'renderSize':
+                    self.set_render_size(payload[0], payload[1])
                 case 'density':
                     r.density(payload)
                 case 'renderIterations':
