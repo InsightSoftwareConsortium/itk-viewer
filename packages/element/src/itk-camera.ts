@@ -43,8 +43,9 @@ const bindCamera = (
   let pan = false;
   let scale = false;
 
-  const onMouseDown = (e: MouseEvent) => {
+  const onPointerDown = (e: PointerEvent) => {
     e.preventDefault();
+
     if (e.button === 0) {
       rotate = true;
     } else if (e.button === 1) {
@@ -53,9 +54,9 @@ const bindCamera = (
       pan = true;
     }
   };
-  viewport.addEventListener('mousedown', onMouseDown);
+  viewport.addEventListener('pointerdown', onPointerDown);
 
-  const onMouseUp = (e: MouseEvent) => {
+  const onPointerUp = (e: PointerEvent) => {
     e.preventDefault();
     if (e.button === 0) {
       rotate = false;
@@ -65,42 +66,42 @@ const bindCamera = (
       pan = false;
     }
   };
-  window.addEventListener('mouseup', onMouseUp);
+  window.addEventListener('pointerup', onPointerUp);
 
-  let prevMouseX = 0;
-  let prevMouseY = 0;
+  let prevPointerX = 0;
+  let prevPointerY = 0;
 
-  const onMouseMove = (e: MouseEvent) => {
-    const mouseX = e.offsetX;
-    const mouseY = e.offsetY;
+  const onPointerMove = (e: PointerEvent) => {
+    const pointerX = e.offsetX;
+    const pointerY = e.offsetY;
 
     if (rotate) {
       camera.rotate(
-        [mouseX / width - 0.5, mouseY / height - 0.5],
-        [prevMouseX / width - 0.5, prevMouseY / height - 0.5],
+        [pointerX / width - 0.5, pointerY / height - 0.5],
+        [prevPointerX / width - 0.5, prevPointerY / height - 0.5],
       );
     }
 
     if (pan) {
       camera.pan([
-        (PAN_SPEED * (mouseX - prevMouseX)) / width,
-        (PAN_SPEED * (mouseY - prevMouseY)) / height,
+        (PAN_SPEED * (pointerX - prevPointerX)) / width,
+        (PAN_SPEED * (pointerY - prevPointerY)) / height,
       ]);
     }
 
     if (scale) {
-      const d = mouseY - prevMouseY;
+      const d = pointerY - prevPointerY;
       if (d) camera.distance *= Math.exp(d / height);
     }
 
-    prevMouseX = mouseX;
-    prevMouseY = mouseY;
+    prevPointerX = pointerX;
+    prevPointerY = pointerY;
 
     if (!rotate && !pan && !scale) return;
 
     updateView();
   };
-  viewport.addEventListener('mousemove', onMouseMove);
+  viewport.addEventListener('pointermove', onPointerMove);
 
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
@@ -115,9 +116,9 @@ const bindCamera = (
 
   const unbind = () => {
     resizeObserver.disconnect();
-    viewport.removeEventListener('mousedown', onMouseDown);
-    window.removeEventListener('mouseup', onMouseUp);
-    viewport.removeEventListener('mousemove', onMouseMove);
+    viewport.removeEventListener('pointerdown', onPointerDown);
+    window.removeEventListener('pointerup', onPointerUp);
+    viewport.removeEventListener('pointermove', onPointerMove);
     viewport.removeEventListener('wheel', onWheel);
     viewport.removeEventListener('contextmenu', preventDefault);
   };
