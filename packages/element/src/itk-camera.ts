@@ -10,7 +10,6 @@ import {
   LookAtParams,
   createCamera,
 } from '@itk-viewer/viewer/camera-machine.js';
-import { Ref, createRef, ref } from 'lit/directives/ref.js';
 import { SelectorController } from 'xstate-lit/dist/select-controller.js';
 
 const PAN_SPEED = 1;
@@ -27,9 +26,7 @@ const bindCamera = (
   const view = mat4.create();
 
   const updateView = () => {
-    camera.view(view);
-    mat4.invert(view, view);
-    onUpdate(view);
+    onUpdate(camera.view(view));
   };
 
   const resizeObserver = new ResizeObserver((entries) => {
@@ -44,8 +41,9 @@ const bindCamera = (
   let pan = false;
   let scale = false;
 
-  const onMouseDown = (e: MouseEvent) => {
+  const onPointerDown = (e: PointerEvent) => {
     e.preventDefault();
+
     if (e.button === 0) {
       rotate = true;
     } else if (e.button === 1) {
@@ -54,9 +52,9 @@ const bindCamera = (
       pan = true;
     }
   };
-  viewport.addEventListener('mousedown', onMouseDown);
+  viewport.addEventListener('pointerdown', onPointerDown);
 
-  const onMouseUp = (e: MouseEvent) => {
+  const onPointerUp = (e: PointerEvent) => {
     e.preventDefault();
     if (e.button === 0) {
       rotate = false;
@@ -66,42 +64,42 @@ const bindCamera = (
       pan = false;
     }
   };
-  window.addEventListener('mouseup', onMouseUp);
+  window.addEventListener('pointerup', onPointerUp);
 
-  let prevMouseX = 0;
-  let prevMouseY = 0;
+  let prevPointerX = 0;
+  let prevPointerY = 0;
 
-  const onMouseMove = (e: MouseEvent) => {
-    const mouseX = e.offsetX;
-    const mouseY = e.offsetY;
+  const onPointerMove = (e: PointerEvent) => {
+    const pointerX = e.offsetX;
+    const pointerY = e.offsetY;
 
     if (rotate) {
       camera.rotate(
-        [mouseX / width - 0.5, mouseY / height - 0.5],
-        [prevMouseX / width - 0.5, prevMouseY / height - 0.5],
+        [pointerX / width - 0.5, pointerY / height - 0.5],
+        [prevPointerX / width - 0.5, prevPointerY / height - 0.5],
       );
     }
 
     if (pan) {
       camera.pan([
-        (PAN_SPEED * (mouseX - prevMouseX)) / width,
-        (PAN_SPEED * (mouseY - prevMouseY)) / height,
+        (PAN_SPEED * (pointerX - prevPointerX)) / width,
+        (PAN_SPEED * (pointerY - prevPointerY)) / height,
       ]);
     }
 
     if (scale) {
-      const d = mouseY - prevMouseY;
+      const d = pointerY - prevPointerY;
       if (d) camera.distance *= Math.exp(d / height);
     }
 
-    prevMouseX = mouseX;
-    prevMouseY = mouseY;
+    prevPointerX = pointerX;
+    prevPointerY = pointerY;
 
     if (!rotate && !pan && !scale) return;
 
     updateView();
   };
-  viewport.addEventListener('mousemove', onMouseMove);
+  viewport.addEventListener('pointermove', onPointerMove);
 
   const onWheel = (e: WheelEvent) => {
     e.preventDefault();
@@ -114,18 +112,18 @@ const bindCamera = (
   const preventDefault = (e: Event) => e.preventDefault();
   viewport.addEventListener('contextmenu', preventDefault);
 
-  const unbind = () => {
+  const unBind = () => {
     resizeObserver.disconnect();
-    viewport.removeEventListener('mousedown', onMouseDown);
-    window.removeEventListener('mouseup', onMouseUp);
-    viewport.removeEventListener('mousemove', onMouseMove);
+    viewport.removeEventListener('pointerdown', onPointerDown);
+    window.removeEventListener('pointerup', onPointerUp);
+    viewport.removeEventListener('pointermove', onPointerMove);
     viewport.removeEventListener('wheel', onWheel);
     viewport.removeEventListener('contextmenu', preventDefault);
   };
 
   updateView();
 
-  return unbind;
+  return unBind;
 };
 
 @customElement('itk-camera')
@@ -135,11 +133,11 @@ export class ItkCamera extends LitElement {
 
   camera: Camera;
 
+  oldLookAt: LookAtParams | undefined;
   lookAt: SelectorController<Camera, LookAtParams>;
 
   cameraController: OrbitCamera;
-  unbind: (() => unknown) | undefined;
-  container: Ref<HTMLElement> = createRef();
+  unBind: (() => unknown) | undefined;
 
   constructor() {
     super();
@@ -152,19 +150,10 @@ export class ItkCamera extends LitElement {
     );
 
     this.cameraController = createOrbitCamera([0, 0, -1], [0, 0, 0], [0, 1, 0]);
-
-    const pose = this.cameraController.view();
-    this.camera.send({
-      type: 'setPose',
-      pose,
-    });
   }
 
   firstUpdated(): void {
-    const container = this.container.value;
-    if (!container) throw new Error('container not found');
-
-    this.unbind = bindCamera(this.cameraController, container, (pose) => {
+    this.unBind = bindCamera(this.cameraController, this, (pose) => {
       this.camera.send({
         type: 'setPose',
         pose,
@@ -174,7 +163,7 @@ export class ItkCamera extends LitElement {
 
   disconnectedCallback(): void {
     super.disconnectedCallback();
-    this.unbind?.();
+    this.unBind?.();
   }
 
   willUpdate(changedProperties: PropertyValues<this>) {
@@ -182,21 +171,15 @@ export class ItkCamera extends LitElement {
       this.viewport?.send({ type: 'setCamera', camera: this.camera });
     }
 
-    const { eye, target, up } = this.lookAt.value;
-    this.cameraController.lookAt(eye, target, up);
-    const pose = this.cameraController.view();
-    this.camera.send({
-      type: 'setPose',
-      pose,
-    });
+    if (this.lookAt.value !== this.oldLookAt) {
+      this.oldLookAt = this.lookAt.value;
+      const { eye, center, up } = this.lookAt.value;
+      this.cameraController.lookAt(eye, center, up);
+    }
   }
 
   render() {
-    return html`
-      <div ${ref(this.container)}>
-        <slot></slot>
-      </div>
-    `;
+    return html`<slot></slot>`;
   }
 }
 

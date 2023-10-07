@@ -25,6 +25,7 @@ type RendererProps = {
   cameraPose: ReadonlyMat4;
   image?: string;
   imageScale?: number;
+  renderSize: [number, number];
 };
 
 // https://stackoverflow.com/a/74823834
@@ -90,7 +91,8 @@ type Event =
   | SlowFps
   | FastFps
   | CameraPoseUpdated
-  | { type: 'done.invoke.updateImageScale'; output: number };
+  | { type: 'done.invoke.updateImageScale'; output: number }
+  | { type: 'setResolution'; resolution: [number, number] };
 
 type ActionArgs = { event: Event; context: Context };
 
@@ -139,12 +141,13 @@ export const remoteMachine = createMachine({
     rendererProps: {
       density: 30,
       cameraPose: mat4.create(),
+      renderSize: [1, 1] as [number, number],
     },
     queuedRendererEvents: [],
     stagedRendererEvents: [],
     toRendererCoordinateSystem: mat4.create(),
     maxImageBytes: MAX_IMAGE_BYTES_DEFAULT,
-    ...input, // captures injected viewport
+    ...input,
   }),
   type: 'parallel',
   states: {
@@ -228,6 +231,16 @@ export const remoteMachine = createMachine({
               return {
                 type: 'updateRenderer' as const,
                 props: { cameraPose: event.pose },
+              };
+            }),
+          ],
+        },
+        setResolution: {
+          actions: [
+            raise(({ event }) => {
+              return {
+                type: 'updateRenderer' as const,
+                props: { renderSize: event.resolution },
               };
             }),
           ],
