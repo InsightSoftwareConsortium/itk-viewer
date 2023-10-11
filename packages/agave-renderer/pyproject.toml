@@ -27,6 +27,7 @@ classifiers = [
 dependencies = [
   "agave-pyclient",
   "hypha",
+  "aiortc",
   "itkwasm-htj2k",
   "numpy",
   "pillow",

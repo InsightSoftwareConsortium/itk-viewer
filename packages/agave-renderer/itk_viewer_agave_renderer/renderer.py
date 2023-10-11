@@ -7,11 +7,15 @@ from enum import Enum, auto
 import functools
 
 import agave_pyclient as agave
-from imjoy_rpc.hypha import connect_to_server
+from imjoy_rpc.hypha import connect_to_server, register_rtc_service
 from itkwasm_htj2k import encode
 from itkwasm import Image, ImageType, PixelTypes, IntTypes
 import numpy as np
 from PIL import Image as PILImage
+
+# Should match constant in connected clients.
+# The WebRTC service id is different from this
+RENDERER_SERVICE_ID = "agave-renderer"
 
 
 class AgaveRendererMemoryRedraw(agave.AgaveRenderer):
@@ -112,21 +116,22 @@ class Renderer:
         hypha_server_url,
         load_image_into_agave_fn,
         visibility="public",
-        identifier="agave-renderer",
+        identifier="agave-renderer-rtc",
     ):
+        self.load_image = functools.partial(load_image_into_agave_fn, self)
+
+        service_id = identifier
+        client_id = service_id + "-client"
         server = await connect_to_server(
             {
-                "name": "agave-renderer-client",
+                "client_id": client_id,
                 "server_url": hypha_server_url,
             }
         )
 
-        self.load_image = functools.partial(load_image_into_agave_fn, self)
-
         await server.register_service(
             {
-                "name": "Agave Renderer",
-                "id": identifier,
+                "id": RENDERER_SERVICE_ID,
                 "config": {
                     "visibility": visibility,
                     "require_context": False,
@@ -138,4 +143,13 @@ class Renderer:
                 "updateRenderer": self.update_renderer,
             }
         )
+
+        await register_rtc_service(
+            server,
+            service_id=service_id,
+            config={
+                "visibility": "public",
+            },
+        )
+
         print("Renderer is ready to receive request!", server.config, flush=True)

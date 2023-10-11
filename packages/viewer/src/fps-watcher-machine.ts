@@ -1,6 +1,6 @@
 import { assign, createMachine, sendParent } from 'xstate';
 
-const SAMPLE_SIZE = 3;
+const SAMPLE_SIZE = 30;
 
 const SLOW_FPS = 15;
 const FAST_FPS = 30;
