@@ -153,8 +153,8 @@ omit = [
 ]
 
 [tool.coverage.paths]
-itk_viewer_remote_image = ["itk_viewer_remote_image", "*/itk-viewer-agave-renderer/itk_viewer_remote_image"]
-tests = ["tests", "*/itk-viewer-agave-renderer/tests"]
+itk_viewer_remote_image = ["itk_viewer_remote_image", "*/itk-viewer-remote-image/itk_viewer_remote_image"]
+tests = ["tests", "*/itk-viewer-remote-image/tests"]
 
 [tool.coverage.report]
 exclude_lines = [

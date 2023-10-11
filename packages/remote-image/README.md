@@ -1,7 +1,7 @@
-# ITK Viewer Agave Renderer
+# ITK Viewer Remote Image
 
-[![PyPI - Version](https://img.shields.io/pypi/v/itk-viewer-agave-renderer.svg)](https://pypi.org/project/itk-viewer-agave-renderer)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/itk-viewer-agave-renderer.svg)](https://pypi.org/project/itk-viewer-agave-renderer)
+[![PyPI - Version](https://img.shields.io/pypi/v/itk-viewer-remote-image.svg)](https://pypi.org/project/itk-viewer-remote-image)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/itk-viewer-remote-image.svg)](https://pypi.org/project/itk-viewer-remote-image)
 
 ---
 
@@ -13,9 +13,9 @@
 ## Installation
 
 ```console
-pip install itk-viewer-agave-renderer
+pip install itk-viewer-remote-image
 ```
 
 ## License
 
-`itk-viewer-agave-renderer` is distributed under the terms of the [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html) license.
+`itk-viewer-remote-image` is distributed under the terms of the [Apache-2.0](https://spdx.org/licenses/Apache-2.0.html) license.
