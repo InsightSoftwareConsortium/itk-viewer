@@ -91,7 +91,7 @@ type Event =
   | SlowFps
   | FastFps
   | CameraPoseUpdated
-  | { type: 'done.invoke.updateImageScale'; output: number }
+  | { type: 'xstate.done.actor.updateImageScale'; output: number }
   | { type: 'setResolution'; resolution: [number, number] };
 
 type ActionArgs = { event: Event; context: Context };
@@ -331,8 +331,8 @@ export const remoteMachine = createMachine({
                 },
                 raiseImageScale: {
                   entry: raise(({ event }) => {
-                    if (event.type !== 'done.invoke.updateImageScale')
-                      throw new Error('Unexpected event type');
+                    if (event.type !== 'xstate.done.actor.updateImageScale')
+                      throw new Error('Unexpected event type: ' + event.type);
                     return {
                       type: 'updateRenderer' as const,
                       props: { imageScale: event.output },

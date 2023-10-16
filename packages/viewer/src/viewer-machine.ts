@@ -22,32 +22,6 @@ type context = {
   images: Record<string, MultiscaleSpatialImage>;
 };
 
-const addViewport = assign({
-  viewports: ({
-    event: { name, viewport },
-    context,
-  }: {
-    event: addViewportEvent;
-    context: context;
-  }) => ({
-    ...context.viewports,
-    [name]: viewport,
-  }),
-});
-
-const assignImage = assign({
-  images: ({
-    event: { name, image },
-    context,
-  }: {
-    event: addImageEvent;
-    context: context;
-  }) => ({
-    ...context.images,
-    [name]: image,
-  }),
-});
-
 const sendToViewports = ({
   event: { name },
   context: { images, viewports },
@@ -75,10 +49,35 @@ export const viewerMachine = createMachine({
     active: {
       on: {
         addViewport: {
-          actions: addViewport,
+          actions: assign({
+            viewports: ({
+              event: { name, viewport },
+              context,
+            }: {
+              event: addViewportEvent;
+              context: context;
+            }) => ({
+              ...context.viewports,
+              [name]: viewport,
+            }),
+          }),
         },
         addImage: {
-          actions: [assignImage, sendToViewports],
+          actions: [
+            assign({
+              images: ({
+                event: { name, image },
+                context,
+              }: {
+                event: addImageEvent;
+                context: context;
+              }) => ({
+                ...context.images,
+                [name]: image,
+              }),
+            }),
+            sendToViewports,
+          ],
         },
       },
     },
