@@ -6,6 +6,9 @@ import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
 
 export type { Image } from '@itk-wasm/htj2k';
 
+// Should match constant in agave-renderer::renderer.py
+const RENDERER_SERVICE_ID = 'agave-renderer';
+
 type RenderedFrame = {
   frame: Image;
   renderTime: number;
@@ -41,13 +44,13 @@ const createHyphaRenderer = async (context: Context) => {
     throw new Error('No server url provided');
   }
 
-  const config = {
-    client_id: 'remote-renderer-test-client',
-    name: 'remote_renderer_client',
+  const server = await hyphaWebsocketClient.connectToServer({
+    name: 'remote-renderer-client',
     server_url: serverUrl,
-  };
-  const hypha = await hyphaWebsocketClient.connectToServer(config);
-  const renderer = await hypha.getService(serviceId);
+  });
+
+  const pc = await hyphaWebsocketClient.getRTCService(server, serviceId);
+  const renderer = await pc.getService(RENDERER_SERVICE_ID);
   await renderer.setup();
 
   return renderer;
