@@ -1,4 +1,4 @@
-import { Dimension, SpatialDimensions } from './types.js';
+import { Bounds, Dimension, SpatialDimensions } from './types.js';
 
 export const CXYZT = Object.freeze(['c', 'x', 'y', 'z', 't'] as const); // viewer indexing
 
@@ -30,7 +30,7 @@ export const orderBy =
       }),
     );
 
-export const chunkArray = <T>(chunkSize: number, array: Array<T>) => {
+export const chunk = <T>(chunkSize: number, array: Array<T>) => {
   const chunks = [];
   for (let i = 0; i < array.length; i += chunkSize) {
     chunks.push(array.slice(i, i + chunkSize));
@@ -43,3 +43,14 @@ export const nonNullable = <T>(value: T): value is NonNullable<T> => {
 };
 
 export const xyz = ['x', 'y', 'z'] as SpatialDimensions;
+
+const INIT_BOUNDS = Object.freeze([
+  Number.MAX_VALUE,
+  -Number.MAX_VALUE, // X
+  Number.MAX_VALUE,
+  -Number.MAX_VALUE, // Y
+  Number.MAX_VALUE,
+  -Number.MAX_VALUE, // Z
+] as Bounds);
+
+export const createBounds = () => [...INIT_BOUNDS] as Bounds;

@@ -7,7 +7,7 @@ import { getDtype } from '@itk-viewer/wasm-utils/dtypeUtils.js';
 
 import { componentTypeToTypedArray } from './componentTypeToTypedArray.js';
 import {
-  chunkArray,
+  chunk,
   CXYZT,
   ensuredDims,
   nonNullable,
@@ -180,7 +180,7 @@ export const worldBoundsToIndexBounds = ({
 
   const imageBounds = transformBounds(worldToIndex, bounds);
   // clamp to existing integer indexes
-  const imageBoundsByDim = chunkArray(2, imageBounds);
+  const imageBoundsByDim = chunk(2, imageBounds);
   const spaceBounds = (['x', 'y', 'z'] as const).map((dim, idx) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const [min, max] = fullIndexBoundsWithZCT.get(dim)!;

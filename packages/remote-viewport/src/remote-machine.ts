@@ -16,7 +16,10 @@ import {
   MultiscaleSpatialImage,
   getVoxelCount,
   getBytes,
+  worldBoundsToIndexBounds,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { Bounds, ReadOnlyDimensionBounds } from '@itk-viewer/io/types.js';
+import { createBounds } from '@itk-viewer/io/dimensionUtils.js';
 
 const MAX_IMAGE_BYTES_DEFAULT = 4000 * 1000 * 1000; // 4000 MB
 
@@ -25,6 +28,7 @@ type RendererProps = {
   cameraPose: ReadonlyMat4;
   image?: string;
   imageScale?: number;
+  imageIndexClipBounds?: ReadOnlyDimensionBounds;
   renderSize: [number, number];
 };
 
@@ -47,8 +51,12 @@ export type Context = {
   queuedRendererEvents: RendererEntries;
   stagedRendererEvents: RendererEntries;
   viewport: ActorRefFrom<typeof viewportMachine>;
-  toRendererCoordinateSystem: ReadonlyMat4;
   maxImageBytes: number;
+  // computed image values
+  toRendererCoordinateSystem: ReadonlyMat4;
+  imageWorldBounds: Bounds;
+  clipBounds: Bounds;
+  imageWorldToIndex: ReadonlyMat4;
 };
 
 type ConnectEvent = {
@@ -92,7 +100,8 @@ type Event =
   | FastFps
   | CameraPoseUpdated
   | { type: 'xstate.done.actor.updateImageScale'; output: number }
-  | { type: 'setResolution'; resolution: [number, number] };
+  | { type: 'setResolution'; resolution: [number, number] }
+  | { type: 'setClipBounds'; clipBounds: Bounds };
 
 type ActionArgs = { event: Event; context: Context };
 
@@ -119,7 +128,6 @@ const checkTargetScaleExists = ({ event, context }: ActionArgs) => {
   return targetScale !== currentScale;
 };
 
-// Assumes image.scaleIndexToWorld has been called with target scale
 const checkMemory = async ({ event, context }: ActionArgs) => {
   const image = context.viewport.getSnapshot().context.image;
   if (!image) throw new Error('image found');
@@ -145,7 +153,13 @@ export const remoteMachine = createMachine({
     },
     queuedRendererEvents: [],
     stagedRendererEvents: [],
+
+    // computed async image values
     toRendererCoordinateSystem: mat4.create(),
+    imageWorldBounds: createBounds(),
+    clipBounds: createBounds(),
+    imageWorldToIndex: mat4.create(),
+
     maxImageBytes: MAX_IMAGE_BYTES_DEFAULT,
     ...input,
   }),
@@ -155,19 +169,22 @@ export const remoteMachine = createMachine({
     // Is an actor because MultiscaleSpatialImage.scaleIndexToWorld is async due to coords
     imageProcessor: {
       initial: 'idle',
+      on: {
+        setImage: '.processing',
+      },
       states: {
-        idle: {
-          on: {
-            setImage: 'processing',
-          },
-        },
+        idle: {},
         processing: {
           invoke: {
             id: 'imageProcessor',
             src: 'imageProcessor',
-            input: ({ event }) => ({
-              event,
-            }),
+            input: ({ context }) => {
+              const { image } = context.viewport.getSnapshot().context;
+              return {
+                image,
+                imageScale: image?.coarsestScale,
+              };
+            },
             onDone: {
               actions: [
                 assign({
@@ -176,6 +193,11 @@ export const remoteMachine = createMachine({
                       output: { toRendererCoordinateSystem },
                     },
                   }) => toRendererCoordinateSystem,
+                  imageWorldBounds: ({
+                    event: {
+                      output: { bounds },
+                    },
+                  }) => bounds,
                 }),
                 raise(
                   ({
@@ -192,8 +214,19 @@ export const remoteMachine = createMachine({
                     };
                   },
                 ),
+                raise(
+                  ({
+                    event: {
+                      output: { bounds },
+                    },
+                  }) => {
+                    return {
+                      type: 'setClipBounds' as const,
+                      clipBounds: bounds,
+                    };
+                  },
+                ),
               ],
-              target: 'idle',
             },
           },
         },
@@ -243,6 +276,38 @@ export const remoteMachine = createMachine({
                 props: { renderSize: event.resolution },
               };
             }),
+          ],
+        },
+        setClipBounds: {
+          actions: [
+            assign({
+              clipBounds: ({ event: { clipBounds } }) => clipBounds,
+            }),
+            raise(
+              ({
+                context: {
+                  viewport,
+                  clipBounds,
+                  imageWorldToIndex,
+                  rendererProps,
+                },
+              }) => {
+                const { imageScale } = rendererProps;
+                const { image } = viewport.getSnapshot().context;
+                if (!image || imageScale === undefined)
+                  throw new Error('image or imageScale not found');
+                const fullIndexBounds = image.getIndexBounds(imageScale);
+                const imageIndexClipBounds = worldBoundsToIndexBounds({
+                  bounds: clipBounds,
+                  fullIndexBounds,
+                  worldToIndex: imageWorldToIndex,
+                });
+                return {
+                  type: 'updateRenderer' as const,
+                  props: { imageIndexClipBounds },
+                };
+              },
+            ),
           ],
         },
       },
@@ -338,6 +403,36 @@ export const remoteMachine = createMachine({
                       props: { imageScale: event.output },
                     };
                   }),
+                  always: { target: 'computingImage' },
+                },
+                computingImage: {
+                  invoke: {
+                    id: 'imageProcessor',
+                    src: 'imageProcessor',
+                    input: ({ context }) => {
+                      const { image } = context.viewport.getSnapshot().context;
+                      return {
+                        image,
+                        imageScale: context.rendererProps.imageScale,
+                      };
+                    },
+                    onDone: {
+                      actions: [
+                        assign({
+                          toRendererCoordinateSystem: ({
+                            event: {
+                              output: { toRendererCoordinateSystem },
+                            },
+                          }) => toRendererCoordinateSystem,
+                          imageWorldBounds: ({
+                            event: {
+                              output: { bounds },
+                            },
+                          }) => bounds,
+                        }),
+                      ],
+                    },
+                  },
                 },
               },
             },

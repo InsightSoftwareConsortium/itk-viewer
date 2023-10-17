@@ -148,32 +148,26 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
         },
       ),
       // compute toRendererCoordinateSystem
-      imageProcessor: fromPromise(
-        async ({
-          input: {
-            event: { image },
-          },
-        }) => {
-          const bounds = await image.getWorldBounds(image.coarsestScale);
+      imageProcessor: fromPromise(async ({ input: { image, imageScale } }) => {
+        const bounds = await image.getWorldBounds(imageScale);
 
-          // Remove image origin offset to world origin
-          const imageOrigin = vec3.fromValues(bounds[0], bounds[2], bounds[4]);
-          const transform = mat4.fromTranslation(mat4.create(), imageOrigin);
+        // Remove image origin offset to world origin
+        const imageOrigin = vec3.fromValues(bounds[0], bounds[2], bounds[4]);
+        const transform = mat4.fromTranslation(mat4.create(), imageOrigin);
 
-          // match Agave by normalizing to largest dim
-          const wx = bounds[1] - bounds[0];
-          const wy = bounds[3] - bounds[2];
-          const wz = bounds[5] - bounds[4];
-          const maxDim = Math.max(wx, wy, wz);
-          const scale = vec3.fromValues(maxDim, maxDim, maxDim);
-          mat4.scale(transform, transform, scale);
+        // match Agave by normalizing to largest dim
+        const wx = bounds[1] - bounds[0];
+        const wy = bounds[3] - bounds[2];
+        const wz = bounds[5] - bounds[4];
+        const maxDim = Math.max(wx, wy, wz);
+        const scale = vec3.fromValues(maxDim, maxDim, maxDim);
+        mat4.scale(transform, transform, scale);
 
-          // invert to go from VTK to Agave
-          mat4.invert(transform, transform);
+        // invert to go from VTK to Agave
+        mat4.invert(transform, transform);
 
-          return { toRendererCoordinateSystem: transform, image };
-        },
-      ),
+        return { toRendererCoordinateSystem: transform, bounds, image };
+      }),
     },
   };
 };

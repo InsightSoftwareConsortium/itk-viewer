@@ -15,6 +15,8 @@ import type { Image } from '@itk-viewer/remote-viewport/remote-viewport.js';
 
 import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
+import { Bounds } from '@itk-viewer/io/types.js';
+import { chunk } from '@itk-viewer/io/dimensionUtils.js';
 
 @customElement('itk-remote-viewport')
 export class ItkRemoteViewport extends ItkViewport {
@@ -38,22 +40,33 @@ export class ItkRemoteViewport extends ItkViewport {
   frame: SelectorController<RemoteActor, Image | undefined>;
   lastFrameValue: Image | undefined = undefined;
 
+  bounds: SelectorController<
+    RemoteActor,
+    {
+      imageWorldBounds: Bounds;
+      clipBounds: Bounds;
+      clipBoundsWithNormalized: Array<readonly [number, number]>;
+    }
+  >;
+
   cleanDimension = (v: number) => Math.max(1, Math.floor(v));
 
-  _resizer = new ResizeObserver((entries: Array<ResizeObserverEntry>) => {
-    if (!entries.length) return;
+  private resizer = new ResizeObserver(
+    (entries: Array<ResizeObserverEntry>) => {
+      if (!entries.length) return;
 
-    const { width, height } = entries[0].contentRect;
-    const resolution = [width, height].map(this.cleanDimension) as [
-      number,
-      number,
-    ];
+      const { width, height } = entries[0].contentRect;
+      const resolution = [width, height].map(this.cleanDimension) as [
+        number,
+        number,
+      ];
 
-    this.actor.send({
-      type: 'setResolution',
-      resolution,
-    });
-  });
+      this.actor.send({
+        type: 'setResolution',
+        resolution,
+      });
+    },
+  );
 
   constructor() {
     super();
@@ -62,15 +75,39 @@ export class ItkRemoteViewport extends ItkViewport {
     );
     this.actor = viewport;
     this.remote = remote;
-    this.remoteOnline = new SelectorController(
-      this,
-      this.remote,
-      (state) => state?.matches('root.online') ?? false,
+    this.remoteOnline = new SelectorController(this, this.remote, (state) =>
+      state.matches('root.online'),
     );
     this.frame = new SelectorController(
       this,
       this.remote,
-      (state) => state?.context.frame,
+      (state) => state.context.frame,
+    );
+    this.bounds = new SelectorController(
+      this,
+      this.remote,
+      ({ context: { imageWorldBounds, clipBounds } }) => {
+        // Compute normalized bounds
+        const ranges = chunk(2, imageWorldBounds).map(
+          ([min, max]) => max - min,
+        );
+        const normalizedBounds = clipBounds.map(
+          (worldBound, index) =>
+            (100 * worldBound) / ranges[Math.floor(index / 2)],
+        );
+        const clipBoundsWithNormalized = clipBounds.map(
+          (bound, i) => [bound, normalizedBounds[i]] as const,
+        );
+
+        return { imageWorldBounds, clipBounds, clipBoundsWithNormalized };
+      },
+      (a, b) => {
+        if (!a || !b) return false;
+        return (
+          a.imageWorldBounds === b.imageWorldBounds &&
+          a.clipBounds === b.clipBounds
+        );
+      },
     );
   }
 
@@ -114,7 +151,7 @@ export class ItkRemoteViewport extends ItkViewport {
     const canvas = this.canvas.value;
     if (!canvas) throw new Error('canvas not found');
     this.canvasCtx = canvas.getContext('2d');
-    this._resizer.observe(canvas);
+    this.resizer.observe(canvas);
   }
 
   startConnection(): void {
@@ -156,6 +193,29 @@ export class ItkRemoteViewport extends ItkViewport {
     this.density = target.valueAsNumber;
   }
 
+  onBounds(event: Event, index: number) {
+    const target = event.target as HTMLInputElement;
+    const normalizedBound = target.valueAsNumber;
+    // Find dimension range to go from normalized to world bounds
+    const { imageWorldBounds } = this.remote.getSnapshot().context;
+    if (!imageWorldBounds) {
+      console.error('No image world bounds');
+      return;
+    }
+    const [lowerBound, upperBound] =
+      index % 2 === 0 ? [index, index + 1] : [index - 1, index];
+    const range = imageWorldBounds[upperBound] - imageWorldBounds[lowerBound];
+    const currentBounds = [
+      ...this.remote.getSnapshot().context.clipBounds,
+    ] as Bounds;
+    currentBounds[index] = range * (normalizedBound / 100);
+
+    this.remote.send({
+      type: 'setClipBounds',
+      clipBounds: currentBounds,
+    });
+  }
+
   render() {
     return html`
       <h1>Remote viewport</h1>
@@ -171,6 +231,23 @@ export class ItkRemoteViewport extends ItkViewport {
           step="1.0"
         />
       </div>
+
+      ${this.bounds.value.clipBoundsWithNormalized.map(
+        ([world, normalized], index) => html`
+          <label
+            >Bound: ${world}
+            <input
+              .valueAsNumber=${normalized}
+              @change="${(e: Event) => this.onBounds(e, index)}"
+              type="range"
+              min="0"
+              max="100.0"
+              step="1"
+            />
+          </label>
+        `,
+      )}
+
       <itk-camera ${ref(this.camera)} .viewport=${this.actor} class="camera">
         <canvas ${ref(this.canvas)} class="canvas"></canvas>
       </itk-camera>
