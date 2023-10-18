@@ -15,8 +15,8 @@ import { viewportMachine } from '@itk-viewer/viewer/viewport-machine.js';
 import {
   MultiscaleSpatialImage,
   getVoxelCount,
-  getBytes,
   worldBoundsToIndexBounds,
+  getBytes,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Bounds, ReadOnlyDimensionBounds } from '@itk-viewer/io/types.js';
 import { createBounds } from '@itk-viewer/io/dimensionUtils.js';
@@ -111,32 +111,17 @@ const getTargetScale = ({ event, context }: ActionArgs) => {
     throw new Error('image or imageScale not found');
 
   const currentScale = context.rendererProps.imageScale;
-  const { type } = event;
-
-  const scaleChange = type === 'slowFps' ? 1 : -1;
+  const scaleChange = event.type === 'slowFps' ? 1 : -1;
   const targetScale = currentScale + scaleChange;
   return Math.max(0, Math.min(image.coarsestScale, targetScale));
 };
 
-const checkTargetScaleExists = ({ event, context }: ActionArgs) => {
-  const image = context.viewport.getSnapshot().context.image;
-  if (!image || context.rendererProps.imageScale === undefined)
-    throw new Error('image or imageScale not found');
-
-  const targetScale = getTargetScale({ event, context });
-  const currentScale = context.rendererProps.imageScale;
-  return targetScale !== currentScale;
-};
-
-const checkMemory = async ({ event, context }: ActionArgs) => {
-  const image = context.viewport.getSnapshot().context.image;
-  if (!image) throw new Error('image found');
-
-  const targetScale = getTargetScale({ event, context });
+const computeBytes = async (
+  image: MultiscaleSpatialImage,
+  targetScale: number,
+) => {
   const voxelCount = await getVoxelCount(image, targetScale);
-  const imageBytes = getBytes(image, voxelCount);
-
-  return imageBytes < context.maxImageBytes;
+  return getBytes(image, voxelCount);
 };
 
 export const remoteMachine = createMachine({
@@ -176,7 +161,7 @@ export const remoteMachine = createMachine({
         idle: {},
         processing: {
           invoke: {
-            id: 'imageProcessor',
+            id: 'imageProcessorFirst',
             src: 'imageProcessor',
             input: ({ context }) => {
               const { image } = context.viewport.getSnapshot().context;
@@ -383,10 +368,13 @@ export const remoteMachine = createMachine({
                         context.viewport.getSnapshot().context.image;
                       if (!image) return; // may be rendering without image
 
-                      if (!checkTargetScaleExists({ event, context })) return;
-                      if (!(await checkMemory({ event, context }))) return;
+                      const targetScale = getTargetScale({ event, context });
+                      if (targetScale === context.rendererProps.imageScale)
+                        return;
+                      const imageBytes = await computeBytes(image, targetScale);
+                      if (imageBytes > context.maxImageBytes) return;
 
-                      return getTargetScale({ event, context });
+                      return targetScale;
                     }),
                     onDone: {
                       guard: ({ event }) => event.output !== undefined,
@@ -441,7 +429,7 @@ export const remoteMachine = createMachine({
               states: {
                 render: {
                   invoke: {
-                    id: 'render',
+                    id: 'renderer',
                     src: 'renderer',
                     input: ({ context }: { context: Context }) => ({
                       events: [...context.stagedRendererEvents],
@@ -464,8 +452,8 @@ export const remoteMachine = createMachine({
                     onError: {
                       actions: (e) =>
                         console.error(
-                          `Error while updating render.`,
-                          e.event.data,
+                          `Error while updating renderer.`,
+                          (e.event.data as Error).stack ?? e.event.data,
                         ),
                       target: 'idle', // soldier on
                     },

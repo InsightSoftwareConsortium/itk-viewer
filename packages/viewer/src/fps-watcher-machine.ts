@@ -70,8 +70,8 @@ export const fpsWatcher = createMachine(
     guards: {
       checkEnoughSamples: ({ context: { samples } }) =>
         samples.length >= SAMPLE_SIZE,
-      checkSlow: ({ context: { average } }) => average < SLOW_FRAME_TIME,
-      checkFast: ({ context: { average } }) => average > FAST_FRAME_TIME,
+      checkSlow: ({ context: { average } }) => average > SLOW_FRAME_TIME,
+      checkFast: ({ context: { average } }) => average < FAST_FRAME_TIME,
     },
   },
 );
