@@ -91,6 +91,21 @@ type CameraPoseUpdated = {
   pose: ReadonlyMat4;
 };
 
+type ImageProcessorDone = {
+  type: 'xstate.done.actor.imageProcessor';
+  output: {
+    bounds: Bounds;
+    toRendererCoordinateSystem: ReadonlyMat4;
+    imageScale: number;
+    image: MultiscaleSpatialImage;
+  };
+};
+
+type UpdateImageScaleDone = {
+  type: 'xstate.done.actor.updateImageScale';
+  output: number;
+};
+
 type Event =
   | ConnectEvent
   | UpdateRendererEvent
@@ -99,16 +114,24 @@ type Event =
   | SlowFps
   | FastFps
   | CameraPoseUpdated
-  | { type: 'xstate.done.actor.updateImageScale'; output: number }
+  | UpdateImageScaleDone
+  | ImageProcessorDone
   | { type: 'setResolution'; resolution: [number, number] }
-  | { type: 'setClipBounds'; clipBounds: Bounds };
+  | { type: 'setClipBounds'; clipBounds: Bounds; imageScale?: number }
+  | { type: 'setImageScale'; imageScale: number };
 
 type ActionArgs = { event: Event; context: Context };
 
+const getImage = (context: Context) => {
+  const { image } = context.viewport.getSnapshot().context;
+  if (!image) throw new Error('Image not found');
+  return image;
+};
+
 const getTargetScale = ({ event, context }: ActionArgs) => {
-  const image = context.viewport.getSnapshot().context.image;
-  if (!image || context.rendererProps.imageScale === undefined)
-    throw new Error('image or imageScale not found');
+  const image = getImage(context);
+  if (context.rendererProps.imageScale === undefined)
+    throw new Error('imageScale not found');
 
   const currentScale = context.rendererProps.imageScale;
   const scaleChange = event.type === 'slowFps' ? 1 : -1;
@@ -150,24 +173,57 @@ export const remoteMachine = createMachine({
   }),
   type: 'parallel',
   states: {
-    // imageProcessor computes toRendererCoordinateSystem.
-    // Is an actor because MultiscaleSpatialImage.scaleIndexToWorld is async due to coords
     imageProcessor: {
       initial: 'idle',
       on: {
-        setImage: '.processing',
+        setImage: '.updatingScale',
+        setImageScale: '.updatingScale',
       },
       states: {
         idle: {},
-        processing: {
+        updatingScale: {
+          // Ensure imageScale is not the same as before and fits in memory
+          id: 'updateImageScale',
           invoke: {
-            id: 'imageProcessorFirst',
+            input: ({ context, event }) => {
+              const image = getImage(context);
+              const getImageScale = () => {
+                if (event.type === 'setImageScale') return event.imageScale;
+                if (event.type === 'setImage') return image.coarsestScale;
+                throw new Error('Unexpected event type: ' + event.type);
+              };
+              const imageScale = getImageScale();
+              return {
+                context,
+                imageScale,
+              };
+            },
+            src: fromPromise(async ({ input: { imageScale, context } }) => {
+              const image = getImage(context);
+
+              if (imageScale === context.rendererProps.imageScale) return;
+
+              const imageBytes = await computeBytes(image, imageScale);
+              if (imageBytes > context.maxImageBytes) return;
+
+              return imageScale;
+            }),
+            onDone: {
+              guard: ({ event }) => event.output !== undefined,
+              target: 'updatingComputedValues',
+            },
+          },
+        },
+        updatingComputedValues: {
+          // For new image scale, compute imageWorldBounds, imageWorldToIndex, toRendererCoordinateSystem
+          invoke: {
             src: 'imageProcessor',
-            input: ({ context }) => {
-              const { image } = context.viewport.getSnapshot().context;
+            input: ({ context, event }) => {
+              const image = getImage(context);
+              const imageScale = (event as UpdateImageScaleDone).output;
               return {
                 image,
-                imageScale: image?.coarsestScale,
+                imageScale,
               };
             },
             onDone: {
@@ -184,36 +240,41 @@ export const remoteMachine = createMachine({
                     },
                   }) => bounds,
                 }),
-                raise(
-                  ({
-                    event: {
-                      output: { image },
-                    },
-                  }) => {
-                    return {
-                      type: 'updateRenderer' as const,
-                      props: {
-                        image: image.name,
-                        imageScale: image.coarsestScale,
-                      },
-                    };
-                  },
-                ),
-                raise(
-                  ({
-                    event: {
-                      output: { bounds },
-                    },
-                  }) => {
-                    return {
-                      type: 'setClipBounds' as const,
-                      clipBounds: bounds,
-                    };
-                  },
-                ),
               ],
+              target: 'checkingFirstImage',
             },
           },
+        },
+        checkingFirstImage: {
+          always: [
+            {
+              guard: ({ context }) => context.rendererProps.image === undefined,
+              target: 'initClipBounds',
+            },
+            { target: 'sendingToRenderer' },
+          ],
+        },
+        initClipBounds: {
+          entry: raise(({ event }) => {
+            return {
+              type: 'setClipBounds' as const,
+              clipBounds: (event as ImageProcessorDone).output.bounds,
+              imageScale: (event as ImageProcessorDone).output.imageScale,
+            };
+          }),
+          always: 'sendingToRenderer',
+        },
+        sendingToRenderer: {
+          entry: raise(({ event }) => {
+            const { image, imageScale } = (event as ImageProcessorDone).output;
+            return {
+              type: 'updateRenderer' as const,
+              props: {
+                image: image.name,
+                imageScale,
+              },
+            };
+          }),
         },
       },
     },
@@ -276,8 +337,9 @@ export const remoteMachine = createMachine({
                   imageWorldToIndex,
                   rendererProps,
                 },
+                event,
               }) => {
-                const { imageScale } = rendererProps;
+                const imageScale = event.imageScale ?? rendererProps.imageScale;
                 const { image } = viewport.getSnapshot().context;
                 if (!image || imageScale === undefined)
                   throw new Error('image or imageScale not found');
@@ -347,80 +409,20 @@ export const remoteMachine = createMachine({
             imageScaleUpdater: {
               on: {
                 slowFps: {
-                  target: '.updatingScale',
-                },
-                fastFps: {
-                  target: '.updatingScale',
-                },
-              },
-              initial: 'idle',
-              states: {
-                idle: {},
-                updatingScale: {
-                  invoke: {
-                    id: 'updateImageScale',
-                    input: ({ context, event }) => ({
-                      context,
-                      event,
-                    }),
-                    src: fromPromise(async ({ input: { event, context } }) => {
-                      const image =
-                        context.viewport.getSnapshot().context.image;
-                      if (!image) return; // may be rendering without image
-
-                      const targetScale = getTargetScale({ event, context });
-                      if (targetScale === context.rendererProps.imageScale)
-                        return;
-                      const imageBytes = await computeBytes(image, targetScale);
-                      if (imageBytes > context.maxImageBytes) return;
-
-                      return targetScale;
-                    }),
-                    onDone: {
-                      guard: ({ event }) => event.output !== undefined,
-                      target: 'raiseImageScale',
-                    },
-                  },
-                },
-                raiseImageScale: {
-                  entry: raise(({ event }) => {
-                    if (event.type !== 'xstate.done.actor.updateImageScale')
-                      throw new Error('Unexpected event type: ' + event.type);
+                  actions: raise(({ context, event }) => {
                     return {
-                      type: 'updateRenderer' as const,
-                      props: { imageScale: event.output },
+                      type: 'setImageScale' as const,
+                      imageScale: getTargetScale({ context, event }),
                     };
                   }),
-                  always: { target: 'computingImage' },
                 },
-                computingImage: {
-                  invoke: {
-                    id: 'imageProcessor',
-                    src: 'imageProcessor',
-                    input: ({ context }) => {
-                      const { image } = context.viewport.getSnapshot().context;
-                      return {
-                        image,
-                        imageScale: context.rendererProps.imageScale,
-                      };
-                    },
-                    onDone: {
-                      actions: [
-                        assign({
-                          toRendererCoordinateSystem: ({
-                            event: {
-                              output: { toRendererCoordinateSystem },
-                            },
-                          }) => toRendererCoordinateSystem,
-                          imageWorldBounds: ({
-                            event: {
-                              output: { bounds },
-                            },
-                          }) => bounds,
-                        }),
-                      ],
-                    },
-                  },
+                fastFps: {
+                  actions: raise(({ context, event }) => {
+                    return {
+                      type: 'setImageScale' as const,
+                      imageScale: getTargetScale({ context, event }),
+                    };
+                  }),
                 },
               },
             },

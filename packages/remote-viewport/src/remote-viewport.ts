@@ -147,7 +147,7 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
           return { frame, renderTime };
         },
       ),
-      // compute toRendererCoordinateSystem
+      // Computes world bounds and transform from VTK to Agave coordinate system
       imageProcessor: fromPromise(async ({ input: { image, imageScale } }) => {
         const bounds = await image.getWorldBounds(imageScale);
 
@@ -166,7 +166,12 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
         // invert to go from VTK to Agave
         mat4.invert(transform, transform);
 
-        return { toRendererCoordinateSystem: transform, bounds, image };
+        return {
+          toRendererCoordinateSystem: transform,
+          bounds,
+          image,
+          imageScale,
+        };
       }),
     },
   };
