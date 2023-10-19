@@ -7,12 +7,12 @@ import { getDtype } from '@itk-viewer/wasm-utils/dtypeUtils.js';
 
 import { componentTypeToTypedArray } from './componentTypeToTypedArray.js';
 import {
-  chunkArray,
+  chunk,
   CXYZT,
   ensuredDims,
   nonNullable,
   orderBy,
-  xyz,
+  XYZ,
 } from './dimensionUtils.js';
 import { transformBounds } from './transformBounds.js';
 import {
@@ -180,7 +180,7 @@ export const worldBoundsToIndexBounds = ({
 
   const imageBounds = transformBounds(worldToIndex, bounds);
   // clamp to existing integer indexes
-  const imageBoundsByDim = chunkArray(2, imageBounds);
+  const imageBoundsByDim = chunk(2, imageBounds);
   const spaceBounds = (['x', 'y', 'z'] as const).map((dim, idx) => {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const [min, max] = fullIndexBoundsWithZCT.get(dim)!;
@@ -541,8 +541,7 @@ export const getVoxelCount = async (
   const scaleInfo = image.scaleInfos[scale];
 
   if (!bounds) {
-    return xyz
-      .map((dim) => scaleInfo.arrayShape.get(dim))
+    return XYZ.map((dim) => scaleInfo.arrayShape.get(dim))
       .filter(nonNullable) // may not have z dim
       .reduce((voxels, dimSize) => voxels * dimSize, 1);
   }
@@ -556,12 +555,10 @@ export const getVoxelCount = async (
     fullIndexBounds,
     worldToIndex: mat4.invert(mat4.create(), indexToWorld),
   });
-  return xyz
-    .map((dim) => {
-      const [start, end] = indexBounds.get(dim)!;
-      return end - start + 1; // plus 1 as bounds are inclusive
-    })
-    .reduce((voxels, dimSize) => voxels * dimSize, 1);
+  return XYZ.map((dim) => {
+    const [start, end] = indexBounds.get(dim)!;
+    return end - start + 1; // plus 1 as bounds are inclusive
+  }).reduce((voxels, dimSize) => voxels * dimSize, 1);
 };
 
 export const getBytes = (

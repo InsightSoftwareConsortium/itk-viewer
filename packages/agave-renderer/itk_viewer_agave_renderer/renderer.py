@@ -56,6 +56,25 @@ class Renderer:
         self.agave = AgaveRendererMemoryRedraw()
         self.agave.set_resolution(self.width, self.height)
 
+        self.agave.skylight_top_color(1, 1, 1)
+        self.agave.skylight_middle_color(1, 1, 1)
+        self.agave.skylight_bottom_color(1, 1, 1)
+        self.agave.light_pos(0, 10, 0, 1.5708)
+        self.agave.light_color(0, 100, 100, 100)
+        self.agave.light_size(0, 1, 1)
+        self.agave.background_color(0, 0, 0)
+        self.agave.exposure(0.75)
+
+        self.agave.show_bounding_box(1)
+        self.agave.bounding_box_color(1, 1, 1)
+        self.agave.render_iterations(1)
+        self.agave.set_primary_ray_step_size(2)
+        self.agave.set_secondary_ray_step_size(4)
+
+        self.agave.camera_projection(0, 55)
+        self.agave.aperture(0)
+        self.agave.focaldist(0.75)
+
     def set_render_size(self, width, height):
         self.width = width
         self.height = height
@@ -99,6 +118,8 @@ class Renderer:
                     r.density(payload)
                 case "renderIterations":
                     r.render_iterations(payload)
+                case "normalizedClipBounds":
+                    r.set_clip_region(*payload)
                 case _:
                     self.handle_unknown_event(event_type)
 

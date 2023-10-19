@@ -1,4 +1,4 @@
-import { ActorRef, assign, createMachine, sendParent } from 'xstate';
+import { assign, createMachine, sendParent } from 'xstate';
 
 import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera } from './camera-machine.js';
@@ -73,9 +73,7 @@ export const viewportMachine = createMachine(
                 // Let observers of Viewport know that camera has updated
                 context.cameraSubscription = context.camera?.subscribe(
                   (cameraState) => {
-                    (
-                      self as ActorRef<SetCameraEvent | CameraPoseUpdatedEvent>
-                    ).send({
+                    self.send({
                       type: 'cameraPoseUpdated',
                       pose: cameraState.context.pose,
                     });
@@ -101,7 +99,7 @@ export const viewportMachine = createMachine(
   },
   {
     actions: {
-      forwardToParent: sendParent<Context, Events, undefined>(({ event }) => {
+      forwardToParent: sendParent(({ event }) => {
         return event;
       }),
       resetCameraPose: async ({ context: { image, camera } }) => {

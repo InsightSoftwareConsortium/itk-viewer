@@ -147,33 +147,36 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
           return { frame, renderTime };
         },
       ),
-      // compute toRendererCoordinateSystem
-      imageProcessor: fromPromise(
-        async ({
-          input: {
-            event: { image },
-          },
-        }) => {
-          const bounds = await image.getWorldBounds(image.coarsestScale);
+      // Computes world bounds and transform from VTK to Agave coordinate system
+      imageProcessor: fromPromise(async ({ input: { image, imageScale } }) => {
+        const bounds = await image.getWorldBounds(imageScale);
 
-          // Remove image origin offset to world origin
-          const imageOrigin = vec3.fromValues(bounds[0], bounds[2], bounds[4]);
-          const transform = mat4.fromTranslation(mat4.create(), imageOrigin);
+        const indexToWorld = await image.scaleIndexToWorld(imageScale);
+        const imageWorldToIndex = mat4.invert(mat4.create(), indexToWorld);
 
-          // match Agave by normalizing to largest dim
-          const wx = bounds[1] - bounds[0];
-          const wy = bounds[3] - bounds[2];
-          const wz = bounds[5] - bounds[4];
-          const maxDim = Math.max(wx, wy, wz);
-          const scale = vec3.fromValues(maxDim, maxDim, maxDim);
-          mat4.scale(transform, transform, scale);
+        // Remove image origin offset to world origin
+        const imageOrigin = vec3.fromValues(bounds[0], bounds[2], bounds[4]);
+        const transform = mat4.fromTranslation(mat4.create(), imageOrigin);
 
-          // invert to go from VTK to Agave
-          mat4.invert(transform, transform);
+        // match Agave by normalizing to largest dim
+        const wx = bounds[1] - bounds[0];
+        const wy = bounds[3] - bounds[2];
+        const wz = bounds[5] - bounds[4];
+        const maxDim = Math.max(wx, wy, wz);
+        const scale = vec3.fromValues(maxDim, maxDim, maxDim);
+        mat4.scale(transform, transform, scale);
 
-          return { toRendererCoordinateSystem: transform, image };
-        },
-      ),
+        // invert to go from VTK to Agave
+        mat4.invert(transform, transform);
+
+        return {
+          toRendererCoordinateSystem: transform,
+          bounds,
+          image,
+          imageScale,
+          imageWorldToIndex,
+        };
+      }),
     },
   };
 };

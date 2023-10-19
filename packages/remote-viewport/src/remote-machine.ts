@@ -16,16 +16,24 @@ import {
   MultiscaleSpatialImage,
   getVoxelCount,
   getBytes,
+  worldBoundsToIndexBounds,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { Bounds, ReadOnlyDimensionBounds } from '@itk-viewer/io/types.js';
+import {
+  XYZ,
+  createBounds,
+  ensuredDims,
+} from '@itk-viewer/io/dimensionUtils.js';
 
 const MAX_IMAGE_BYTES_DEFAULT = 4000 * 1000 * 1000; // 4000 MB
 
 type RendererProps = {
   density: number;
   cameraPose: ReadonlyMat4;
+  renderSize: [number, number];
   image?: string;
   imageScale?: number;
-  renderSize: [number, number];
+  normalizedClipBounds: Bounds;
 };
 
 // https://stackoverflow.com/a/74823834
@@ -47,8 +55,13 @@ export type Context = {
   queuedRendererEvents: RendererEntries;
   stagedRendererEvents: RendererEntries;
   viewport: ActorRefFrom<typeof viewportMachine>;
-  toRendererCoordinateSystem: ReadonlyMat4;
   maxImageBytes: number;
+  // computed image values
+  toRendererCoordinateSystem: ReadonlyMat4;
+  imageWorldBounds: Bounds;
+  imageIndexClipBounds?: ReadOnlyDimensionBounds;
+  clipBounds: Bounds;
+  imageWorldToIndex: ReadonlyMat4;
 };
 
 type ConnectEvent = {
@@ -83,6 +96,21 @@ type CameraPoseUpdated = {
   pose: ReadonlyMat4;
 };
 
+type ImageProcessorDone = {
+  type: 'xstate.done.actor.imageProcessor';
+  output: {
+    bounds: Bounds;
+    toRendererCoordinateSystem: ReadonlyMat4;
+    imageScale: number;
+    image: MultiscaleSpatialImage;
+  };
+};
+
+type UpdateImageScaleDone = {
+  type: 'xstate.done.actor.updateImageScale';
+  output: number;
+};
+
 type Event =
   | ConnectEvent
   | UpdateRendererEvent
@@ -91,44 +119,37 @@ type Event =
   | SlowFps
   | FastFps
   | CameraPoseUpdated
-  | { type: 'done.invoke.updateImageScale'; output: number }
-  | { type: 'setResolution'; resolution: [number, number] };
+  | UpdateImageScaleDone
+  | ImageProcessorDone
+  | { type: 'setResolution'; resolution: [number, number] }
+  | { type: 'setClipBounds'; clipBounds: Bounds; imageScale?: number }
+  | { type: 'setImageScale'; imageScale: number };
 
 type ActionArgs = { event: Event; context: Context };
 
+const getImage = (context: Context) => {
+  const { image } = context.viewport.getSnapshot().context;
+  if (!image) throw new Error('Image not found');
+  return image;
+};
+
 const getTargetScale = ({ event, context }: ActionArgs) => {
-  const image = context.viewport.getSnapshot().context.image;
-  if (!image || context.rendererProps.imageScale === undefined)
-    throw new Error('image or imageScale not found');
+  const image = getImage(context);
+  if (context.rendererProps.imageScale === undefined)
+    throw new Error('imageScale not found');
 
   const currentScale = context.rendererProps.imageScale;
-  const { type } = event;
-
-  const scaleChange = type === 'slowFps' ? 1 : -1;
+  const scaleChange = event.type === 'slowFps' ? 1 : -1;
   const targetScale = currentScale + scaleChange;
   return Math.max(0, Math.min(image.coarsestScale, targetScale));
 };
 
-const checkTargetScaleExists = ({ event, context }: ActionArgs) => {
-  const image = context.viewport.getSnapshot().context.image;
-  if (!image || context.rendererProps.imageScale === undefined)
-    throw new Error('image or imageScale not found');
-
-  const targetScale = getTargetScale({ event, context });
-  const currentScale = context.rendererProps.imageScale;
-  return targetScale !== currentScale;
-};
-
-// Assumes image.scaleIndexToWorld has been called with target scale
-const checkMemory = async ({ event, context }: ActionArgs) => {
-  const image = context.viewport.getSnapshot().context.image;
-  if (!image) throw new Error('image found');
-
-  const targetScale = getTargetScale({ event, context });
+const computeBytes = async (
+  image: MultiscaleSpatialImage,
+  targetScale: number,
+) => {
   const voxelCount = await getVoxelCount(image, targetScale);
-  const imageBytes = getBytes(image, voxelCount);
-
-  return imageBytes < context.maxImageBytes;
+  return getBytes(image, voxelCount);
 };
 
 export const remoteMachine = createMachine({
@@ -142,32 +163,75 @@ export const remoteMachine = createMachine({
       density: 30,
       cameraPose: mat4.create(),
       renderSize: [1, 1] as [number, number],
+      normalizedClipBounds: [0, 1, 0, 1, 0, 1] as Bounds,
     },
     queuedRendererEvents: [],
     stagedRendererEvents: [],
+
+    // computed async image values
     toRendererCoordinateSystem: mat4.create(),
+    imageWorldBounds: createBounds(),
+    clipBounds: createBounds(),
+    imageWorldToIndex: mat4.create(),
+
     maxImageBytes: MAX_IMAGE_BYTES_DEFAULT,
     ...input,
   }),
   type: 'parallel',
   states: {
-    // imageProcessor computes toRendererCoordinateSystem.
-    // Is an actor because MultiscaleSpatialImage.scaleIndexToWorld is async due to coords
     imageProcessor: {
       initial: 'idle',
+      on: {
+        setImage: '.updatingScale',
+        setImageScale: '.updatingScale',
+      },
       states: {
-        idle: {
-          on: {
-            setImage: 'processing',
+        idle: {},
+        updatingScale: {
+          // Ensure imageScale is not the same as before and fits in memory
+          id: 'updateImageScale',
+          invoke: {
+            input: ({ context, event }) => {
+              const image = getImage(context);
+              const getImageScale = () => {
+                if (event.type === 'setImageScale') return event.imageScale;
+                if (event.type === 'setImage') return image.coarsestScale;
+                throw new Error('Unexpected event type: ' + event.type);
+              };
+              const imageScale = getImageScale();
+              return {
+                context,
+                imageScale,
+              };
+            },
+            src: fromPromise(async ({ input: { imageScale, context } }) => {
+              const image = getImage(context);
+
+              if (imageScale === context.rendererProps.imageScale) return;
+
+              const imageBytes = await computeBytes(image, imageScale);
+              if (imageBytes > context.maxImageBytes) return;
+
+              return imageScale;
+            }),
+            onDone: {
+              guard: ({ event }) => event.output !== undefined,
+              target: 'updatingComputedValues',
+            },
           },
         },
-        processing: {
+        updatingComputedValues: {
+          // For new image scale, compute imageWorldBounds, imageWorldToIndex, toRendererCoordinateSystem
           invoke: {
-            id: 'imageProcessor',
             src: 'imageProcessor',
-            input: ({ event }) => ({
-              event,
-            }),
+            input: ({ context, event }) => {
+              const image = getImage(context);
+              const imageScale = (event as UpdateImageScaleDone).output;
+              return {
+                image,
+                imageScale,
+              };
+            },
             onDone: {
               actions: [
                 assign({
@@ -176,26 +240,52 @@ export const remoteMachine = createMachine({
                       output: { toRendererCoordinateSystem },
                     },
                   }) => toRendererCoordinateSystem,
-                }),
-                raise(
-                  ({
+                  imageWorldBounds: ({
                     event: {
-                      output: { image },
+                      output: { bounds },
                     },
-                  }) => {
-                    return {
-                      type: 'updateRenderer' as const,
-                      props: {
-                        image: image.name,
-                        imageScale: image.coarsestScale,
-                      },
-                    };
-                  },
-                ),
+                  }) => bounds,
+                  imageWorldToIndex: ({
+                    event: {
+                      output: { imageWorldToIndex },
+                    },
+                  }) => imageWorldToIndex,
+                }),
               ],
-              target: 'idle',
+              target: 'checkingFirstImage',
             },
           },
+        },
+        checkingFirstImage: {
+          always: [
+            {
+              guard: ({ context }) => context.rendererProps.image === undefined,
+              target: 'initClipBounds',
+            },
+            { target: 'sendingToRenderer' },
+          ],
+        },
+        initClipBounds: {
+          entry: raise(({ event }) => {
+            return {
+              type: 'setClipBounds' as const,
+              clipBounds: (event as ImageProcessorDone).output.bounds,
+              imageScale: (event as ImageProcessorDone).output.imageScale,
+            };
+          }),
+          always: 'sendingToRenderer',
+        },
+        sendingToRenderer: {
+          entry: raise(({ event }) => {
+            const { image, imageScale } = (event as ImageProcessorDone).output;
+            return {
+              type: 'updateRenderer' as const,
+              props: {
+                image: image.name,
+                imageScale,
+              },
+            };
+          }),
         },
       },
     },
@@ -243,6 +333,54 @@ export const remoteMachine = createMachine({
                 props: { renderSize: event.resolution },
               };
             }),
+          ],
+        },
+        setClipBounds: {
+          actions: [
+            assign({
+              clipBounds: ({ event: { clipBounds } }) => clipBounds,
+            }),
+            raise(
+              ({
+                context: {
+                  viewport,
+                  clipBounds,
+                  imageWorldToIndex,
+                  rendererProps,
+                },
+                event,
+              }) => {
+                const imageScale = event.imageScale ?? rendererProps.imageScale;
+                const { image } = viewport.getSnapshot().context;
+                if (!image || imageScale === undefined)
+                  throw new Error('image or imageScale not found');
+                const fullIndexBounds = image.getIndexBounds(imageScale);
+                const imageIndexClipBounds = worldBoundsToIndexBounds({
+                  bounds: clipBounds,
+                  fullIndexBounds,
+                  worldToIndex: imageWorldToIndex,
+                });
+
+                // Compute normalized bounds in image space
+                const spatialImageBounds = ensuredDims(
+                  [0, 1],
+                  XYZ,
+                  fullIndexBounds,
+                );
+                const ranges = Object.fromEntries(
+                  XYZ.map((dim) => [dim, spatialImageBounds.get(dim)![1]]),
+                );
+                const normalizedClipBounds = XYZ.flatMap(
+                  (dim) =>
+                    imageIndexClipBounds.get(dim)?.map((v) => v / ranges[dim]),
+                ) as Bounds;
+
+                return {
+                  type: 'updateRenderer' as const,
+                  props: { normalizedClipBounds },
+                };
+              },
+            ),
           ],
         },
       },
@@ -297,45 +435,18 @@ export const remoteMachine = createMachine({
             imageScaleUpdater: {
               on: {
                 slowFps: {
-                  target: '.updatingScale',
+                  actions: raise(({ context, event }) => {
+                    return {
+                      type: 'setImageScale' as const,
+                      imageScale: getTargetScale({ context, event }),
+                    };
+                  }),
                 },
                 fastFps: {
-                  target: '.updatingScale',
-                },
-              },
-              initial: 'idle',
-              states: {
-                idle: {},
-                updatingScale: {
-                  invoke: {
-                    id: 'updateImageScale',
-                    input: ({ context, event }) => ({
-                      context,
-                      event,
-                    }),
-                    src: fromPromise(async ({ input: { event, context } }) => {
-                      const image =
-                        context.viewport.getSnapshot().context.image;
-                      if (!image) return; // may be rendering without image
-
-                      if (!checkTargetScaleExists({ event, context })) return;
-                      if (!(await checkMemory({ event, context }))) return;
-
-                      return getTargetScale({ event, context });
-                    }),
-                    onDone: {
-                      guard: ({ event }) => event.output !== undefined,
-                      target: 'raiseImageScale',
-                    },
-                  },
-                },
-                raiseImageScale: {
-                  entry: raise(({ event }) => {
-                    if (event.type !== 'done.invoke.updateImageScale')
-                      throw new Error('Unexpected event type');
+                  actions: raise(({ context, event }) => {
                     return {
-                      type: 'updateRenderer' as const,
-                      props: { imageScale: event.output },
+                      type: 'setImageScale' as const,
+                      imageScale: getTargetScale({ context, event }),
                     };
                   }),
                 },
@@ -346,7 +457,7 @@ export const remoteMachine = createMachine({
               states: {
                 render: {
                   invoke: {
-                    id: 'render',
+                    id: 'renderer',
                     src: 'renderer',
                     input: ({ context }: { context: Context }) => ({
                       events: [...context.stagedRendererEvents],
@@ -369,8 +480,8 @@ export const remoteMachine = createMachine({
                     onError: {
                       actions: (e) =>
                         console.error(
-                          `Error while updating render.`,
-                          e.event.data,
+                          `Error while updating renderer.`,
+                          (e.event.data as Error).stack ?? e.event.data,
                         ),
                       target: 'idle', // soldier on
                     },
