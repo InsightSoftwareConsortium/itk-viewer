@@ -99,6 +99,8 @@ class Renderer:
                     r.density(payload)
                 case "renderIterations":
                     r.render_iterations(payload)
+                case "normalizedClipBounds":
+                    r.set_clip_region(*payload)
                 case _:
                     self.handle_unknown_event(event_type)
 

@@ -151,6 +151,9 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
       imageProcessor: fromPromise(async ({ input: { image, imageScale } }) => {
         const bounds = await image.getWorldBounds(imageScale);
 
+        const indexToWorld = await image.scaleIndexToWorld(imageScale);
+        const imageWorldToIndex = mat4.invert(mat4.create(), indexToWorld);
+
         // Remove image origin offset to world origin
         const imageOrigin = vec3.fromValues(bounds[0], bounds[2], bounds[4]);
         const transform = mat4.fromTranslation(mat4.create(), imageOrigin);
@@ -171,6 +174,7 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
           bounds,
           image,
           imageScale,
+          imageWorldToIndex,
         };
       }),
     },

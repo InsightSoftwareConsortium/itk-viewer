@@ -15,21 +15,25 @@ import { viewportMachine } from '@itk-viewer/viewer/viewport-machine.js';
 import {
   MultiscaleSpatialImage,
   getVoxelCount,
-  worldBoundsToIndexBounds,
   getBytes,
+  worldBoundsToIndexBounds,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Bounds, ReadOnlyDimensionBounds } from '@itk-viewer/io/types.js';
-import { createBounds } from '@itk-viewer/io/dimensionUtils.js';
+import {
+  XYZ,
+  createBounds,
+  ensuredDims,
+} from '@itk-viewer/io/dimensionUtils.js';
 
 const MAX_IMAGE_BYTES_DEFAULT = 4000 * 1000 * 1000; // 4000 MB
 
 type RendererProps = {
   density: number;
   cameraPose: ReadonlyMat4;
+  renderSize: [number, number];
   image?: string;
   imageScale?: number;
-  imageIndexClipBounds?: ReadOnlyDimensionBounds;
-  renderSize: [number, number];
+  normalizedClipBounds: Bounds;
 };
 
 // https://stackoverflow.com/a/74823834
@@ -55,6 +59,7 @@ export type Context = {
   // computed image values
   toRendererCoordinateSystem: ReadonlyMat4;
   imageWorldBounds: Bounds;
+  imageIndexClipBounds?: ReadOnlyDimensionBounds;
   clipBounds: Bounds;
   imageWorldToIndex: ReadonlyMat4;
 };
@@ -158,6 +163,7 @@ export const remoteMachine = createMachine({
       density: 30,
       cameraPose: mat4.create(),
       renderSize: [1, 1] as [number, number],
+      normalizedClipBounds: [0, 1, 0, 1, 0, 1] as Bounds,
     },
     queuedRendererEvents: [],
     stagedRendererEvents: [],
@@ -239,6 +245,11 @@ export const remoteMachine = createMachine({
                       output: { bounds },
                     },
                   }) => bounds,
+                  imageWorldToIndex: ({
+                    event: {
+                      output: { imageWorldToIndex },
+                    },
+                  }) => imageWorldToIndex,
                 }),
               ],
               target: 'checkingFirstImage',
@@ -349,9 +360,24 @@ export const remoteMachine = createMachine({
                   fullIndexBounds,
                   worldToIndex: imageWorldToIndex,
                 });
+
+                // Compute normalized bounds in image space
+                const spatialImageBounds = ensuredDims(
+                  [0, 1],
+                  XYZ,
+                  fullIndexBounds,
+                );
+                const ranges = Object.fromEntries(
+                  XYZ.map((dim) => [dim, spatialImageBounds.get(dim)![1]]),
+                );
+                const normalizedClipBounds = XYZ.flatMap(
+                  (dim) =>
+                    imageIndexClipBounds.get(dim)?.map((v) => v / ranges[dim]),
+                ) as Bounds;
+
                 return {
                   type: 'updateRenderer' as const,
-                  props: { imageIndexClipBounds },
+                  props: { normalizedClipBounds },
                 };
               },
             ),

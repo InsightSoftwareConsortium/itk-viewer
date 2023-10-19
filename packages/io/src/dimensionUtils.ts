@@ -42,7 +42,7 @@ export const nonNullable = <T>(value: T): value is NonNullable<T> => {
   return value != null;
 };
 
-export const xyz = ['x', 'y', 'z'] as SpatialDimensions;
+export const XYZ = Object.freeze(['x', 'y', 'z']) as SpatialDimensions;
 
 const INIT_BOUNDS = Object.freeze([
   Number.MAX_VALUE,
