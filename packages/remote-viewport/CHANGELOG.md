@@ -1,5 +1,18 @@
 # @itk-viewer/remote-viewport
 
+## 0.2.7
+
+### Patch Changes
+
+- 7163009: Remote renderer changes rendered frame size based on client canvas size.
+- 0219988: remote-viewport clips rendered image space.
+- 8f26a13: Add WebRTC for remote-viewport and fix framerate based image scale picking.
+- Updated dependencies [7163009]
+- Updated dependencies [0219988]
+- Updated dependencies [8f26a13]
+  - @itk-viewer/viewer@0.2.4
+  - @itk-viewer/io@0.1.4
+
 ## 0.2.6
 
 ### Patch Changes
