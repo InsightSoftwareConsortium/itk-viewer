@@ -125,6 +125,19 @@ importers:
         specifier: ^1.4.4
         version: 1.4.4
 
+  packages/imjoy-api:
+    dependencies:
+      '@itk-viewer/viewer':
+        specifier: workspace:^
+        version: link:../viewer
+      imjoy-rpc:
+        specifier: ^0.5.44
+        version: 0.5.44
+    devDependencies:
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
+
   packages/io:
     dependencies:
       '@itk-viewer/blosc-zarr':
