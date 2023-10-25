@@ -2,7 +2,10 @@
   "extends": "./tsconfig.root",
   "compilerOptions": {
     "declaration": true,
-    "composite": true
+    "composite": true,
+    "types": [
+      "vite/client"
+    ]
   },
   "exclude": [
     "packages/**/dist/",
