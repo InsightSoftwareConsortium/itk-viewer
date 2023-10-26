@@ -123,7 +123,8 @@ type Event =
   | ImageProcessorDone
   | { type: 'setResolution'; resolution: [number, number] }
   | { type: 'setClipBounds'; clipBounds: Bounds; imageScale?: number }
-  | { type: 'setImageScale'; imageScale: number };
+  | { type: 'setImageScale'; imageScale: number }
+  | { type: 'sendCommands' };
 
 type ActionArgs = { event: Event; context: Context };
 
@@ -312,7 +313,7 @@ export const remoteMachine = createMachine({
               ],
             }),
             // Trigger a render (if in idle state)
-            raise({ type: 'render' }),
+            raise({ type: 'sendCommands' }),
           ],
         },
         cameraPoseUpdated: {
@@ -452,6 +453,51 @@ export const remoteMachine = createMachine({
                 },
               },
             },
+            sendPropsLoop: {
+              initial: 'sendingProps',
+              states: {
+                sendingProps: {
+                  invoke: {
+                    id: 'propSender',
+                    src: 'propSender',
+                    input: ({ context }: { context: Context }) => ({
+                      events: [...context.stagedRendererEvents],
+                      context,
+                    }),
+                    onDone: {
+                      actions: [],
+                      target: 'idle',
+                    },
+                    onError: {
+                      actions: (e) =>
+                        console.error(
+                          `Error while sending commands.`,
+                          (e.event.data as Error).stack ?? e.event.data,
+                        ),
+                      target: 'idle', // soldier on
+                    },
+                  },
+                },
+                idle: {
+                  always: {
+                    // Renderer props changed while sending commands? Then sendCommands.
+                    guard: ({ context }) =>
+                      context.queuedRendererEvents.length > 0,
+                    target: 'sendingProps',
+                  },
+                  on: {
+                    sendCommands: { target: 'sendingProps' },
+                  },
+                  exit: assign({
+                    // consumes queue in prep for renderer
+                    stagedRendererEvents: ({ context }) => [
+                      ...context.queuedRendererEvents,
+                    ],
+                    queuedRendererEvents: [],
+                  }),
+                },
+              },
+            },
             renderLoop: {
               initial: 'render',
               states: {
@@ -460,7 +506,6 @@ export const remoteMachine = createMachine({
                     id: 'renderer',
                     src: 'renderer',
                     input: ({ context }: { context: Context }) => ({
-                      events: [...context.stagedRendererEvents],
                       context,
                     }),
                     onDone: {
@@ -488,22 +533,9 @@ export const remoteMachine = createMachine({
                   },
                 },
                 idle: {
-                  always: {
-                    // Renderer props changed while rendering? Then render.
-                    guard: ({ context }) =>
-                      context.queuedRendererEvents.length > 0,
-                    target: 'render',
-                  },
                   on: {
                     render: { target: 'render' },
                   },
-                  exit: assign({
-                    // consumes queue in prep for renderer
-                    stagedRendererEvents: ({ context }) => [
-                      ...context.queuedRendererEvents,
-                    ],
-                    queuedRendererEvents: [],
-                  }),
                 },
               },
             },

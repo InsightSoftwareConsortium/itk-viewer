@@ -89,7 +89,7 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
       connect: fromPromise(async ({ input }: { input: ConnectInput }) =>
         createHyphaRenderer(input.context),
       ),
-      renderer: fromPromise(
+      propSender: fromPromise(
         async ({ input: { context, events } }: { input: RendererInput }) => {
           const commands = events
             .map(([key, value]) => {
@@ -135,8 +135,15 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
               return [event];
             });
 
-          const { server } = context;
-          server.updateRenderer(commands);
+          context.server.updateRenderer(commands);
+        },
+      ),
+      renderer: fromPromise(
+        async ({
+          input: {
+            context: { server },
+          },
+        }) => {
           const { frame: encodedImage, renderTime } = await server.render();
           const { image: frame, webWorker } = await decode(
             decodeWorker,
