@@ -179,7 +179,7 @@ export class ItkRemoteViewport extends ItkViewport {
     if (changedProperties.has('density')) {
       this.remote.send({
         type: 'updateRenderer',
-        props: { density: this.density },
+        state: { density: this.density },
       });
     }
 
