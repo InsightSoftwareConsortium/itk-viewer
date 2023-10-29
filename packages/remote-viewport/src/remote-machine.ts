@@ -27,7 +27,7 @@ import {
 
 const MAX_IMAGE_BYTES_DEFAULT = 4000 * 1000 * 1000; // 4000 MB
 
-type RendererProps = {
+type RendererState = {
   density: number;
   cameraPose: ReadonlyMat4;
   renderSize: [number, number];
@@ -45,15 +45,15 @@ const getEntries = <T extends object>(obj: T) =>
   Object.entries(obj) as Entries<T>;
 
 // example: [['density', 30], ['cameraPose', mat4.create()]]
-export type RendererEntries = Entries<RendererProps>;
+export type RendererEntries = Entries<RendererState>;
 
 export type Context = {
   serverConfig?: unknown;
   server?: unknown;
   frame?: Image;
-  rendererProps: RendererProps;
-  queuedRendererEvents: RendererEntries;
-  stagedRendererEvents: RendererEntries;
+  rendererState: RendererState;
+  queuedRendererCommands: RendererEntries;
+  stagedRendererCommands: RendererEntries;
   viewport: ActorRefFrom<typeof viewportMachine>;
   maxImageBytes: number;
   // computed image values
@@ -71,7 +71,7 @@ type ConnectEvent = {
 
 type UpdateRendererEvent = {
   type: 'updateRenderer';
-  props: Partial<RendererProps>;
+  state: Partial<RendererState>;
 };
 
 type RenderEvent = {
@@ -123,7 +123,8 @@ type Event =
   | ImageProcessorDone
   | { type: 'setResolution'; resolution: [number, number] }
   | { type: 'setClipBounds'; clipBounds: Bounds; imageScale?: number }
-  | { type: 'setImageScale'; imageScale: number };
+  | { type: 'setImageScale'; imageScale: number }
+  | { type: 'sendCommands' };
 
 type ActionArgs = { event: Event; context: Context };
 
@@ -135,10 +136,10 @@ const getImage = (context: Context) => {
 
 const getTargetScale = ({ event, context }: ActionArgs) => {
   const image = getImage(context);
-  if (context.rendererProps.imageScale === undefined)
+  if (context.rendererState.imageScale === undefined)
     throw new Error('imageScale not found');
 
-  const currentScale = context.rendererProps.imageScale;
+  const currentScale = context.rendererState.imageScale;
   const scaleChange = event.type === 'slowFps' ? 1 : -1;
   const targetScale = currentScale + scaleChange;
   return Math.max(0, Math.min(image.coarsestScale, targetScale));
@@ -159,14 +160,14 @@ export const remoteMachine = createMachine({
   },
   id: 'remote',
   context: ({ input }: { input: { viewport: Viewport } }) => ({
-    rendererProps: {
+    rendererState: {
       density: 30,
       cameraPose: mat4.create(),
       renderSize: [1, 1] as [number, number],
       normalizedClipBounds: [0, 1, 0, 1, 0, 1] as Bounds,
     },
-    queuedRendererEvents: [],
-    stagedRendererEvents: [],
+    queuedRendererCommands: [],
+    stagedRendererCommands: [],
 
     // computed async image values
     toRendererCoordinateSystem: mat4.create(),
@@ -207,7 +208,7 @@ export const remoteMachine = createMachine({
             src: fromPromise(async ({ input: { imageScale, context } }) => {
               const image = getImage(context);
 
-              if (imageScale === context.rendererProps.imageScale) return;
+              if (imageScale === context.rendererState.imageScale) return;
 
               const imageBytes = await computeBytes(image, imageScale);
               if (imageBytes > context.maxImageBytes) return;
@@ -259,7 +260,7 @@ export const remoteMachine = createMachine({
         checkingFirstImage: {
           always: [
             {
-              guard: ({ context }) => context.rendererProps.image === undefined,
+              guard: ({ context }) => context.rendererState.image === undefined,
               target: 'initClipBounds',
             },
             { target: 'sendingToRenderer' },
@@ -280,7 +281,7 @@ export const remoteMachine = createMachine({
             const { image, imageScale } = (event as ImageProcessorDone).output;
             return {
               type: 'updateRenderer' as const,
-              props: {
+              state: {
                 image: image.name,
                 imageScale,
               },
@@ -289,7 +290,7 @@ export const remoteMachine = createMachine({
         },
       },
     },
-    // root state captures initial rendererProps events even when disconnected
+    // root state captures initial updateRenderer events, even when disconnected
     root: {
       entry: [
         assign({
@@ -300,19 +301,19 @@ export const remoteMachine = createMachine({
         updateRenderer: {
           actions: [
             assign({
-              rendererProps: ({ event: { props }, context }) => {
+              rendererState: ({ event: { state }, context }) => {
                 return {
-                  ...context.rendererProps,
-                  ...props,
+                  ...context.rendererState,
+                  ...state,
                 };
               },
-              queuedRendererEvents: ({ event: { props }, context }) => [
-                ...context.queuedRendererEvents,
-                ...(getEntries(props) as RendererEntries),
+              queuedRendererCommands: ({ event: { state }, context }) => [
+                ...context.queuedRendererCommands,
+                ...(getEntries(state) as RendererEntries),
               ],
             }),
             // Trigger a render (if in idle state)
-            raise({ type: 'render' }),
+            raise({ type: 'sendCommands' }),
           ],
         },
         cameraPoseUpdated: {
@@ -320,7 +321,7 @@ export const remoteMachine = createMachine({
             raise(({ event }) => {
               return {
                 type: 'updateRenderer' as const,
-                props: { cameraPose: event.pose },
+                state: { cameraPose: event.pose },
               };
             }),
           ],
@@ -330,7 +331,7 @@ export const remoteMachine = createMachine({
             raise(({ event }) => {
               return {
                 type: 'updateRenderer' as const,
-                props: { renderSize: event.resolution },
+                state: { renderSize: event.resolution },
               };
             }),
           ],
@@ -346,11 +347,11 @@ export const remoteMachine = createMachine({
                   viewport,
                   clipBounds,
                   imageWorldToIndex,
-                  rendererProps,
+                  rendererState,
                 },
                 event,
               }) => {
-                const imageScale = event.imageScale ?? rendererProps.imageScale;
+                const imageScale = event.imageScale ?? rendererState.imageScale;
                 const { image } = viewport.getSnapshot().context;
                 if (!image || imageScale === undefined)
                   throw new Error('image or imageScale not found');
@@ -377,7 +378,7 @@ export const remoteMachine = createMachine({
 
                 return {
                   type: 'updateRenderer' as const,
-                  props: { normalizedClipBounds },
+                  state: { normalizedClipBounds },
                 };
               },
             ),
@@ -415,9 +416,9 @@ export const remoteMachine = createMachine({
             onDone: {
               actions: assign({
                 server: ({ event }) => event.output,
-                // initially, send all props to renderer
-                queuedRendererEvents: ({ context }) =>
-                  getEntries(context.rendererProps),
+                // initially, send all commands to renderer
+                queuedRendererCommands: ({ context }) =>
+                  getEntries(context.rendererState),
               }),
               target: 'online',
             },
@@ -452,6 +453,50 @@ export const remoteMachine = createMachine({
                 },
               },
             },
+            commandLoop: {
+              initial: 'sendingCommands',
+              states: {
+                sendingCommands: {
+                  invoke: {
+                    id: 'commandSender',
+                    src: 'commandSender',
+                    input: ({ context }: { context: Context }) => ({
+                      commands: [...context.stagedRendererCommands],
+                      context,
+                    }),
+                    onDone: {
+                      target: 'idle',
+                    },
+                    onError: {
+                      actions: (e) =>
+                        console.error(
+                          `Error while sending commands.`,
+                          (e.event.data as Error).stack ?? e.event.data,
+                        ),
+                      target: 'idle', // soldier on
+                    },
+                  },
+                },
+                idle: {
+                  always: {
+                    // More commands while sending commands? Then send commands.
+                    guard: ({ context }) =>
+                      context.queuedRendererCommands.length > 0,
+                    target: 'sendingCommands',
+                  },
+                  on: {
+                    sendCommands: { target: 'sendingCommands' },
+                  },
+                  exit: assign({
+                    // consumes queue in prep for renderer
+                    stagedRendererCommands: ({ context }) => [
+                      ...context.queuedRendererCommands,
+                    ],
+                    queuedRendererCommands: [],
+                  }),
+                },
+              },
+            },
             renderLoop: {
               initial: 'render',
               states: {
@@ -460,7 +505,6 @@ export const remoteMachine = createMachine({
                     id: 'renderer',
                     src: 'renderer',
                     input: ({ context }: { context: Context }) => ({
-                      events: [...context.stagedRendererEvents],
                       context,
                     }),
                     onDone: {
@@ -488,22 +532,9 @@ export const remoteMachine = createMachine({
                   },
                 },
                 idle: {
-                  always: {
-                    // Renderer props changed while rendering? Then render.
-                    guard: ({ context }) =>
-                      context.queuedRendererEvents.length > 0,
-                    target: 'render',
-                  },
                   on: {
                     render: { target: 'render' },
                   },
-                  exit: assign({
-                    // consumes queue in prep for renderer
-                    stagedRendererEvents: ({ context }) => [
-                      ...context.queuedRendererEvents,
-                    ],
-                    queuedRendererEvents: [],
-                  }),
                 },
               },
             },

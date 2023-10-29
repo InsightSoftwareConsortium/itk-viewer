@@ -23,7 +23,7 @@ type MachineContext = Omit<Context, 'server'> & { server: Renderer };
 
 type RendererInput = {
   context: MachineContext;
-  events: RendererEntries;
+  commands: RendererEntries;
 };
 
 type ConnectInput = { context: Context };
@@ -89,9 +89,9 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
       connect: fromPromise(async ({ input }: { input: ConnectInput }) =>
         createHyphaRenderer(input.context),
       ),
-      renderer: fromPromise(
-        async ({ input: { context, events } }: { input: RendererInput }) => {
-          const commands = events
+      commandSender: fromPromise(
+        async ({ input: { context, commands } }: { input: RendererInput }) => {
+          const translatedCommands = commands
             .map(([key, value]) => {
               if (key === 'cameraPose') {
                 return makeCameraPoseCommand(
@@ -102,7 +102,7 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
 
               if (key === 'image') {
                 const { imageScale: multiresolution_level } =
-                  context.rendererProps;
+                  context.rendererState;
                 return [
                   'loadImage',
                   { image_path: value, multiresolution_level },
@@ -110,7 +110,7 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
               }
 
               if (key === 'imageScale') {
-                const { image: image_path } = context.rendererProps;
+                const { image: image_path } = context.rendererState;
                 return [
                   'loadImage',
                   { image_path, multiresolution_level: value },
@@ -128,15 +128,22 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
                   event,
                   makeCameraPoseCommand(
                     context.toRendererCoordinateSystem,
-                    context.rendererProps.cameraPose,
+                    context.rendererState.cameraPose,
                   ),
                 ];
               }
               return [event];
             });
 
-          const { server } = context;
-          server.updateRenderer(commands);
+          context.server.updateRenderer(translatedCommands);
+        },
+      ),
+      renderer: fromPromise(
+        async ({
+          input: {
+            context: { server },
+          },
+        }) => {
           const { frame: encodedImage, renderTime } = await server.render();
           const { image: frame, webWorker } = await decode(
             decodeWorker,

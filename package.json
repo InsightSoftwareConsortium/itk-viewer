@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm -r --parallel run dev",
+    "dev:debug": "VITE_DEBUG=true pnpm -r --parallel run dev",
     "build": "pnpm -r build",
     "lint": "pnpm prettier --check . && pnpm eslint .",
     "lint:fix": "pnpm prettier --write . && pnpm eslint --fix .",

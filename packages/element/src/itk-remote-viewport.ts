@@ -40,6 +40,8 @@ export class ItkRemoteViewport extends ItkViewport {
   frame: SelectorController<RemoteActor, Image | undefined>;
   lastFrameValue: Image | undefined = undefined;
 
+  frameData: ImageData | undefined = undefined;
+
   bounds: SelectorController<
     RemoteActor,
     {
@@ -117,13 +119,19 @@ export class ItkRemoteViewport extends ItkViewport {
     const { size, data } = this.frame.value;
     if (!data) throw new Error('No data in frame');
     const [width, height] = size;
-    if (this.canvas.value) {
-      this.canvas.value.width = width;
-      this.canvas.value.height = height;
+
+    // Cache ImageData to avoid allocation
+    if (
+      !this.frameData ||
+      this.frameData.width !== width ||
+      this.frameData.height !== height
+    ) {
+      this.canvas.value!.width = width;
+      this.canvas.value!.height = height;
+      this.frameData = this.canvasCtx.createImageData(width, height);
     }
-    const pixels = new Uint8ClampedArray(data);
-    const imageData = new ImageData(pixels, width, height);
-    this.canvasCtx.putImageData(imageData, 0, 0);
+    this.frameData.data.set(data as ArrayLike<number>);
+    this.canvasCtx.putImageData(this.frameData, 0, 0);
   }
 
   startRenderLoop() {
@@ -171,7 +179,7 @@ export class ItkRemoteViewport extends ItkViewport {
     if (changedProperties.has('density')) {
       this.remote.send({
         type: 'updateRenderer',
-        props: { density: this.density },
+        state: { density: this.density },
       });
     }
 

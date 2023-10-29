@@ -1,5 +1,7 @@
 import { assign, createMachine, sendParent } from 'xstate';
 
+const DEBUG = Boolean(import.meta.env.VITE_DEBUG ?? false);
+
 const SAMPLE_SIZE = 30;
 
 const SLOW_FPS = 15;
@@ -43,8 +45,11 @@ export const fpsWatcher = createMachine(
       judge: {
         entry: [
           assign({
-            average: ({ context: { samples } }) =>
-              samples.reduce((a, b) => a + b) / samples.length,
+            average: ({ context: { samples } }) => {
+              const average = samples.reduce((a, b) => a + b) / samples.length;
+              if (DEBUG) console.log('FPS Watcher Average:', average);
+              return average;
+            },
           }),
         ],
         always: [
