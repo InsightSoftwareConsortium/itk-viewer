@@ -61,6 +61,7 @@ export type Context = {
   toRendererCoordinateSystem: ReadonlyMat4;
   imageWorldBounds: Bounds;
   imageIndexClipBounds?: ReadOnlyDimensionBounds;
+  loadedImageIndexBounds?: ReadOnlyDimensionBounds;
   clipBounds: Bounds;
   imageWorldToIndex: ReadonlyMat4;
 };
@@ -123,7 +124,7 @@ type Event =
   | UpdateImageScaleDone
   | ImageProcessorDone
   | { type: 'setResolution'; resolution: [number, number] }
-  | { type: 'setClipBounds'; clipBounds: Bounds; imageScale?: number }
+  | { type: 'setClipBounds'; clipBounds: Bounds }
   | { type: 'setImageScale'; imageScale: number }
   | { type: 'sendCommands' };
 
@@ -224,6 +225,7 @@ export const remoteMachine = createMachine(
                 return imageScale;
               }),
               onDone: {
+                // If imageScale should not change, output is undefined
                 guard: ({ event }) => event.output !== undefined,
                 target: 'updatingComputedValues',
               },
@@ -267,6 +269,10 @@ export const remoteMachine = createMachine(
                     }) => imageWorldToIndex,
                   }),
                   'computeImageIndexClipBounds',
+                  assign({
+                    loadedImageIndexBounds: ({ context }) =>
+                      context.imageIndexClipBounds,
+                  }),
                 ],
                 target: 'checkingFirstImage',
               },
@@ -287,23 +293,25 @@ export const remoteMachine = createMachine(
               return {
                 type: 'setClipBounds' as const,
                 clipBounds: (event as ImageProcessorDone).output.bounds,
-                imageScale: (event as ImageProcessorDone).output.imageScale,
               };
             }),
             always: 'sendingToRenderer',
           },
           sendingToRenderer: {
-            entry: raise(({ event }) => {
-              const { image, imageScale } = (event as ImageProcessorDone)
-                .output;
-              return {
-                type: 'updateRenderer' as const,
-                state: {
-                  image: image.name,
-                  imageScale,
-                },
-              };
-            }),
+            entry: [
+              raise(({ event }) => {
+                const { image, imageScale } = (event as ImageProcessorDone)
+                  .output;
+                return {
+                  type: 'updateRenderer' as const,
+                  state: {
+                    image: image.name,
+                    imageScale,
+                  },
+                };
+              }),
+              'updateNormalizedClipBounds',
+            ],
           },
         },
       },
@@ -359,42 +367,7 @@ export const remoteMachine = createMachine(
                 clipBounds: ({ event: { clipBounds } }) => clipBounds,
               }),
               'computeImageIndexClipBounds',
-              raise(
-                ({
-                  context: { viewport, imageIndexClipBounds, rendererState },
-                  event,
-                }) => {
-                  const imageScale =
-                    event.imageScale ?? rendererState.imageScale;
-                  const { image } = viewport.getSnapshot().context;
-                  if (!image || imageScale === undefined)
-                    throw new Error('image or imageScale not found');
-                  if (!imageIndexClipBounds)
-                    throw new Error('imageIndexClipBounds not found');
-
-                  // Compute normalized bounds in image space
-                  const fullIndexBounds = image.getIndexBounds(imageScale);
-                  const spatialImageBounds = ensuredDims(
-                    [0, 1],
-                    XYZ,
-                    fullIndexBounds,
-                  );
-                  const ranges = Object.fromEntries(
-                    XYZ.map((dim) => [dim, spatialImageBounds.get(dim)![1]]),
-                  );
-                  const normalizedClipBounds = XYZ.flatMap(
-                    (dim) =>
-                      imageIndexClipBounds
-                        .get(dim)
-                        ?.map((v) => v / ranges[dim]),
-                  ) as Bounds;
-
-                  return {
-                    type: 'updateRenderer' as const,
-                    state: { normalizedClipBounds },
-                  };
-                },
-              ),
+              'updateNormalizedClipBounds',
             ],
           },
         },
@@ -575,6 +548,42 @@ export const remoteMachine = createMachine(
           return wBounds;
         },
       }),
+      updateNormalizedClipBounds: raise(
+        ({
+          context: {
+            viewport,
+            imageIndexClipBounds,
+            loadedImageIndexBounds,
+            imageScale,
+          },
+        }) => {
+          const { image } = viewport.getSnapshot().context;
+          if (!image || imageScale === undefined)
+            throw new Error('image or imageScale not found');
+          if (!imageIndexClipBounds)
+            throw new Error('imageIndexClipBounds not found');
+          if (!loadedImageIndexBounds)
+            throw new Error('loadedImageIndexBounds not found');
+
+          // Compute normalized bounds in loaded image space
+          const spatialImageBounds = ensuredDims(
+            [0, 1],
+            XYZ,
+            loadedImageIndexBounds,
+          );
+          const normalizedClipBounds = XYZ.flatMap((dim) => {
+            const [floor, top] = spatialImageBounds.get(dim)!;
+            const range = top - floor;
+            return imageIndexClipBounds
+              .get(dim)!
+              .map((v) => (v - floor) / range);
+          }) as Bounds;
+          return {
+            type: 'updateRenderer' as const,
+            state: { normalizedClipBounds },
+          };
+        },
+      ),
     },
   },
 );
