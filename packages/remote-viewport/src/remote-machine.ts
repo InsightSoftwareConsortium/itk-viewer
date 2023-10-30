@@ -56,6 +56,7 @@ export type Context = {
   stagedRendererCommands: RendererEntries;
   viewport: ActorRefFrom<typeof viewportMachine>;
   maxImageBytes: number;
+  imageScale: number;
   // computed image values
   toRendererCoordinateSystem: ReadonlyMat4;
   imageWorldBounds: Bounds;
@@ -154,391 +155,399 @@ const computeBytes = async (
   return getBytes(image, voxelCount);
 };
 
-export const remoteMachine = createMachine({
-  types: {} as {
-    context: Context;
-    events: Event;
-  },
-  id: 'remote',
-  context: ({ input }: { input: { viewport: Viewport } }) => ({
-    rendererState: {
-      density: 30,
-      cameraPose: mat4.create(),
-      renderSize: [1, 1] as [number, number],
-      normalizedClipBounds: [0, 1, 0, 1, 0, 1] as Bounds,
+export const remoteMachine = createMachine(
+  {
+    types: {} as {
+      context: Context;
+      events: Event;
     },
-    queuedRendererCommands: [],
-    stagedRendererCommands: [],
-
-    // computed async image values
-    toRendererCoordinateSystem: mat4.create(),
-    imageWorldBounds: createBounds(),
-    clipBounds: createBounds(),
-    imageWorldToIndex: mat4.create(),
-
-    maxImageBytes: MAX_IMAGE_BYTES_DEFAULT,
-    ...input,
-  }),
-  type: 'parallel',
-  states: {
-    imageProcessor: {
-      initial: 'idle',
-      on: {
-        setImage: '.updatingScale',
-        setImageScale: '.updatingScale',
+    id: 'remote',
+    context: ({ input }: { input: { viewport: Viewport } }) => ({
+      rendererState: {
+        density: 30,
+        cameraPose: mat4.create(),
+        renderSize: [1, 1] as [number, number],
+        normalizedClipBounds: [0, 1, 0, 1, 0, 1] as Bounds,
       },
-      states: {
-        idle: {},
-        updatingScale: {
-          // Ensure imageScale is not the same as before and fits in memory
-          id: 'updateImageScale',
-          invoke: {
-            input: ({ context, event }) => {
-              const image = getImage(context);
-              const getImageScale = () => {
-                if (event.type === 'setImageScale') return event.imageScale;
-                if (event.type === 'setImage') return image.coarsestScale;
-                throw new Error('Unexpected event type: ' + event.type);
-              };
-              const imageScale = getImageScale();
-              return {
-                context,
-                imageScale,
-              };
-            },
-            src: fromPromise(async ({ input: { imageScale, context } }) => {
-              const image = getImage(context);
+      queuedRendererCommands: [],
+      stagedRendererCommands: [],
 
-              if (imageScale === context.rendererState.imageScale) return;
+      imageScale: 0,
+      // computed async image values
+      toRendererCoordinateSystem: mat4.create(),
+      imageWorldBounds: createBounds(),
+      clipBounds: createBounds(),
+      imageWorldToIndex: mat4.create(),
 
-              const imageBytes = await computeBytes(
-                image,
-                imageScale,
-                context.clipBounds,
-              );
-              if (imageBytes > context.maxImageBytes) return;
-
-              return imageScale;
-            }),
-            onDone: {
-              guard: ({ event }) => event.output !== undefined,
-              target: 'updatingComputedValues',
-            },
-          },
+      maxImageBytes: MAX_IMAGE_BYTES_DEFAULT,
+      ...input,
+    }),
+    type: 'parallel',
+    states: {
+      imageProcessor: {
+        initial: 'idle',
+        on: {
+          setImage: '.updatingScale',
+          setImageScale: '.updatingScale',
         },
-        updatingComputedValues: {
-          // For new image scale, compute imageWorldBounds, imageWorldToIndex, toRendererCoordinateSystem
-          invoke: {
-            src: 'imageProcessor',
-            input: ({ context, event }) => {
-              const image = getImage(context);
-              const imageScale = (event as UpdateImageScaleDone).output;
-              return {
-                image,
-                imageScale,
-              };
-            },
-            onDone: {
-              actions: [
-                assign({
-                  toRendererCoordinateSystem: ({
-                    event: {
-                      output: { toRendererCoordinateSystem },
-                    },
-                  }) => toRendererCoordinateSystem,
-                  imageWorldBounds: ({
-                    event: {
-                      output: { bounds },
-                    },
-                  }) => bounds,
-                  imageWorldToIndex: ({
-                    event: {
-                      output: { imageWorldToIndex },
-                    },
-                  }) => imageWorldToIndex,
-                }),
-              ],
-              target: 'checkingFirstImage',
-            },
-          },
-        },
-        checkingFirstImage: {
-          always: [
-            {
-              guard: ({ context }) => context.rendererState.image === undefined,
-              target: 'initClipBounds',
-            },
-            { target: 'sendingToRenderer' },
-          ],
-        },
-        initClipBounds: {
-          entry: raise(({ event }) => {
-            return {
-              type: 'setClipBounds' as const,
-              clipBounds: (event as ImageProcessorDone).output.bounds,
-              imageScale: (event as ImageProcessorDone).output.imageScale,
-            };
-          }),
-          always: 'sendingToRenderer',
-        },
-        sendingToRenderer: {
-          entry: raise(({ event }) => {
-            const { image, imageScale } = (event as ImageProcessorDone).output;
-            return {
-              type: 'updateRenderer' as const,
-              state: {
-                image: image.name,
-                imageScale,
-              },
-            };
-          }),
-        },
-      },
-    },
-    // root state captures initial updateRenderer events, even when disconnected
-    root: {
-      entry: [
-        assign({
-          viewport: ({ spawn }) => spawn(viewportMachine, { id: 'viewport' }),
-        }),
-      ],
-      on: {
-        updateRenderer: {
-          actions: [
-            assign({
-              rendererState: ({ event: { state }, context }) => {
+        states: {
+          idle: {},
+          updatingScale: {
+            // Ensure imageScale is not the same as before and fits in memory
+            id: 'updateImageScale',
+            invoke: {
+              input: ({ context, event }) => {
+                const image = getImage(context);
+                const getImageScale = () => {
+                  if (event.type === 'setImageScale') return event.imageScale;
+                  if (event.type === 'setImage') return image.coarsestScale;
+                  throw new Error('Unexpected event type: ' + event.type);
+                };
+                const imageScale = getImageScale();
                 return {
-                  ...context.rendererState,
-                  ...state,
+                  context,
+                  imageScale,
                 };
               },
-              queuedRendererCommands: ({ event: { state }, context }) => [
-                ...context.queuedRendererCommands,
-                ...(getEntries(state) as RendererEntries),
-              ],
-            }),
-            // Trigger a render (if in idle state)
-            raise({ type: 'sendCommands' }),
-          ],
-        },
-        cameraPoseUpdated: {
-          actions: [
-            raise(({ event }) => {
+              src: fromPromise(async ({ input: { imageScale, context } }) => {
+                const image = getImage(context);
+
+                if (imageScale === context.rendererState.imageScale) return;
+
+                const imageBytes = await computeBytes(
+                  image,
+                  imageScale,
+                  context.clipBounds,
+                );
+                if (imageBytes > context.maxImageBytes) return;
+
+                return imageScale;
+              }),
+              onDone: {
+                guard: ({ event }) => event.output !== undefined,
+                target: 'updatingComputedValues',
+              },
+            },
+          },
+          updatingComputedValues: {
+            entry: [
+              assign({
+                imageScale: ({ event }) =>
+                  (event as UpdateImageScaleDone).output,
+              }),
+            ],
+            // For new image scale, compute imageWorldBounds, imageWorldToIndex, toRendererCoordinateSystem
+            invoke: {
+              src: 'imageProcessor',
+              input: ({ context }) => {
+                const image = getImage(context);
+                const { imageScale } = context;
+                return {
+                  image,
+                  imageScale,
+                };
+              },
+              onDone: {
+                actions: [
+                  assign({
+                    toRendererCoordinateSystem: ({
+                      event: {
+                        output: { toRendererCoordinateSystem },
+                      },
+                    }) => toRendererCoordinateSystem,
+                    imageWorldBounds: ({
+                      event: {
+                        output: { bounds },
+                      },
+                    }) => bounds,
+                    imageWorldToIndex: ({
+                      event: {
+                        output: { imageWorldToIndex },
+                      },
+                    }) => imageWorldToIndex,
+                  }),
+                  'computeImageIndexClipBounds',
+                ],
+                target: 'checkingFirstImage',
+              },
+            },
+          },
+          checkingFirstImage: {
+            always: [
+              {
+                guard: ({ context }) =>
+                  context.rendererState.image === undefined,
+                target: 'initClipBounds',
+              },
+              { target: 'sendingToRenderer' },
+            ],
+          },
+          initClipBounds: {
+            entry: raise(({ event }) => {
               return {
-                type: 'updateRenderer' as const,
-                state: { cameraPose: event.pose },
+                type: 'setClipBounds' as const,
+                clipBounds: (event as ImageProcessorDone).output.bounds,
+                imageScale: (event as ImageProcessorDone).output.imageScale,
               };
             }),
-          ],
-        },
-        setResolution: {
-          actions: [
-            raise(({ event }) => {
+            always: 'sendingToRenderer',
+          },
+          sendingToRenderer: {
+            entry: raise(({ event }) => {
+              const { image, imageScale } = (event as ImageProcessorDone)
+                .output;
               return {
                 type: 'updateRenderer' as const,
-                state: { renderSize: event.resolution },
-              };
-            }),
-          ],
-        },
-        setClipBounds: {
-          actions: [
-            assign({
-              clipBounds: ({ event: { clipBounds } }) => clipBounds,
-            }),
-            raise(
-              ({
-                context: {
-                  viewport,
-                  clipBounds,
-                  imageWorldToIndex,
-                  rendererState,
+                state: {
+                  image: image.name,
+                  imageScale,
                 },
-                event,
-              }) => {
-                const imageScale = event.imageScale ?? rendererState.imageScale;
-                const { image } = viewport.getSnapshot().context;
-                if (!image || imageScale === undefined)
-                  throw new Error('image or imageScale not found');
-                const fullIndexBounds = image.getIndexBounds(imageScale);
-                const imageIndexClipBounds = worldBoundsToIndexBounds({
-                  bounds: clipBounds,
-                  fullIndexBounds,
-                  worldToIndex: imageWorldToIndex,
-                });
-
-                // Compute normalized bounds in image space
-                const spatialImageBounds = ensuredDims(
-                  [0, 1],
-                  XYZ,
-                  fullIndexBounds,
-                );
-                const ranges = Object.fromEntries(
-                  XYZ.map((dim) => [dim, spatialImageBounds.get(dim)![1]]),
-                );
-                const normalizedClipBounds = XYZ.flatMap(
-                  (dim) =>
-                    imageIndexClipBounds.get(dim)?.map((v) => v / ranges[dim]),
-                ) as Bounds;
-
+              };
+            }),
+          },
+        },
+      },
+      // root state captures initial updateRenderer events, even when disconnected
+      root: {
+        entry: [
+          assign({
+            viewport: ({ spawn }) => spawn(viewportMachine, { id: 'viewport' }),
+          }),
+        ],
+        on: {
+          updateRenderer: {
+            actions: [
+              assign({
+                rendererState: ({ event: { state }, context }) => {
+                  return {
+                    ...context.rendererState,
+                    ...state,
+                  };
+                },
+                queuedRendererCommands: ({ event: { state }, context }) => [
+                  ...context.queuedRendererCommands,
+                  ...(getEntries(state) as RendererEntries),
+                ],
+              }),
+              // Trigger a render (if in idle state)
+              raise({ type: 'sendCommands' }),
+            ],
+          },
+          cameraPoseUpdated: {
+            actions: [
+              raise(({ event }) => {
                 return {
                   type: 'updateRenderer' as const,
-                  state: { normalizedClipBounds },
+                  state: { cameraPose: event.pose },
                 };
-              },
-            ),
-          ],
-        },
-      },
-      initial: 'disconnected',
-      states: {
-        disconnected: {
-          on: {
-            connect: {
-              actions: [
-                assign({
-                  serverConfig: ({
-                    event: { config },
-                  }: {
-                    event: ConnectEvent;
-                  }) => {
-                    return config;
-                  },
-                }),
-              ],
-              target: 'connecting',
-            },
-          },
-        },
-        connecting: {
-          invoke: {
-            id: 'connect',
-            src: 'connect',
-            input: ({ context, event }) => ({
-              context,
-              event,
-            }),
-            onDone: {
-              actions: assign({
-                server: ({ event }) => event.output,
-                // initially, send all commands to renderer
-                queuedRendererCommands: ({ context }) =>
-                  getEntries(context.rendererState),
               }),
-              target: 'online',
-            },
+            ],
+          },
+          setResolution: {
+            actions: [
+              raise(({ event }) => {
+                return {
+                  type: 'updateRenderer' as const,
+                  state: { renderSize: event.resolution },
+                };
+              }),
+            ],
+          },
+          setClipBounds: {
+            actions: [
+              assign({
+                clipBounds: ({ event: { clipBounds } }) => clipBounds,
+              }),
+              'computeImageIndexClipBounds',
+              raise(
+                ({
+                  context: { viewport, imageIndexClipBounds, rendererState },
+                  event,
+                }) => {
+                  const imageScale =
+                    event.imageScale ?? rendererState.imageScale;
+                  const { image } = viewport.getSnapshot().context;
+                  if (!image || imageScale === undefined)
+                    throw new Error('image or imageScale not found');
+                  if (!imageIndexClipBounds)
+                    throw new Error('imageIndexClipBounds not found');
+
+                  // Compute normalized bounds in image space
+                  const fullIndexBounds = image.getIndexBounds(imageScale);
+                  const spatialImageBounds = ensuredDims(
+                    [0, 1],
+                    XYZ,
+                    fullIndexBounds,
+                  );
+                  const ranges = Object.fromEntries(
+                    XYZ.map((dim) => [dim, spatialImageBounds.get(dim)![1]]),
+                  );
+                  const normalizedClipBounds = XYZ.flatMap(
+                    (dim) =>
+                      imageIndexClipBounds
+                        .get(dim)
+                        ?.map((v) => v / ranges[dim]),
+                  ) as Bounds;
+
+                  return {
+                    type: 'updateRenderer' as const,
+                    state: { normalizedClipBounds },
+                  };
+                },
+              ),
+            ],
           },
         },
-        online: {
-          type: 'parallel',
-          states: {
-            fpsWatcher: {
-              invoke: {
-                id: 'fpsWatcher',
-                src: fpsWatcher,
-              },
-            },
-            imageScaleUpdater: {
-              on: {
-                slowFps: {
-                  actions: raise(({ context, event }) => {
-                    return {
-                      type: 'setImageScale' as const,
-                      imageScale: getTargetScale({ context, event }),
-                    };
-                  }),
-                },
-                fastFps: {
-                  actions: raise(({ context, event }) => {
-                    return {
-                      type: 'setImageScale' as const,
-                      imageScale: getTargetScale({ context, event }),
-                    };
-                  }),
-                },
-              },
-            },
-            commandLoop: {
-              initial: 'sendingCommands',
-              states: {
-                sendingCommands: {
-                  invoke: {
-                    id: 'commandSender',
-                    src: 'commandSender',
-                    input: ({ context }: { context: Context }) => ({
-                      commands: [...context.stagedRendererCommands],
-                      context,
-                    }),
-                    onDone: {
-                      target: 'idle',
+        initial: 'disconnected',
+        states: {
+          disconnected: {
+            on: {
+              connect: {
+                actions: [
+                  assign({
+                    serverConfig: ({
+                      event: { config },
+                    }: {
+                      event: ConnectEvent;
+                    }) => {
+                      return config;
                     },
-                    onError: {
-                      actions: (e) =>
-                        console.error(
-                          `Error while sending commands.`,
-                          (e.event.data as Error).stack ?? e.event.data,
-                        ),
-                      target: 'idle', // soldier on
-                    },
-                  },
-                },
-                idle: {
-                  always: {
-                    // More commands while sending commands? Then send commands.
-                    guard: ({ context }) =>
-                      context.queuedRendererCommands.length > 0,
-                    target: 'sendingCommands',
-                  },
-                  on: {
-                    sendCommands: { target: 'sendingCommands' },
-                  },
-                  exit: assign({
-                    // consumes queue in prep for renderer
-                    stagedRendererCommands: ({ context }) => [
-                      ...context.queuedRendererCommands,
-                    ],
-                    queuedRendererCommands: [],
                   }),
-                },
+                ],
+                target: 'connecting',
               },
             },
-            renderLoop: {
-              initial: 'render',
-              states: {
-                render: {
-                  invoke: {
-                    id: 'renderer',
-                    src: 'renderer',
-                    input: ({ context }: { context: Context }) => ({
-                      context,
+          },
+          connecting: {
+            invoke: {
+              id: 'connect',
+              src: 'connect',
+              input: ({ context, event }) => ({
+                context,
+                event,
+              }),
+              onDone: {
+                actions: assign({
+                  server: ({ event }) => event.output,
+                  // initially, send all commands to renderer
+                  queuedRendererCommands: ({ context }) =>
+                    getEntries(context.rendererState),
+                }),
+                target: 'online',
+              },
+            },
+          },
+          online: {
+            type: 'parallel',
+            states: {
+              fpsWatcher: {
+                invoke: {
+                  id: 'fpsWatcher',
+                  src: fpsWatcher,
+                },
+              },
+              imageScaleUpdater: {
+                on: {
+                  slowFps: {
+                    actions: raise(({ context, event }) => {
+                      return {
+                        type: 'setImageScale' as const,
+                        imageScale: getTargetScale({ context, event }),
+                      };
                     }),
-                    onDone: {
-                      actions: [
-                        assign({
-                          frame: ({ event }) => {
-                            return event.output.frame;
-                          },
-                        }),
-                        sendTo('fpsWatcher', ({ event }) => ({
-                          type: 'newSample',
-                          renderTime: event.output.renderTime,
-                        })),
+                  },
+                  fastFps: {
+                    actions: raise(({ context, event }) => {
+                      return {
+                        type: 'setImageScale' as const,
+                        imageScale: getTargetScale({ context, event }),
+                      };
+                    }),
+                  },
+                },
+              },
+              commandLoop: {
+                initial: 'sendingCommands',
+                states: {
+                  sendingCommands: {
+                    invoke: {
+                      id: 'commandSender',
+                      src: 'commandSender',
+                      input: ({ context }: { context: Context }) => ({
+                        commands: [...context.stagedRendererCommands],
+                        context,
+                      }),
+                      onDone: {
+                        target: 'idle',
+                      },
+                      onError: {
+                        actions: (e) =>
+                          console.error(
+                            `Error while sending commands.`,
+                            (e.event.data as Error).stack ?? e.event.data,
+                          ),
+                        target: 'idle', // soldier on
+                      },
+                    },
+                  },
+                  idle: {
+                    always: {
+                      // More commands while sending commands? Then send commands.
+                      guard: ({ context }) =>
+                        context.queuedRendererCommands.length > 0,
+                      target: 'sendingCommands',
+                    },
+                    on: {
+                      sendCommands: { target: 'sendingCommands' },
+                    },
+                    exit: assign({
+                      // consumes queue in prep for renderer
+                      stagedRendererCommands: ({ context }) => [
+                        ...context.queuedRendererCommands,
                       ],
-                      target: 'idle',
-                    },
-                    onError: {
-                      actions: (e) =>
-                        console.error(
-                          `Error while updating renderer.`,
-                          (e.event.data as Error).stack ?? e.event.data,
-                        ),
-                      target: 'idle', // soldier on
-                    },
+                      queuedRendererCommands: [],
+                    }),
                   },
                 },
-                idle: {
-                  on: {
-                    render: { target: 'render' },
+              },
+              renderLoop: {
+                initial: 'render',
+                states: {
+                  render: {
+                    invoke: {
+                      id: 'renderer',
+                      src: 'renderer',
+                      input: ({ context }: { context: Context }) => ({
+                        context,
+                      }),
+                      onDone: {
+                        actions: [
+                          assign({
+                            frame: ({ event }) => {
+                              return event.output.frame;
+                            },
+                          }),
+                          sendTo('fpsWatcher', ({ event }) => ({
+                            type: 'newSample',
+                            renderTime: event.output.renderTime,
+                          })),
+                        ],
+                        target: 'idle',
+                      },
+                      onError: {
+                        actions: (e) =>
+                          console.error(
+                            `Error while updating renderer.`,
+                            (e.event.data as Error).stack ?? e.event.data,
+                          ),
+                        target: 'idle', // soldier on
+                      },
+                    },
+                  },
+                  idle: {
+                    on: {
+                      render: { target: 'render' },
+                    },
                   },
                 },
               },
@@ -548,4 +557,24 @@ export const remoteMachine = createMachine({
       },
     },
   },
-});
+  {
+    actions: {
+      computeImageIndexClipBounds: assign({
+        imageIndexClipBounds: ({
+          context: { viewport, imageWorldToIndex, clipBounds, imageScale },
+        }) => {
+          const { image } = viewport.getSnapshot().context;
+          if (!image || imageScale === undefined)
+            throw new Error('image or imageScale not found');
+          const fullIndexBounds = image.getIndexBounds(imageScale);
+          const wBounds = worldBoundsToIndexBounds({
+            bounds: clipBounds,
+            fullIndexBounds,
+            worldToIndex: imageWorldToIndex,
+          });
+          return wBounds;
+        },
+      }),
+    },
+  },
+);

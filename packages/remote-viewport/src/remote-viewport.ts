@@ -3,6 +3,7 @@ import { hyphaWebsocketClient } from 'imjoy-rpc';
 import { ReadonlyMat4, mat4, vec3 } from 'gl-matrix';
 import { decode, Image } from '@itk-wasm/htj2k';
 import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
+import { XYZ } from '@itk-viewer/io/dimensionUtils.js';
 
 export type { Image } from '@itk-wasm/htj2k';
 
@@ -83,6 +84,30 @@ const makeCameraPoseCommand = (
   return ['cameraPose', mat4ToLookAt(transform)] as Command;
 };
 
+const makeLoadImageCommand = ([type, payload]: Command, context: Context) => {
+  const { imageIndexClipBounds } = context;
+  if (!imageIndexClipBounds) throw new Error('No image index clip bounds');
+  const image_path = type === 'image' ? payload : context.rendererState.image;
+  const multiresolution_level =
+    type === 'imageScale' ? payload : context.rendererState.imageScale;
+  const channelRange = imageIndexClipBounds.get('c') ?? [0, 0];
+  const cDelta = channelRange[1] - channelRange[0];
+  const channels = Array.from(
+    { length: cDelta + 1 }, // +1 for inclusive
+    (_, i) => i + channelRange[0],
+  );
+  const region = XYZ.flatMap((dim) => imageIndexClipBounds.get(dim));
+  return [
+    'loadImage',
+    {
+      image_path,
+      multiresolution_level,
+      channels,
+      region,
+    },
+  ] as Command;
+};
+
 export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
   let decodeWorker: Worker | null = null;
 
@@ -101,24 +126,9 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
                   value,
                 );
               }
-
-              if (key === 'image') {
-                const { imageScale: multiresolution_level } =
-                  context.rendererState;
-                return [
-                  'loadImage',
-                  { image_path: value, multiresolution_level },
-                ] as Command;
+              if (key === 'image' || key === 'imageScale') {
+                return makeLoadImageCommand([key, value], context);
               }
-
-              if (key === 'imageScale') {
-                const { image: image_path } = context.rendererState;
-                return [
-                  'loadImage',
-                  { image_path, multiresolution_level: value },
-                ] as Command;
-              }
-
               return [key, value];
             })
             .flatMap((command) => {
