@@ -63,6 +63,7 @@ export type Context = {
   imageIndexClipBounds?: ReadOnlyDimensionBounds;
   loadedImageIndexBounds?: ReadOnlyDimensionBounds;
   clipBounds: Bounds;
+  loadedImageClipBounds: Bounds;
   imageWorldToIndex: ReadonlyMat4;
 };
 
@@ -108,9 +109,14 @@ type ImageProcessorDone = {
   };
 };
 
+type UpdateImageScaleResult =
+  | { type: 'noChange' }
+  | { type: 'coarserScale'; imageScale: number }
+  | { type: 'load'; imageScale: number };
+
 type UpdateImageScaleDone = {
   type: 'xstate.done.actor.updateImageScale';
-  output: number;
+  output: UpdateImageScaleResult;
 };
 
 type Event =
@@ -156,6 +162,28 @@ const computeBytes = async (
   return getBytes(image, voxelCount);
 };
 
+const EPSILON = 0.000001;
+
+const checkBoundsBigger = (
+  fullImage: Bounds,
+  benchmark: Bounds,
+  sample: Bounds,
+) => {
+  // clamp rendered bounds to max size of image
+  sample.forEach((b, i) => {
+    sample[i] =
+      i % 2
+        ? Math.min(b, fullImage[i]) // high bound case
+        : Math.max(b, fullImage[i]); // low bound case
+  });
+
+  return benchmark.some((loaded, i) => {
+    return i % 2
+      ? sample[i] - loaded > EPSILON // high bound case: currentBounds[i] > loadedBound
+      : loaded - sample[i] > EPSILON; // low bound case: currentBounds[i] < loadedBound
+  });
+};
+
 export const remoteMachine = createMachine(
   {
     types: {} as {
@@ -178,6 +206,7 @@ export const remoteMachine = createMachine(
       toRendererCoordinateSystem: mat4.create(),
       imageWorldBounds: createBounds(),
       clipBounds: createBounds(),
+      loadedImageClipBounds: createBounds(),
       imageWorldToIndex: mat4.create(),
 
       maxImageBytes: MAX_IMAGE_BYTES_DEFAULT,
@@ -193,6 +222,18 @@ export const remoteMachine = createMachine(
         },
         states: {
           idle: {},
+          raiseCoarserScale: {
+            entry: raise(({ event }) => {
+              const result = (event as UpdateImageScaleDone).output;
+              if (result.type === 'coarserScale') {
+                return {
+                  type: 'setImageScale' as const,
+                  imageScale: result.imageScale,
+                };
+              }
+              throw new Error('Unexpected result type: ' + result.type);
+            }),
+          },
           updatingScale: {
             // Ensure imageScale is not the same as before and fits in memory
             id: 'updateImageScale',
@@ -213,29 +254,50 @@ export const remoteMachine = createMachine(
               src: fromPromise(async ({ input: { imageScale, context } }) => {
                 const image = getImage(context);
 
-                if (imageScale === context.rendererState.imageScale) return;
-
-                const imageBytes = await computeBytes(
-                  image,
-                  imageScale,
+                const boundsBiggerThanLoaded = checkBoundsBigger(
+                  context.imageWorldBounds,
+                  context.loadedImageClipBounds,
                   context.clipBounds,
                 );
-                if (imageBytes > context.maxImageBytes) return;
+                if (
+                  !boundsBiggerThanLoaded &&
+                  imageScale === context.imageScale
+                )
+                  return { type: 'noChange' }; // no new data to load
 
-                return imageScale;
+                // Always try to load base scale
+                if (imageScale !== image.coarsestScale) {
+                  const imageBytes = await computeBytes(
+                    image,
+                    imageScale,
+                    context.clipBounds,
+                  );
+                  if (imageBytes > context.maxImageBytes)
+                    return { type: 'coarserScale', imageScale: imageScale + 1 };
+                }
+
+                return { type: 'load', imageScale };
               }),
-              onDone: {
-                // If imageScale should not change, output is undefined
-                guard: ({ event }) => event.output !== undefined,
-                target: 'updatingComputedValues',
-              },
+              onDone: [
+                {
+                  guard: ({ event }) => event.output.type === 'coarserScale',
+                  target: 'raiseCoarserScale',
+                },
+                {
+                  guard: ({ event }) => event.output.type === 'load',
+                  target: 'updatingComputedValues',
+                },
+              ],
             },
           },
           updatingComputedValues: {
             entry: [
               assign({
-                imageScale: ({ event }) =>
-                  (event as UpdateImageScaleDone).output,
+                imageScale: ({ event }) => {
+                  const result = (event as UpdateImageScaleDone).output;
+                  if (result.type === 'load') return result.imageScale;
+                  throw new Error('Unexpected result type: ' + result.type);
+                },
               }),
             ],
             // For new image scale, compute imageWorldBounds, imageWorldToIndex, toRendererCoordinateSystem
@@ -272,6 +334,7 @@ export const remoteMachine = createMachine(
                   assign({
                     loadedImageIndexBounds: ({ context }) =>
                       context.imageIndexClipBounds,
+                    loadedImageClipBounds: ({ context }) => context.clipBounds,
                   }),
                 ],
                 target: 'checkingFirstImage',
@@ -368,6 +431,12 @@ export const remoteMachine = createMachine(
               }),
               'computeImageIndexClipBounds',
               'updateNormalizedClipBounds',
+              raise(({ context }) => {
+                return {
+                  type: 'setImageScale' as const,
+                  imageScale: context.imageScale,
+                };
+              }),
             ],
           },
         },
@@ -540,12 +609,11 @@ export const remoteMachine = createMachine(
           if (!image || imageScale === undefined)
             throw new Error('image or imageScale not found');
           const fullIndexBounds = image.getIndexBounds(imageScale);
-          const wBounds = worldBoundsToIndexBounds({
+          return worldBoundsToIndexBounds({
             bounds: clipBounds,
             fullIndexBounds,
             worldToIndex: imageWorldToIndex,
           });
-          return wBounds;
         },
       }),
       updateNormalizedClipBounds: raise(
