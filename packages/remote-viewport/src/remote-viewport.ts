@@ -4,6 +4,9 @@ import { ReadonlyMat4, mat4, vec3 } from 'gl-matrix';
 import { decode, Image } from '@itk-wasm/htj2k';
 import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
 import { XYZ } from '@itk-viewer/io/dimensionUtils.js';
+import { worldBoundsToIndexBounds } from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { Bounds } from '@itk-viewer/io/types.js';
+import { transformBounds } from '@itk-viewer/io/transformBounds.js';
 
 export type { Image } from '@itk-wasm/htj2k';
 
@@ -182,35 +185,49 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
         },
       ),
       // Computes world bounds and transform from VTK to Agave coordinate system
-      imageProcessor: fromPromise(async ({ input: { image, imageScale } }) => {
-        const bounds = await image.getWorldBounds(imageScale);
+      imageProcessor: fromPromise(
+        async ({ input: { image, imageScale, clipBounds } }) => {
+          const indexToWorld = await image.scaleIndexToWorld(imageScale);
+          const imageWorldToIndex = mat4.invert(mat4.create(), indexToWorld);
 
-        const indexToWorld = await image.scaleIndexToWorld(imageScale);
-        const imageWorldToIndex = mat4.invert(mat4.create(), indexToWorld);
+          const fullIndexBounds = image.getIndexBounds(imageScale);
+          const byDim = worldBoundsToIndexBounds({
+            bounds: clipBounds,
+            fullIndexBounds,
+            worldToIndex: imageWorldToIndex,
+          });
 
-        // Remove image origin offset to world origin
-        const imageOrigin = vec3.fromValues(bounds[0], bounds[2], bounds[4]);
-        const transform = mat4.fromTranslation(mat4.create(), imageOrigin);
+          // loaded image world bounds
+          const bounds = transformBounds(
+            indexToWorld,
+            XYZ.flatMap((dim) => byDim.get(dim)) as Bounds,
+          );
 
-        // match Agave by normalizing to largest dim
-        const wx = bounds[1] - bounds[0];
-        const wy = bounds[3] - bounds[2];
-        const wz = bounds[5] - bounds[4];
-        const maxDim = Math.max(wx, wy, wz);
-        const scale = vec3.fromValues(maxDim, maxDim, maxDim);
-        mat4.scale(transform, transform, scale);
+          // Remove image origin offset to world origin
+          const imageOrigin = vec3.fromValues(bounds[0], bounds[2], bounds[4]);
+          const transform = mat4.fromTranslation(mat4.create(), imageOrigin);
 
-        // invert to go from VTK to Agave
-        mat4.invert(transform, transform);
+          // match Agave by normalizing to largest dim
+          const wx = bounds[1] - bounds[0];
+          const wy = bounds[3] - bounds[2];
+          const wz = bounds[5] - bounds[4];
+          const maxDim = Math.max(wx, wy, wz);
+          const scale = vec3.fromValues(maxDim, maxDim, maxDim);
+          mat4.scale(transform, transform, scale);
 
-        return {
-          toRendererCoordinateSystem: transform,
-          bounds,
-          image,
-          imageScale,
-          imageWorldToIndex,
-        };
-      }),
+          // invert to go from VTK to Agave
+          mat4.invert(transform, transform);
+
+          const fullWorldBounds = await image.getWorldBounds(imageScale);
+          return {
+            toRendererCoordinateSystem: transform,
+            bounds: fullWorldBounds,
+            image,
+            imageScale,
+            imageWorldToIndex,
+          };
+        },
+      ),
     },
   };
 };

@@ -305,10 +305,11 @@ export const remoteMachine = createMachine(
               src: 'imageProcessor',
               input: ({ context }) => {
                 const image = getImage(context);
-                const { imageScale } = context;
+                const { imageScale, clipBounds } = context;
                 return {
                   image,
                   imageScale,
+                  clipBounds,
                 };
               },
               onDone: {
