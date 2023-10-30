@@ -148,8 +148,9 @@ const getTargetScale = ({ event, context }: ActionArgs) => {
 const computeBytes = async (
   image: MultiscaleSpatialImage,
   targetScale: number,
+  clipBounds: Bounds,
 ) => {
-  const voxelCount = await getVoxelCount(image, targetScale);
+  const voxelCount = await getVoxelCount(image, targetScale, clipBounds);
   return getBytes(image, voxelCount);
 };
 
@@ -210,7 +211,11 @@ export const remoteMachine = createMachine({
 
               if (imageScale === context.rendererState.imageScale) return;
 
-              const imageBytes = await computeBytes(image, imageScale);
+              const imageBytes = await computeBytes(
+                image,
+                imageScale,
+                context.clipBounds,
+              );
               if (imageBytes > context.maxImageBytes) return;
 
               return imageScale;
