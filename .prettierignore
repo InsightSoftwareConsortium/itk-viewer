@@ -1,5 +1,7 @@
 dist
 types
 pnpm-lock.yaml
+environment.yml
+micromamba/*
 packages/blosc-zarr/*
 !packages/blosc-zarr/bloscZarrDecompress.js
