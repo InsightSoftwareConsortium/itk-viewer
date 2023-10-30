@@ -68,6 +68,8 @@ const mat4ToLookAt = (transform: ReadonlyMat4) => {
   return { eye, center, up };
 };
 
+type Command = [string, unknown];
+
 const makeCameraPoseCommand = (
   toRendererCoordinateSystem: ReadonlyMat4,
   cameraPose: ReadonlyMat4,
@@ -78,7 +80,7 @@ const makeCameraPoseCommand = (
     toRendererCoordinateSystem,
     inverted,
   );
-  return ['cameraPose', mat4ToLookAt(transform)];
+  return ['cameraPose', mat4ToLookAt(transform)] as Command;
 };
 
 export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
@@ -91,7 +93,7 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
       ),
       commandSender: fromPromise(
         async ({ input: { context, commands } }: { input: RendererInput }) => {
-          const translatedCommands = commands
+          const { commands: translatedCommands } = commands
             .map(([key, value]) => {
               if (key === 'cameraPose') {
                 return makeCameraPoseCommand(
@@ -106,7 +108,7 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
                 return [
                   'loadImage',
                   { image_path: value, multiresolution_level },
-                ];
+                ] as Command;
               }
 
               if (key === 'imageScale') {
@@ -114,26 +116,41 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
                 return [
                   'loadImage',
                   { image_path, multiresolution_level: value },
-                ];
+                ] as Command;
               }
 
               return [key, value];
             })
-            .flatMap((event) => {
-              const [type] = event;
+            .flatMap((command) => {
+              const [type] = command;
               if (type === 'loadImage') {
                 // Resend camera pose after load image.
                 // Camera is reset by Agave after load image?
                 return [
-                  event,
+                  command as Command,
                   makeCameraPoseCommand(
                     context.toRendererCoordinateSystem,
                     context.rendererState.cameraPose,
                   ),
                 ];
               }
-              return [event];
-            });
+              return [command as Command];
+            })
+            .reduceRight(
+              // filter duplicate commands
+              ({ commands, seenCommands }, command) => {
+                const [type] = command;
+                if (seenCommands.has(type)) {
+                  return { commands, seenCommands };
+                }
+                seenCommands.add(type);
+                return { commands: [command, ...commands], seenCommands };
+              },
+              {
+                commands: [] as Array<Command>,
+                seenCommands: new Set<string>(),
+              },
+            );
 
           context.server.updateRenderer(translatedCommands);
         },
