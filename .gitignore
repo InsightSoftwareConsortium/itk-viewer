@@ -27,6 +27,7 @@ dist-ssr
 test/data/
 cypress/screenshots
 cypress/videos
+micromamba/
 
 types/
 
