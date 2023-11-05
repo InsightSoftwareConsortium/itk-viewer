@@ -24,6 +24,9 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Download test data
+        run: pnpm test:data:download
+
       - name: Test with Chrome
         uses: cypress-io/github-action@v5
         with:
