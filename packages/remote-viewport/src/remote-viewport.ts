@@ -3,6 +3,10 @@ import { hyphaWebsocketClient } from 'imjoy-rpc';
 import { ReadonlyMat4, mat4, vec3 } from 'gl-matrix';
 import { decode, Image } from '@itk-wasm/htj2k';
 import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
+import { XYZ } from '@itk-viewer/io/dimensionUtils.js';
+import { worldBoundsToIndexBounds } from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { Bounds } from '@itk-viewer/io/types.js';
+import { transformBounds } from '@itk-viewer/io/transformBounds.js';
 
 export type { Image } from '@itk-wasm/htj2k';
 
@@ -68,6 +72,8 @@ const mat4ToLookAt = (transform: ReadonlyMat4) => {
   return { eye, center, up };
 };
 
+type Command = [string, unknown];
+
 const makeCameraPoseCommand = (
   toRendererCoordinateSystem: ReadonlyMat4,
   cameraPose: ReadonlyMat4,
@@ -78,7 +84,31 @@ const makeCameraPoseCommand = (
     toRendererCoordinateSystem,
     inverted,
   );
-  return ['cameraPose', mat4ToLookAt(transform)];
+  return ['cameraPose', mat4ToLookAt(transform)] as Command;
+};
+
+const makeLoadImageCommand = ([type, payload]: Command, context: Context) => {
+  const { imageIndexClipBounds } = context;
+  if (!imageIndexClipBounds) throw new Error('No image index clip bounds');
+  const image_path = type === 'image' ? payload : context.rendererState.image;
+  const multiresolution_level =
+    type === 'imageScale' ? payload : context.rendererState.imageScale;
+  const channelRange = imageIndexClipBounds.get('c') ?? [0, 0];
+  const cDelta = channelRange[1] - channelRange[0];
+  const channels = Array.from(
+    { length: cDelta + 1 }, // +1 for inclusive
+    (_, i) => i + channelRange[0],
+  );
+  const region = XYZ.flatMap((dim) => imageIndexClipBounds.get(dim));
+  return [
+    'loadImage',
+    {
+      image_path,
+      multiresolution_level,
+      channels,
+      region,
+    },
+  ] as Command;
 };
 
 export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
@@ -91,7 +121,7 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
       ),
       commandSender: fromPromise(
         async ({ input: { context, commands } }: { input: RendererInput }) => {
-          const translatedCommands = commands
+          const { commands: translatedCommands } = commands
             .map(([key, value]) => {
               if (key === 'cameraPose') {
                 return makeCameraPoseCommand(
@@ -99,41 +129,41 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
                   value,
                 );
               }
-
-              if (key === 'image') {
-                const { imageScale: multiresolution_level } =
-                  context.rendererState;
-                return [
-                  'loadImage',
-                  { image_path: value, multiresolution_level },
-                ];
+              if (key === 'image' || key === 'imageScale') {
+                return makeLoadImageCommand([key, value], context);
               }
-
-              if (key === 'imageScale') {
-                const { image: image_path } = context.rendererState;
-                return [
-                  'loadImage',
-                  { image_path, multiresolution_level: value },
-                ];
-              }
-
               return [key, value];
             })
-            .flatMap((event) => {
-              const [type] = event;
+            .flatMap((command) => {
+              const [type] = command;
               if (type === 'loadImage') {
                 // Resend camera pose after load image.
                 // Camera is reset by Agave after load image?
                 return [
-                  event,
+                  command as Command,
                   makeCameraPoseCommand(
                     context.toRendererCoordinateSystem,
                     context.rendererState.cameraPose,
                   ),
                 ];
               }
-              return [event];
-            });
+              return [command as Command];
+            })
+            .reduceRight(
+              // filter duplicate commands
+              ({ commands, seenCommands }, command) => {
+                const [type] = command;
+                if (seenCommands.has(type)) {
+                  return { commands, seenCommands };
+                }
+                seenCommands.add(type);
+                return { commands: [command, ...commands], seenCommands };
+              },
+              {
+                commands: [] as Array<Command>,
+                seenCommands: new Set<string>(),
+              },
+            );
 
           context.server.updateRenderer(translatedCommands);
         },
@@ -155,35 +185,49 @@ export const createHyphaMachineConfig: () => RemoteMachineOptions = () => {
         },
       ),
       // Computes world bounds and transform from VTK to Agave coordinate system
-      imageProcessor: fromPromise(async ({ input: { image, imageScale } }) => {
-        const bounds = await image.getWorldBounds(imageScale);
+      imageProcessor: fromPromise(
+        async ({ input: { image, imageScale, clipBounds } }) => {
+          const indexToWorld = await image.scaleIndexToWorld(imageScale);
+          const imageWorldToIndex = mat4.invert(mat4.create(), indexToWorld);
 
-        const indexToWorld = await image.scaleIndexToWorld(imageScale);
-        const imageWorldToIndex = mat4.invert(mat4.create(), indexToWorld);
+          const fullIndexBounds = image.getIndexBounds(imageScale);
+          const byDim = worldBoundsToIndexBounds({
+            bounds: clipBounds,
+            fullIndexBounds,
+            worldToIndex: imageWorldToIndex,
+          });
 
-        // Remove image origin offset to world origin
-        const imageOrigin = vec3.fromValues(bounds[0], bounds[2], bounds[4]);
-        const transform = mat4.fromTranslation(mat4.create(), imageOrigin);
+          // loaded image world bounds
+          const bounds = transformBounds(
+            indexToWorld,
+            XYZ.flatMap((dim) => byDim.get(dim)) as Bounds,
+          );
 
-        // match Agave by normalizing to largest dim
-        const wx = bounds[1] - bounds[0];
-        const wy = bounds[3] - bounds[2];
-        const wz = bounds[5] - bounds[4];
-        const maxDim = Math.max(wx, wy, wz);
-        const scale = vec3.fromValues(maxDim, maxDim, maxDim);
-        mat4.scale(transform, transform, scale);
+          // Remove image origin offset to world origin
+          const imageOrigin = vec3.fromValues(bounds[0], bounds[2], bounds[4]);
+          const transform = mat4.fromTranslation(mat4.create(), imageOrigin);
 
-        // invert to go from VTK to Agave
-        mat4.invert(transform, transform);
+          // match Agave by normalizing to largest dim
+          const wx = bounds[1] - bounds[0];
+          const wy = bounds[3] - bounds[2];
+          const wz = bounds[5] - bounds[4];
+          const maxDim = Math.max(wx, wy, wz);
+          const scale = vec3.fromValues(maxDim, maxDim, maxDim);
+          mat4.scale(transform, transform, scale);
 
-        return {
-          toRendererCoordinateSystem: transform,
-          bounds,
-          image,
-          imageScale,
-          imageWorldToIndex,
-        };
-      }),
+          // invert to go from VTK to Agave
+          mat4.invert(transform, transform);
+
+          const fullWorldBounds = await image.getWorldBounds(imageScale);
+          return {
+            toRendererCoordinateSystem: transform,
+            bounds: fullWorldBounds,
+            image,
+            imageScale,
+            imageWorldToIndex,
+          };
+        },
+      ),
     },
   };
 };

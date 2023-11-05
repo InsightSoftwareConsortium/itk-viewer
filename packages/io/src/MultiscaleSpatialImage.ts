@@ -62,7 +62,14 @@ const extentToBounds = (ex: Extent, indexToWorld: mat4) => {
   const idx = new Float32Array([corners[0], corners[1], corners[2]]);
   const vout = new Float32Array(3);
   vec3.transformMat4(vout, idx, indexToWorld);
-  const bounds = [vout[0], vout[0], vout[1], vout[1], vout[2], vout[2]];
+  const bounds = [
+    vout[0],
+    vout[0],
+    vout[1],
+    vout[1],
+    vout[2],
+    vout[2],
+  ] as Bounds;
   for (let i = 3; i < 24; i += 3) {
     vec3.set(idx, corners[i], corners[i + 1], corners[i + 2]);
     vec3.transformMat4(vout, idx, indexToWorld);

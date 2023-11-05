@@ -213,10 +213,11 @@ export class ItkRemoteViewport extends ItkViewport {
     const [lowerBound, upperBound] =
       index % 2 === 0 ? [index, index + 1] : [index - 1, index];
     const range = imageWorldBounds[upperBound] - imageWorldBounds[lowerBound];
+    const floor = imageWorldBounds[lowerBound];
     const currentBounds = [
       ...this.remote.getSnapshot().context.clipBounds,
     ] as Bounds;
-    currentBounds[index] = range * (normalizedBound / 100);
+    currentBounds[index] = range * (normalizedBound / 100) + floor;
 
     this.remote.send({
       type: 'setClipBounds',
