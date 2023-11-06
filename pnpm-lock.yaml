@@ -81,6 +81,9 @@ importers:
       '@itk-viewer/viewer':
         specifier: workspace:^
         version: link:../viewer
+      '@itk-viewer/vtkjs':
+        specifier: workspace:^
+        version: link:../vtkjs
       gl-matrix:
         specifier: ^3.4.3
         version: 3.4.3
@@ -181,6 +184,25 @@ importers:
       vite:
         specifier: ^4.4.9
         version: 4.4.9
+
+  packages/vtkjs:
+    dependencies:
+      '@itk-viewer/io':
+        specifier: workspace:^
+        version: link:../io
+      '@itk-viewer/viewer':
+        specifier: workspace:^
+        version: link:../viewer
+      xstate:
+        specifier: 5.0.0-beta.34
+        version: 5.0.0-beta.34
+    devDependencies:
+      typescript:
+        specifier: ^5.2.2
+        version: 5.2.2
+      vite:
+        specifier: ^4.4.9
+        version: 4.4.11
 
   packages/wasm-utils:
     dependencies:

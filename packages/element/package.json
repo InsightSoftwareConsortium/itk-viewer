@@ -50,8 +50,9 @@
   },
   "dependencies": {
     "@itk-viewer/io": "workspace:^",
-    "@itk-viewer/remote-viewport": "workspace:^",
     "@itk-viewer/viewer": "workspace:^",
+    "@itk-viewer/remote-viewport": "workspace:^",
+    "@itk-viewer/vtkjs": "workspace:^",
     "gl-matrix": "^3.4.3",
     "lit": "^3.0.0",
     "orbit-camera": "^1.0.0",
