@@ -1,9 +1,7 @@
 import { createActor } from 'xstate';
 
 import '@kitware/vtk.js/Rendering/Profiles/Geometry';
-import GenericRenderWindow, {
-  vtkGenericRenderWindow,
-} from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
+import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor.js';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper.js';
 import vtkConeSource from '@kitware/vtk.js/Filters/Sources/ConeSource.js';
@@ -41,35 +39,28 @@ const setContainer = (
   renderer.resetCamera();
   renderWindow.render();
 };
+const config = {
+  actions: {
+    setContainer: ({
+      event: { container },
+      context: { rendererContainer },
+    }: {
+      event: SetContainerEvent;
+      context: Context;
+    }) => {
+      setContainer(rendererContainer, container);
+    },
+  },
+  actors: {
+    view2d,
+  },
+};
+export const view2dVtkjs = machine.provide(config);
 
-export const createView2d = () => {
-  // The VTK.js implementation of view2d machine
-  const config = {
-    actions: {
-      setup: ({ context }: { context: Context }) => {
-        context.rendererContainer = GenericRenderWindow.newInstance({
-          listenWindowResize: false,
-        });
-      },
-      setContainer: ({
-        event: { container },
-        context: { rendererContainer },
-      }: {
-        event: SetContainerEvent;
-        context: Context;
-      }) => {
-        if (!rendererContainer) {
-          throw new Error('rendererContainer is undefined');
-        }
-        setContainer(rendererContainer, container);
-      },
-    },
-    actors: {
-      view2d,
-    },
-  };
-  const configured = machine.provide(config);
-  return createActor(configured).start();
+export const createView2d = (id: string | undefined) => {
+  return createActor(view2dVtkjs, {
+    systemId: id,
+  }).start();
 };
 
 export type View2dActor = ReturnType<typeof createView2d>;

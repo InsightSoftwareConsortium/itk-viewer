@@ -1,30 +1,63 @@
 import { LitElement, css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { ref } from 'lit/directives/ref.js';
-import { createView2d, View2dActor } from '@itk-viewer/vtkjs/view-2d.js';
+import { ContextConsumer } from '@lit/context';
+
+import {
+  createView2d,
+  View2dActor,
+  view2dVtkjs,
+} from '@itk-viewer/vtkjs/view-2d.js';
+import { type Viewer, viewerContext } from './viewer-context.js';
 
 @customElement('itk-view-2d')
 export class ItkView2d extends LitElement {
-  actor: View2dActor = createView2d();
+  actorId: string = 'view2d';
+  actor: View2dActor = createView2d(this.actorId);
+  container: HTMLElement | undefined;
+
+  // @ts-expect-error viewerContext unused
+  private viewerContext = new ContextConsumer(this, {
+    context: viewerContext,
+    subscribe: true,
+    callback: (viewer: Viewer) => {
+      this.setViewer(viewer);
+    },
+  });
 
   constructor() {
     super();
   }
 
-  getActor(): View2dActor {
+  getActor() {
     return this.actor;
   }
 
-  setContainer(container: Element | undefined) {
-    if (container instanceof HTMLElement) {
-      this.actor.send({ type: 'setContainer', container });
+  setViewer(system: Viewer) {
+    this.actorId = system.getSnapshot().context.nextId;
+    system.send({
+      type: 'createViewport',
+      logic: view2dVtkjs,
+    });
+    this.actor = system.getSnapshot().children[this.actorId] as View2dActor;
+    this.sendContainer();
+  }
+
+  sendContainer() {
+    this.actor.send({ type: 'setContainer', container: this.container });
+  }
+
+  onContainer(container: Element | undefined) {
+    if (container instanceof HTMLElement || container == undefined) {
+      this.container = container;
+      this.sendContainer();
     }
   }
 
   render() {
     return html`
       <h1>View 2D</h1>
-      <div class="container" ${ref(this.setContainer)}></div>
+      <div class="container" ${ref(this.onContainer)}></div>
     `;
   }
 

@@ -1,12 +1,10 @@
 import { createMachine } from 'xstate';
-import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
+import GenericRenderWindow, {
+  vtkGenericRenderWindow,
+} from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 
 export type Context = {
-  rendererContainer: vtkGenericRenderWindow | undefined;
-};
-
-const context = {
-  rendererContainer: undefined,
+  rendererContainer: vtkGenericRenderWindow;
 };
 
 export type SetContainerEvent = {
@@ -16,13 +14,19 @@ export type SetContainerEvent = {
 
 export const machine = createMachine({
   types: {} as {
-    context: typeof context;
+    context: Context;
     events: SetContainerEvent;
     actions:
-      | { type: 'setup'; context: typeof context }
+      | { type: 'setup'; context: Context }
       | { type: 'setContainer'; event: SetContainerEvent };
   },
-  context: () => JSON.parse(JSON.stringify(context)),
+  context: () => {
+    return {
+      rendererContainer: GenericRenderWindow.newInstance({
+        listenWindowResize: false,
+      }),
+    };
+  },
   id: 'view2d',
   type: 'parallel',
   states: {
