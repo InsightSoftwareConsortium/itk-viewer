@@ -11,4 +11,7 @@ export default defineConfig({
       external: /^lit/,
     },
   },
+  optimizeDeps: {
+    exclude: ['@itk-wasm/htj2k', 'itk-wasm'],
+  },
 });
