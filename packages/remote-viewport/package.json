@@ -27,7 +27,7 @@
   "dependencies": {
     "@itk-viewer/io": "workspace:^",
     "@itk-viewer/viewer": "workspace:^",
-    "@itk-wasm/htj2k": "^1.1.0",
+    "@itk-wasm/htj2k": "2.1.0",
     "gl-matrix": "^3.4.3",
     "imjoy-rpc": "^0.5.44",
     "xstate": "5.0.0-beta.34"
