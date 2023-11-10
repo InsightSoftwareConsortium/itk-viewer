@@ -6,7 +6,7 @@ import { ContextConsumer } from '@lit/context';
 import {
   createView2d,
   View2dActor,
-  view2dVtkjs,
+  createView2dVtkjs,
 } from '@itk-viewer/vtkjs/view-2d.js';
 import { type Viewer, viewerContext } from './viewer-context.js';
 
@@ -37,7 +37,7 @@ export class ItkView2d extends LitElement {
     this.actorId = system.getSnapshot().context.nextId;
     system.send({
       type: 'createViewport',
-      logic: view2dVtkjs,
+      logic: createView2dVtkjs(),
     });
     this.actor = system.getSnapshot().children[this.actorId] as View2dActor;
     this.sendContainer();

@@ -37,7 +37,7 @@ describe('Viewer', () => {
       document.location.origin,
     );
     const image = await ZarrMultiscaleSpatialImage.fromUrl(storeURL);
-    viewer.send({ type: 'addImage', name: 'zarr', image });
+    viewer.send({ type: 'setImage', name: 'zarr', image });
 
     expect(watcher.viewportUpdated).to.be.called;
     expect(viewport.getSnapshot().context.image).to.be.equal(image);

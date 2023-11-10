@@ -6,7 +6,9 @@ const noop = () => {};
 export const createViewport = () => {
   const standAloneViewportLogic = viewportMachine.provide({
     actions: {
-      forwardToParent: noop, // if not spawned in system, don't error
+      // if not spawned in system, don't error
+      forwardToParent: noop,
+      sendImageAssigned: noop,
     },
   });
   return createActor(standAloneViewportLogic).start();

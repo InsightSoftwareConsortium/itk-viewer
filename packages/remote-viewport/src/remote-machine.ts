@@ -81,8 +81,8 @@ type RenderEvent = {
   type: 'render';
 };
 
-type SetImage = {
-  type: 'setImage';
+type ImageAssigned = {
+  type: 'imageAssigned';
   image: MultiscaleSpatialImage;
 };
 
@@ -123,7 +123,7 @@ type Event =
   | ConnectEvent
   | UpdateRendererEvent
   | RenderEvent
-  | SetImage
+  | ImageAssigned
   | SlowFps
   | FastFps
   | CameraPoseUpdated
@@ -217,7 +217,7 @@ export const remoteMachine = createMachine(
       imageProcessor: {
         initial: 'idle',
         on: {
-          setImage: '.updatingScale',
+          imageAssigned: '.updatingScale',
           setImageScale: '.updatingScale',
         },
         states: {
@@ -242,7 +242,8 @@ export const remoteMachine = createMachine(
                 const image = getImage(context);
                 const getImageScale = () => {
                   if (event.type === 'setImageScale') return event.imageScale;
-                  if (event.type === 'setImage') return image.coarsestScale;
+                  if (event.type === 'imageAssigned')
+                    return image.coarsestScale;
                   throw new Error('Unexpected event type: ' + event.type);
                 };
                 const imageScale = getImageScale();

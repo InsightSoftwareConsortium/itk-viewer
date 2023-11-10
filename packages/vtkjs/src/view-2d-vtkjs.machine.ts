@@ -1,7 +1,8 @@
-import { createMachine } from 'xstate';
+import { createMachine, sendTo } from 'xstate';
 import GenericRenderWindow, {
   vtkGenericRenderWindow,
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
+import type { Events } from '@itk-viewer/viewer/viewport-machine.js';
 
 export type Context = {
   rendererContainer: vtkGenericRenderWindow;
@@ -12,10 +13,10 @@ export type SetContainerEvent = {
   container: HTMLElement | undefined;
 };
 
-export const machine = createMachine({
+export const view2dLogic = createMachine({
   types: {} as {
     context: Context;
-    events: SetContainerEvent;
+    events: Events | SetContainerEvent;
     actions:
       | { type: 'setup'; context: Context }
       | { type: 'setContainer'; event: SetContainerEvent };
@@ -27,18 +28,21 @@ export const machine = createMachine({
       }),
     };
   },
-  id: 'view2d',
+  id: 'view2dVtkjs',
   type: 'parallel',
   states: {
     view2d: {
-      id: 'view2d',
       invoke: {
+        id: 'view2d',
         src: 'view2d',
       },
     },
     vtkjs: {
       entry: [{ type: 'setup' }],
       on: {
+        setImage: {
+          actions: sendTo('view2d', ({ event }) => event),
+        },
         setContainer: {
           actions: [{ type: 'setContainer' }],
         },
