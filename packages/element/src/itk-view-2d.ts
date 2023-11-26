@@ -5,15 +5,15 @@ import { ContextConsumer } from '@lit/context';
 
 import {
   createView2d,
-  View2dActor,
+  View2dVtkjsActor,
   createView2dVtkjs,
-} from '@itk-viewer/vtkjs/view-2d.js';
+} from '@itk-viewer/vtkjs/view-2d-vtkjs.js';
 import { type Viewer, viewerContext } from './viewer-context.js';
 
 @customElement('itk-view-2d')
 export class ItkView2d extends LitElement {
   actorId: string = 'view2d';
-  actor: View2dActor = createView2d(this.actorId);
+  actor: View2dVtkjsActor = createView2d(this.actorId);
   container: HTMLElement | undefined;
 
   // @ts-expect-error viewerContext unused
@@ -29,7 +29,7 @@ export class ItkView2d extends LitElement {
     super();
   }
 
-  getActor() {
+  getActor(): View2dVtkjsActor {
     return this.actor;
   }
 
@@ -39,7 +39,9 @@ export class ItkView2d extends LitElement {
       type: 'createViewport',
       logic: createView2dVtkjs(),
     });
-    this.actor = system.getSnapshot().children[this.actorId] as View2dActor;
+    this.actor = system.getSnapshot().children[
+      this.actorId
+    ] as View2dVtkjsActor;
     this.sendContainer();
   }
 

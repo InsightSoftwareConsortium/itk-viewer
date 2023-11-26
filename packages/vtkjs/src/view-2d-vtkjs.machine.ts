@@ -3,6 +3,7 @@ import GenericRenderWindow, {
   vtkGenericRenderWindow,
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import type { Events } from '@itk-viewer/viewer/viewport-machine.js';
+import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 export type Context = {
   rendererContainer: vtkGenericRenderWindow;
@@ -16,10 +17,14 @@ export type SetContainerEvent = {
 export const view2dLogic = createMachine({
   types: {} as {
     context: Context;
-    events: Events | SetContainerEvent;
+    events:
+      | Events
+      | SetContainerEvent
+      | { type: 'imageBuilt'; image: BuiltImage };
     actions:
       | { type: 'setup'; context: Context }
-      | { type: 'setContainer'; event: SetContainerEvent };
+      | { type: 'setContainer'; event: SetContainerEvent }
+      | { type: 'imageBuilt'; image: BuiltImage };
   },
   context: () => {
     return {
@@ -45,6 +50,9 @@ export const view2dLogic = createMachine({
         },
         setContainer: {
           actions: [{ type: 'setContainer' }],
+        },
+        imageBuilt: {
+          actions: [{ type: 'imageBuilt' }],
         },
       },
     },

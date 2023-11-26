@@ -1,7 +1,10 @@
-import { createMachine, sendTo } from 'xstate';
+import { assign, createMachine, fromPromise, sendParent, sendTo } from 'xstate';
 import { viewportMachine } from './viewport-machine.js';
 
-const context = {};
+const context = {
+  slice: 0,
+  imageScale: 0,
+};
 
 export const view2d = createMachine(
   {
@@ -24,7 +27,51 @@ export const view2d = createMachine(
             actions: [sendTo('viewport', ({ event }) => event)],
           },
           imageAssigned: {
-            actions: [({ event }) => console.log(event)],
+            actions: [
+              assign({
+                imageScale: ({ event }) => event.image.coarsestScale,
+                slice: ({ event: { image } }) => {
+                  return image.coarsestScale;
+                },
+              }),
+            ],
+            target: '.buildingImage',
+          },
+        },
+        initial: 'idle',
+        states: {
+          idle: {},
+          buildingImage: {
+            invoke: {
+              input: ({ context, self }) => {
+                const { image } = self
+                  .getSnapshot()
+                  .children.viewport.getSnapshot().context;
+                return { context, image };
+              },
+              src: fromPromise(
+                async ({
+                  input: {
+                    context: { imageScale },
+                    image,
+                  },
+                }) => {
+                  const builtImage = await image.getImage(imageScale);
+                  return builtImage;
+                },
+              ),
+
+              onDone: {
+                actions: [
+                  sendParent(({ event: { output } }) => {
+                    return {
+                      type: 'imageBuilt',
+                      image: output,
+                    };
+                  }),
+                ],
+              },
+            },
           },
         },
       },
