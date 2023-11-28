@@ -1,5 +1,12 @@
 # @itk-viewer/io
 
+## 0.1.5
+
+### Patch Changes
+
+- c13abd2: Add view-2d-vtkjs. Fix computeRanges.
+- 14817ae: Load image with bounded by clip bounds.
+
 ## 0.1.4
 
 ### Patch Changes
