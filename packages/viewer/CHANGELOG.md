@@ -1,5 +1,16 @@
 # @itk-viewer/viewer
 
+## 0.2.5
+
+### Patch Changes
+
+- c13abd2: Add view-2d-vtkjs. Fix computeRanges.
+- 991d042: Performance improvements to canvas blitting and render loop
+- 14817ae: Load image with bounded by clip bounds.
+- Updated dependencies [c13abd2]
+- Updated dependencies [14817ae]
+  - @itk-viewer/io@0.1.5
+
 ## 0.2.4
 
 ### Patch Changes
