@@ -10,8 +10,8 @@ import {
 } from '@itk-viewer/vtkjs/view-2d-vtkjs.js';
 import { type Viewer, viewerContext } from './viewer-context.js';
 
-@customElement('itk-view-2d')
-export class ItkView2d extends LitElement {
+@customElement('itk-view-2d-vtkjs')
+export class ItkView2dVtkjs extends LitElement {
   actorId: string = 'view2d';
   actor: View2dVtkjsActor = createView2d(this.actorId);
   container: HTMLElement | undefined;
@@ -79,6 +79,6 @@ export class ItkView2d extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'itk-view-2d': ItkView2d;
+    'itk-view-2d-vtkjs': ItkView2dVtkjs;
   }
 }

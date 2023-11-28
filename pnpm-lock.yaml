@@ -90,6 +90,9 @@ importers:
       gl-matrix:
         specifier: ^3.4.3
         version: 3.4.3
+      itk-wasm:
+        specifier: 1.0.0-b.133
+        version: 1.0.0-b.133
       lit:
         specifier: ^3.0.0
         version: 3.0.0

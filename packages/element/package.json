@@ -56,6 +56,7 @@
     "@itk-viewer/vtkjs": "workspace:^",
     "@lit/context": "^1.0.1",
     "gl-matrix": "^3.4.3",
+    "itk-wasm": "1.0.0-b.133",
     "lit": "^3.0.0",
     "orbit-camera": "^1.0.0",
     "xstate": "5.0.0-beta.34",
