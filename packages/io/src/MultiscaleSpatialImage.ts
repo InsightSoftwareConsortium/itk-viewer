@@ -576,3 +576,7 @@ export const getBytes = (
     componentTypeToTypedArray.get(componentType)!.prototype.BYTES_PER_ELEMENT;
   return bytesPerElement * components * voxelCount;
 };
+
+export type BuiltImage = Awaited<
+  ReturnType<MultiscaleSpatialImage['buildImage']>
+>;

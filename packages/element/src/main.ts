@@ -23,7 +23,7 @@ const setImage = async (imagePath: string) => {
     serverUrl,
     serviceId: remoteZarrServiceId,
   });
-  viewer.send({ type: 'addImage', image, name: 'image' });
+  viewer.send({ type: 'setImage', image, name: 'image' });
 };
 
 setImage(imagePath);

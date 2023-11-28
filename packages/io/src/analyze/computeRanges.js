@@ -4,9 +4,10 @@ import { createRangeHelper } from './createRangeHelper';
 const haveSharedArrayBuffer =
   typeof globalThis.SharedArrayBuffer === 'function';
 
-const numberOfWorkers = navigator.hardwareConcurrency
-  ? Math.min(navigator.hardwareConcurrency, 8)
-  : 4;
+const numberOfWorkers =
+  navigator.hardwareConcurrency != undefined
+    ? Math.min(navigator.hardwareConcurrency, 8)
+    : 4;
 
 const computeRangeWorkerPool = webWorkerPromiseWorkerPool(
   numberOfWorkers,
@@ -34,12 +35,13 @@ export async function computeRanges(values, numberOfComponents = 1) {
     }
   } else {
     let arrayStride = Math.floor(values.length / numberOfSplits) || 1;
-    arrayStride += arrayStride % numberOfComponents;
+    // include all components of last pixel
+    arrayStride += numberOfComponents - (arrayStride % numberOfComponents);
     let arrayIndex = 0;
     for (let split = 0; split < numberOfSplits; split++) {
       const arrayStart = arrayIndex;
-      const arrayEnd = Math.min(arrayIndex + arrayStride, values.length - 1);
-      const subArray = values.slice(arrayStart, arrayEnd + 1);
+      const arrayEnd = Math.min(arrayIndex + arrayStride, values.length);
+      const subArray = values.slice(arrayStart, arrayEnd);
       taskArgs[split] = [
         {
           split: 0, // 0 because array already split

@@ -11,7 +11,7 @@
     "types"
   ],
   "scripts": {
-    "dev": "vite",
+    "dev": "tsc --watch --project tsconfig.build.json & vite",
     "build": "tsc --project tsconfig.build.json"
   },
   "repository": {
@@ -46,13 +46,17 @@
   "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
     "typescript": "^5.2.2",
-    "vite": "^4.4.11"
+    "vite": "^4.4.11",
+    "vite-plugin-static-copy": "^0.17.0"
   },
   "dependencies": {
     "@itk-viewer/io": "workspace:^",
     "@itk-viewer/remote-viewport": "workspace:^",
     "@itk-viewer/viewer": "workspace:^",
+    "@itk-viewer/vtkjs": "workspace:^",
+    "@lit/context": "^1.0.1",
     "gl-matrix": "^3.4.3",
+    "itk-wasm": "1.0.0-b.133",
     "lit": "^3.0.0",
     "orbit-camera": "^1.0.0",
     "xstate": "5.0.0-beta.34",

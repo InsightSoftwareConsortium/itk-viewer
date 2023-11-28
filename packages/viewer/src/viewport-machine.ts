@@ -26,7 +26,7 @@ type CameraPoseUpdatedEvent = {
   pose: ReadonlyMat4;
 };
 
-type Events =
+export type Events =
   | SetImageEvent
   | SetCameraEvent
   | CameraPoseUpdatedEvent
@@ -55,7 +55,7 @@ export const viewportMachine = createMachine(
                 image: ({ event: { image } }: { event: SetImageEvent }) =>
                   image,
               }),
-              'forwardToParent',
+              'sendImageAssigned',
               'resetCameraPose',
             ],
           },
@@ -101,6 +101,10 @@ export const viewportMachine = createMachine(
     actions: {
       forwardToParent: sendParent(({ event }) => {
         return event;
+      }),
+      sendImageAssigned: sendParent(({ event }) => {
+        const { image } = event as SetImageEvent;
+        return { type: 'imageAssigned', image };
       }),
       resetCameraPose: async ({ context: { image, camera } }) => {
         if (!image || !camera) return;
