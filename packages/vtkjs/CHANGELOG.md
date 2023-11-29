@@ -1,5 +1,11 @@
 # @itk-viewer/vtkjs
 
+## 0.0.2
+
+### Patch Changes
+
+- a896e57: Trigger a publish to fix private publish attempt.
+
 ## 0.0.1
 
 ### Patch Changes
