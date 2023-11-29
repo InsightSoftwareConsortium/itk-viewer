@@ -1,5 +1,12 @@
 # @itk-viewer/element
 
+## 0.2.9
+
+### Patch Changes
+
+- Updated dependencies [a896e57]
+  - @itk-viewer/vtkjs@0.0.2
+
 ## 0.2.8
 
 ### Patch Changes
