@@ -20,7 +20,7 @@
     "cy:component:ci": "cypress run --component --record",
     "cy:component:chrome": "cypress run --component --browser chrome",
     "clean": "git clean -fdx",
-    "ci:publish": "pnpm publish -r"
+    "ci:publish": "pnpm publish -r --access public"
   },
   "devDependencies": {
     "@changesets/cli": "^2.26.2",
