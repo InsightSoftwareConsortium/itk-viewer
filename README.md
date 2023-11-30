@@ -50,6 +50,10 @@ revision `f6b4fa13c8`, before they were extracted.
     <th><img src="src/crop.svg" width="40" alt="cropIconDataUri"/></th>
   </tr>
   <tr>
+    <th>downloadIconDataUri</th>
+    <th><img src="src/download.svg" width="40" alt="downloadIconDataUri"/></th>
+  </tr>
+  <tr>
     <th>fullscreenIconDataUri</th>
     <th><img src="src/fullscreen.svg" width="40" alt="fullscreenIconDataUri"/></th>
   </tr>
