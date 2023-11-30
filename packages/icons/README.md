@@ -1,19 +1,17 @@
-# itk-viewer-icons
-
-[![npm version](https://badge.fury.io/js/itk-viewer-icons.svg)](https://badge.fury.io/js/itk-viewer-icons)
+# @itk-viewer/icons
 
 Icons for `itk-viewer` user interfaces.
 
 ## Installation
 
 ```
-npm install --save itk-viewer-icons
+npm install --save @itk-viewer/icons
 ```
 
 ## Example Usage
 
 ```
-import { axesIconDataUri } from 'itk-viewer-icons'
+import { axesIconDataUri } from '@itk-viewer/icons'
 
 iconElement = document.createElement('div')
 iconElement.innerHTML = `<img src="${axesIconDataUri}" alt="axes"/>`
