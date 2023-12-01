@@ -1,0 +1,3 @@
+const optimizedSVGDataUri = "data:image/svg+xml,%3c%3fxml version='1.0' encoding='utf-8'%3f%3e%3c!-- Uploaded to: SVG Repo%2c www.svgrepo.com%2c Generator: SVG Repo Mixer Tools --%3e %3csvg fill='black' width='800px' height='800px' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M7.293%2c13.707a1%2c1%2c0%2c1%2c1%2c1.414-1.414L11%2c14.586V3a1%2c1%2c0%2c0%2c1%2c2%2c0V14.586l2.293-2.293a1%2c1%2c0%2c0%2c1%2c1.414%2c1.414l-4%2c4a1%2c1%2c0%2c0%2c1-.325.216.986.986%2c0%2c0%2c1-.764%2c0%2c1%2c1%2c0%2c0%2c1-.325-.216ZM22%2c12a1%2c1%2c0%2c0%2c0-1%2c1v7H3V13a1%2c1%2c0%2c0%2c0-2%2c0v8a1%2c1%2c0%2c0%2c0%2c1%2c1H22a1%2c1%2c0%2c0%2c0%2c1-1V13A1%2c1%2c0%2c0%2c0%2c22%2c12Z'/%3e%3c/svg%3e"
+
+export default optimizedSVGDataUri
