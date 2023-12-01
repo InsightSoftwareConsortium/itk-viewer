@@ -25,7 +25,6 @@ revision `f6b4fa13c8`, before they were extracted.
 
 ## Icon Renderings
 
-
 <table>
   <tr>
     <th>annotationsIconDataUri</th>
