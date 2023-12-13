@@ -6,7 +6,7 @@ export const CONTROL_POINT_CLASS = 'controlPoint'
 const makeCircle = () => {
   const circle = document.createElementNS(
     'http://www.w3.org/2000/svg',
-    'circle'
+    'circle',
   )
   circle.setAttribute('r', '9')
   circle.setAttribute('fill', 'white')
@@ -32,7 +32,7 @@ export class ControlPoint {
     container: ContainerType,
     point: Point,
     deleteEventCallback?: (event: CustomEvent) => void,
-    isNewPointFromPointer = false
+    isNewPointFromPointer = false,
   ) {
     this.element = makeCircle()
     this.point = point
@@ -102,7 +102,6 @@ export class ControlPoint {
   setupInteraction() {
     this.element.addEventListener('pointerdown', (event) => {
       event.stopPropagation()
-      event.preventDefault()
       this.startInteraction()
     })
     this.element.addEventListener('pointerenter', () => {

@@ -31,7 +31,6 @@ export class PointsController {
   }
 
   onPointerDown(event: PointerEvent) {
-    event.preventDefault()
     const [x, y] = this.container.domToNormalized(event.clientX, event.clientY)
     this.isNewPointFromPointer = true
     this.points.addPoint(x, y)
@@ -45,11 +44,11 @@ export class PointsController {
   updatePoints() {
     // delete removed ControlPoints
     const orphans = this.controlPoints.filter(
-      (cp) => !this.points.points.find((point) => point === cp.point)
+      (cp) => !this.points.points.find((point) => point === cp.point),
     )
     orphans.forEach((cp) => cp.remove())
     this.controlPoints = this.controlPoints.filter(
-      (cp) => !orphans.includes(cp)
+      (cp) => !orphans.includes(cp),
     )
 
     // add new ControlPoints
@@ -62,8 +61,8 @@ export class PointsController {
           this.container,
           point,
           (e) => this.onControlPointDelete(e),
-          this.isNewPointFromPointer
-        )
+          this.isNewPointFromPointer,
+        ),
       )
 
     this.points.points
