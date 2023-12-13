@@ -26,7 +26,7 @@ describe('TfEditor', () => {
 
   it('Initial points are in lower left and upper right', () => {
     const [first, second] = root.querySelectorAll(
-      '.controlPoint'
+      '.controlPoint',
     ) as unknown as [Element, Element]
     const { top, bottom, left, right } = root.getBoundingClientRect()
 

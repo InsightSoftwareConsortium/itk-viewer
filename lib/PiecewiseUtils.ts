@@ -16,7 +16,7 @@ export const drawChart = (
     strokeStyle: '#000',
     fillStyle: undefined,
     clip: false,
-  }
+  },
 ) => {
   const verticalScale = area[3]
   const horizontalScale = area[2] / (values.length - 1)
@@ -31,7 +31,7 @@ export const drawChart = (
   for (let index = 0; index < values.length; index++) {
     ctx.lineTo(
       area[0] + index * horizontalScale,
-      Math.max(area[1], offset - values[index] * verticalScale)
+      Math.max(area[1], offset - values[index] * verticalScale),
     )
   }
 
@@ -54,7 +54,7 @@ export type ColorTransferFunction = {
     start: number,
     end: number,
     width: number,
-    withAlpha: boolean
+    withAlpha: boolean,
   ) => Uint8Array
   getMappingRange: () => [number, number]
   getSize: () => number
@@ -66,7 +66,7 @@ export const updateColorCanvas = (
   colorTransferFunction: ColorTransferFunction,
   width: number,
   renderedDataRange: [number, number],
-  canvas: HTMLCanvasElement
+  canvas: HTMLCanvasElement,
 ) => {
   const workCanvas = canvas || document.createElement('canvas')
   workCanvas.setAttribute('width', String(width))
@@ -78,7 +78,7 @@ export const updateColorCanvas = (
     renderedDataRange[0],
     renderedDataRange[1],
     width,
-    true
+    true,
   )
 
   const ctx = workCanvas.getContext('2d')

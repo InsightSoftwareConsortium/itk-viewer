@@ -13,7 +13,7 @@ describe('PointsController', () => {
     expect(points.points.length).toBe(count)
     // view
     const pointCount = container.root.querySelectorAll(
-      `.${CONTROL_POINT_CLASS}`
+      `.${CONTROL_POINT_CLASS}`,
     ).length
     expect(pointCount).toBe(count)
   }
@@ -45,7 +45,7 @@ describe('PointsController', () => {
     root.dispatchEvent(pointerDown)
 
     const controlPointElement = container.root.querySelector(
-      `.${CONTROL_POINT_CLASS}`
+      `.${CONTROL_POINT_CLASS}`,
     )
     controlPointElement?.dispatchEvent(pointerDown)
 

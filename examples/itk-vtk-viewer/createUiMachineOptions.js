@@ -36,7 +36,7 @@ function createImagesInterface(context) {
   applyGroupVisibility(
     context,
     ['images', 'labelImages', 'labelImageWeights'],
-    false
+    false,
   )
 }
 

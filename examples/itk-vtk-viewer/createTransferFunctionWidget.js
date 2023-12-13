@@ -12,14 +12,14 @@ const createTransferFunctionWidget = (context, imagesUIGroup) => {
   // in the illusion that it's the content portion of a tabbed pane
   transferFunctionWidgetRow.setAttribute(
     'style',
-    'background: rgba(127, 127, 127, 0.5);'
+    'background: rgba(127, 127, 127, 0.5);',
   )
   imagesUIGroup.appendChild(transferFunctionWidgetRow)
   transferFunctionWidgetRow.appendChild(piecewiseWidgetContainer)
 
   const transferFunctionWidget = createTransferFunctionEditor(
     context,
-    piecewiseWidgetContainer
+    piecewiseWidgetContainer,
   )
 
   context.images.transferFunctionWidget = transferFunctionWidget

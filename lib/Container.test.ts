@@ -37,7 +37,7 @@ describe('Container', () => {
 
   it('SVG element added to root', () => {
     const svgElement = Array.from(container.root.children).find(
-      (element) => element.nodeName === 'SVG'
+      (element) => element.nodeName === 'SVG',
     )
     expect(svgElement).toBeTruthy()
   })
@@ -58,7 +58,7 @@ describe('Container', () => {
 
     const [normX, normY] = container.domToNormalized(
       LEFT + CONTAINER_WIDTH - PADDING,
-      TOP + PADDING
+      TOP + PADDING,
     )
     expect(normX).toBe(0.5)
     expect(normY).toBe(0.5)

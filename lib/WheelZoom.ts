@@ -12,7 +12,7 @@ export const WheelZoom = (container: ContainerType) => {
 
     const newLeft = Math.max(
       0,
-      left - Math.max(0, targetX - left) * (scaleFactor - 1)
+      left - Math.max(0, targetX - left) * (scaleFactor - 1),
     )
     const newRight = Math.min(1, (right - left) * scaleFactor + newLeft)
 

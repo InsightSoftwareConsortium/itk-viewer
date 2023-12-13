@@ -60,7 +60,7 @@ export class TransferFunctionEditor {
     valueStart: number,
     valueEnd: number,
     opacityMin = 0,
-    opacityMax = 1
+    opacityMax = 1,
   ) {
     this.container.setViewBox(valueStart, valueEnd, opacityMin, opacityMax)
   }

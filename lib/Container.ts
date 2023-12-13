@@ -6,7 +6,7 @@ const makeSvg = () => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svg.setAttribute(
     'style',
-    'position: absolute; top: 0; left: 0; z-index: 2; box-sizing: border-box; width: 100%; height: 100%;'
+    'position: absolute; top: 0; left: 0; z-index: 2; box-sizing: border-box; width: 100%; height: 100%;',
   )
   return svg
 }
@@ -31,7 +31,7 @@ export const Container = (parent: HTMLElement) => {
 
   const paddedBorder = document.createElementNS(
     'http://www.w3.org/2000/svg',
-    'rect'
+    'rect',
   )
   svg.appendChild(paddedBorder)
   paddedBorder.setAttribute('fill', 'none')
@@ -54,7 +54,7 @@ export const Container = (parent: HTMLElement) => {
     valueStart: number,
     valueEnd: number,
     opacityMin = 0,
-    opacityMax = 1
+    opacityMax = 1,
   ) => {
     const oldViewBox = viewBox
     viewBox = [valueStart, valueEnd, opacityMin, opacityMax]

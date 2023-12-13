@@ -36,7 +36,7 @@ export class Point {
 
   dispatchUpdatedEvent() {
     this.eventTarget.dispatchEvent(
-      new CustomEvent('updated', { detail: [this.x, this.y] })
+      new CustomEvent('updated', { detail: [this.x, this.y] }),
     )
   }
 }

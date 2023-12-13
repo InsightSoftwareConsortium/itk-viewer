@@ -18,12 +18,12 @@ export default defineConfig({
       inline: ['vitest-canvas-mock'],
     },
     // For this config, check https://github.com/vitest-dev/vitest/issues/740
-    threads: false,
+    // threads: false,
   },
   resolve: {
     alias: {
       'itk-viewer-transfer-function-editor': fileURLToPath(
-        new URL('./lib/TransferFunctionEditor.ts', import.meta.url)
+        new URL('./lib/TransferFunctionEditor.ts', import.meta.url),
       ),
     },
   },

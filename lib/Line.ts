@@ -4,7 +4,7 @@ import { Points, pointsToWindowedPoints } from './Points'
 const createLine = () => {
   const line = document.createElementNS(
     'http://www.w3.org/2000/svg',
-    'polyline'
+    'polyline',
   )
   line.setAttribute('fill', 'none')
   line.setAttribute('stroke', 'black')

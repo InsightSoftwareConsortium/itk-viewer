@@ -33,7 +33,7 @@ export const Background = (container: ContainerType, points: Points) => {
 
       const windowed = pointsToWindowedPoints(points.points)
       const linePoints = [[0, 0], ...windowed, [1, 0]].map(([x, y]) =>
-        container.normalizedToSvg(x, y)
+        container.normalizedToSvg(x, y),
       )
 
       ctx.save() // only apply clip path to color transfer function, leave historgram alone
@@ -67,7 +67,7 @@ export const Background = (container: ContainerType, points: Points) => {
           colorTransferFunction,
           colorCanvasWidth,
           visibleDataRange,
-          colorCanvas
+          colorCanvas,
         )
 
         ctx.drawImage(
@@ -79,7 +79,7 @@ export const Background = (container: ContainerType, points: Points) => {
           Math.floor(headXClamped),
           Math.floor(top),
           colorCanvasWidth,
-          Math.ceil(bottom - top)
+          Math.ceil(bottom - top),
         )
       }
       ctx.restore()
@@ -91,7 +91,7 @@ export const Background = (container: ContainerType, points: Points) => {
         number,
         number,
         number,
-        number
+        number,
       ]
       drawChart(ctx, graphArea, histogram, {
         lineWidth: 1,

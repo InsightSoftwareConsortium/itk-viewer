@@ -58,7 +58,7 @@ export class Points {
 
   dispatchUpdatedEvent() {
     this.eventTarget.dispatchEvent(
-      new CustomEvent('updated', { detail: this._points })
+      new CustomEvent('updated', { detail: this._points }),
     )
   }
 
