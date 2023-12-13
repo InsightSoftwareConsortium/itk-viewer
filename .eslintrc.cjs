@@ -10,7 +10,7 @@ module.exports = {
     sourceType: 'module',
   },
   plugins: ['@typescript-eslint'],
-  ignorePatterns: ['/dist/**'],
+  ignorePatterns: ['dist/*'],
   rules: {
     'comma-dangle': [0],
     'space-before-function-paren': [0],
