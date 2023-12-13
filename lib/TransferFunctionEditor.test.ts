@@ -53,4 +53,9 @@ describe('TfEditor', () => {
     editor.setPoints(points)
     expect(editor.getPoints()).toEqual(points)
   })
+
+  it('Set color range', () => {
+    editor.setColorRange(0.1, 0.5)
+    expect(editor.getColorRange()).toEqual([0.1, 0.5])
+  })
 })

@@ -5,14 +5,14 @@ import { Line } from './Line'
 import { WheelZoom } from './WheelZoom'
 import { Background, BackgroundType } from './Background'
 import { ColorTransferFunction, logTransform } from './PiecewiseUtils'
+import { ColorRange, ColorRangeType } from './ColorRange'
 
 export { windowPointsForSort } from './PiecewiseUtils'
 
 export class TransferFunctionEditor {
   private points: Points
-  // @ts-ignore declared but never read
+  private colorRange: ColorRangeType
   private line: Line
-  // @ts-ignore
   private pointController: PointsController
   private container: ContainerType
   private background: BackgroundType
@@ -28,7 +28,8 @@ export class TransferFunctionEditor {
     ] as [number, number][]
     this.points.setPoints(startPoints)
 
-    this.background = Background(this.container, this.points)
+    this.colorRange = ColorRange()
+    this.background = Background(this.container, this.points, this.colorRange)
 
     this.line = new Line(this.container, this.points)
     this.pointController = new PointsController(this.container, this.points)
@@ -50,6 +51,14 @@ export class TransferFunctionEditor {
     this.pointController.updatePoints()
     this.line.update()
     this.background.render()
+  }
+
+  getColorRange() {
+    return this.colorRange.getColorRange()
+  }
+
+  setColorRange(normalizedStart: number, normalizedEnd: number) {
+    return this.colorRange.setColorRange(normalizedStart, normalizedEnd)
   }
 
   get eventTarget() {

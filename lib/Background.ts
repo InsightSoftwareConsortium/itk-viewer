@@ -1,3 +1,4 @@
+import { ColorRangeType } from './ColorRange'
 import { ContainerType } from './Container'
 import {
   ColorTransferFunction,
@@ -8,7 +9,11 @@ import { Points, pointsToWindowedPoints } from './Points'
 
 const HISTOGRAM_COLOR = 'rgba(50, 50, 50, 0.3)'
 
-export const Background = (container: ContainerType, points: Points) => {
+export const Background = (
+  container: ContainerType,
+  points: Points,
+  colorRange: ColorRangeType,
+) => {
   const canvas = document.createElement('canvas')
   container.root.appendChild(canvas)
   canvas.setAttribute('style', 'width: 100%; height: 100%; ')
@@ -44,8 +49,9 @@ export const Background = (container: ContainerType, points: Points) => {
       ctx.clip()
 
       // width in pixels between head and tail, bounded by SVG size
-      const [headX] = linePoints[1]
-      const [tailX] = linePoints[linePoints.length - 2]
+      const [colorStart, colorEnd] = colorRange.getColorRange()
+      const [headX] = container.normalizedToSvg(colorStart, 1)
+      const [tailX] = container.normalizedToSvg(colorEnd, 1)
       const headXClamped = Math.min(width, Math.max(0, headX))
       const tailXClamped = Math.min(width, Math.max(0, tailX))
       const colorCanvasWidth = Math.ceil(tailXClamped - headXClamped)
@@ -103,6 +109,7 @@ export const Background = (container: ContainerType, points: Points) => {
 
   container.addSizeObserver(render)
   points.eventTarget.addEventListener('updated', render)
+  colorRange.eventTarget.addEventListener('updated', render)
 
   const setColorTransferFunction = (ctf: ColorTransferFunction) => {
     colorTransferFunction = ctf
