@@ -13,7 +13,10 @@ const makeSvg = () => {
 
 export const Container = (parent: HTMLElement) => {
   const root = document.createElement('div')
-  root.setAttribute('style', 'position: relative; width: 100%; height: 100%')
+  root.setAttribute(
+    'style',
+    'position: relative; width: 100%; height: 100%; user-select: none;',
+  )
   parent.appendChild(root)
 
   const svg = makeSvg()

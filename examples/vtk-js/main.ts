@@ -17,7 +17,11 @@ declare global {
 const app = document.querySelector<HTMLDivElement>('#app')!
 
 app.innerHTML = `
-  <div id='editorHome'></div>
+  <div>
+    <h3>Transfer Function</h3>
+    <p>Click on empty space to drop a point.  Click a point without dragging to delete.</p>
+    <div id='editorHome'></div>
+  </div>
 `
 // rescales into data range space
 const getNodes = (range: number[], points: Point[]) => {
