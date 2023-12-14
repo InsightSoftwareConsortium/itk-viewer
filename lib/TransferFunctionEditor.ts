@@ -5,7 +5,7 @@ import { Line } from './Line'
 import { WheelZoom } from './WheelZoom'
 import { Background, BackgroundType } from './Background'
 import { ColorTransferFunction, logTransform } from './PiecewiseUtils'
-import { ColorRange, ColorRangeType } from './ColorRange'
+import { ColorRange, ColorRangeController, ColorRangeType } from './ColorRange'
 
 export { windowPointsForSort } from './PiecewiseUtils'
 
@@ -29,6 +29,7 @@ export class TransferFunctionEditor {
     this.points.setPoints(startPoints)
 
     this.colorRange = ColorRange()
+    ColorRangeController(this.container, this.colorRange)
     this.background = Background(this.container, this.points, this.colorRange)
 
     this.line = new Line(this.container, this.points)
