@@ -21,13 +21,13 @@ describe('TfEditor', () => {
 
   it('Initial points are represented', () => {
     const pointElements = root.querySelectorAll('.controlPoint')
-    expect(pointElements?.length).toBe(2)
+    expect(pointElements?.length).toBe(4) // 2 opacity points, 2 color range points
   })
 
   it('Initial points are in lower left and upper right', () => {
-    const [first, second] = root.querySelectorAll(
+    const [, , first, second] = root.querySelectorAll(
       '.controlPoint',
-    ) as unknown as [Element, Element]
+    ) as unknown as [Element, Element, Element, Element]
     const { top, bottom, left, right } = root.getBoundingClientRect()
 
     expect(Number(first.getAttribute('cx'))).toBe(PADDING)

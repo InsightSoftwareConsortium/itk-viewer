@@ -10,6 +10,8 @@ import { ColorRange, ColorRangeController, ColorRangeType } from './ColorRange'
 export { windowPointsForSort } from './PiecewiseUtils'
 
 export class TransferFunctionEditor {
+  public eventTarget = new EventTarget()
+
   private points: Points
   private colorRange: ColorRangeType
   private line: Line
@@ -34,6 +36,17 @@ export class TransferFunctionEditor {
 
     this.line = new Line(this.container, this.points)
     this.pointController = new PointsController(this.container, this.points)
+
+    this.points.eventTarget.addEventListener('updated', (e) => {
+      this.eventTarget.dispatchEvent(
+        new CustomEvent('updated', { detail: (e as CustomEvent).detail }),
+      )
+    })
+    this.colorRange.eventTarget.addEventListener('updated', (e) => {
+      this.eventTarget.dispatchEvent(
+        new CustomEvent('colorRange', { detail: (e as CustomEvent).detail }),
+      )
+    })
   }
 
   remove() {
@@ -60,10 +73,6 @@ export class TransferFunctionEditor {
 
   setColorRange(normalizedStart: number, normalizedEnd: number) {
     return this.colorRange.setColorRange(normalizedStart, normalizedEnd)
-  }
-
-  get eventTarget() {
-    return this.points.eventTarget
   }
 
   setViewBox(

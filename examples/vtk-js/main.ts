@@ -6,7 +6,7 @@ import {
 } from '../../lib/TransferFunctionEditor'
 import { Point } from '../../lib/Point'
 
-const OPACITY_UPDATE_DELAY = 100
+const UPDATE_TF_DELAY = 100
 const DATA_RANGE = [0, 255]
 
 declare global {
@@ -47,10 +47,22 @@ if (editorHome) {
     const points = (<CustomEvent>e).detail as Point[]
     const nodes = getNodes(DATA_RANGE, points)
     opacityFunction.setNodes(nodes)
-    colorFunction.setRange(nodes[0].x, nodes[nodes.length - 1].x)
 
     globalThis.renderWindow.render()
-  }, OPACITY_UPDATE_DELAY)
+  }, UPDATE_TF_DELAY)
 
   editor.eventTarget.addEventListener('updated', updateViewerOpacityFunction)
+
+  editor.eventTarget.addEventListener(
+    'colorRange',
+    throttle((e) => {
+      const delta = DATA_RANGE[1] - DATA_RANGE[0]
+      const [start, end] = ((<CustomEvent>e).detail as [number, number]).map(
+        (bound) => bound * delta,
+      )
+      colorFunction.setRange(start, end)
+
+      globalThis.renderWindow.render()
+    }, UPDATE_TF_DELAY),
+  )
 }

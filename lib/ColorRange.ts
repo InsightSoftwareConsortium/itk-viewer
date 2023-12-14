@@ -6,14 +6,16 @@ export const ColorRange = () => {
   const pointStart = new Point(0, 0)
   const pointEnd = new Point(1, 0)
   const eventTarget = new EventTarget()
-  pointStart.eventTarget.addEventListener('updated', () => {
-    if (pointStart.y !== 0) pointStart.y = 0
-    eventTarget.dispatchEvent(new CustomEvent('updated'))
-  })
-  pointEnd.eventTarget.addEventListener('updated', () => {
-    if (pointEnd.y !== 0) pointEnd.y = 0
-    eventTarget.dispatchEvent(new CustomEvent('updated'))
-  })
+  const setupPoint = (point: Point) => {
+    point.eventTarget.addEventListener('updated', () => {
+      if (point.y !== 0) point.y = 0
+      eventTarget.dispatchEvent(
+        new CustomEvent('updated', { detail: [pointStart.x, pointEnd.x] }),
+      )
+    })
+  }
+  setupPoint(pointStart)
+  setupPoint(pointEnd)
   return {
     getPoints: () => [pointStart, pointEnd],
     getColorRange: () => [pointStart.x, pointEnd.x],
