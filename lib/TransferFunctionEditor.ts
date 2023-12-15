@@ -30,12 +30,12 @@ export class TransferFunctionEditor {
     ] as [number, number][]
     this.points.setPoints(startPoints)
 
+    this.line = new Line(this.container, this.points)
+    this.pointController = new PointsController(this.container, this.points)
+
     this.colorRange = ColorRange()
     ColorRangeController(this.container, this.colorRange)
     this.background = Background(this.container, this.points, this.colorRange)
-
-    this.line = new Line(this.container, this.points)
-    this.pointController = new PointsController(this.container, this.points)
 
     this.points.eventTarget.addEventListener('updated', (e) => {
       this.eventTarget.dispatchEvent(
