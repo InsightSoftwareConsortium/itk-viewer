@@ -51,7 +51,9 @@ export const Background = (
       // width in pixels between head and tail, bounded by SVG size
       const [colorStart, colorEnd] = colorRange.getColorRange()
       const [headX] = container.normalizedToSvg(colorStart, 1)
-      const [tailX] = container.normalizedToSvg(colorEnd, 1)
+      const [rawTailX] = container.normalizedToSvg(colorEnd, 1)
+      // ensure 2 pixel width color canvas to sample high and low color
+      const tailX = rawTailX - headX < 2 ? headX + 2 : rawTailX
       const headXClamped = Math.min(width, Math.max(0, headX))
       const tailXClamped = Math.min(width, Math.max(0, tailX))
       const colorCanvasWidth = Math.ceil(tailXClamped - headXClamped)
@@ -88,9 +90,11 @@ export const Background = (
           Math.ceil(bottom - top),
         )
         // fill left edge to head with first color
+        const savedSmoothing = ctx.imageSmoothingEnabled
+        ctx.imageSmoothingEnabled = false
         ctx.drawImage(
           colorCanvas,
-          1,
+          0,
           0,
           1,
           1,
@@ -111,6 +115,7 @@ export const Background = (
           width - tailXClamped,
           Math.ceil(bottom - top),
         )
+        ctx.imageSmoothingEnabled = savedSmoothing
       }
       ctx.restore()
     }
