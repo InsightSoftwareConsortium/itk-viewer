@@ -58,6 +58,7 @@ export type ColorTransferFunction = {
   ) => Uint8Array
   getMappingRange: () => [number, number]
   getSize: () => number
+  getColor: (x: number, rgba: Array<number>) => void
 }
 
 const CANVAS_HEIGHT = 1
@@ -125,4 +126,11 @@ export function arrayEquals<T>(a: Array<T>, b: Array<T>) {
     if (a[i] !== b[i]) return false
   }
   return true
+}
+
+export function rgbaToHexa(rgba: Array<number>) {
+  const hexa = rgba
+    .map((c) => Math.floor(c * 255))
+    .map((comp) => `0${comp.toString(16)}`.slice(-2))
+  return `#${hexa.join('')}`
 }

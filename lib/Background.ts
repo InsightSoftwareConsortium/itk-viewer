@@ -59,7 +59,7 @@ export const Background = (
       const colorCanvasWidth = Math.ceil(tailXClamped - headXClamped)
 
       // color area not visible if 0 width
-      if (colorCanvasWidth) {
+      if (colorCanvasWidth && colorTransferFunction) {
         // Compute visible data range
         const pointPixelWidth = tailX - headX
         const headClampAmount = (headXClamped - headX) / pointPixelWidth

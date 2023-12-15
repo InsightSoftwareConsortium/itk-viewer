@@ -1,6 +1,7 @@
 import { Point } from './Point'
 import { ControlPoint } from './ControlPoint'
 import { ContainerType } from './Container'
+import { ColorTransferFunction, rgbaToHexa } from './PiecewiseUtils'
 
 export const ColorRange = () => {
   const points = [new Point(0, 0), new Point(1, 0)]
@@ -35,11 +36,27 @@ export const ColorRangeController = (
   container: ContainerType,
   colorRange: ColorRangeType,
 ) => {
-  const [pointStart, pointEnd] = colorRange.getPoints()
-  const start = new ControlPoint(container, pointStart)
-  const end = new ControlPoint(container, pointEnd)
+  const points = colorRange.getPoints().map((p) => {
+    const cp = new ControlPoint(container, p)
+    cp.deletable = false
+    return cp
+  })
 
-  return { start, end }
+  // let colorTransferFunction: ColorTransferFunction
+  const setColorTransferFunction = (ctf: ColorTransferFunction) => {
+    const dataRange = ctf.getMappingRange()
+    const low = [] as Array<number>
+    ctf.getColor(dataRange[0], low)
+    const high = [] as Array<number>
+    ctf.getColor(dataRange[1], high)
+    points[0].setColor(rgbaToHexa(low))
+    points[1].setColor(rgbaToHexa(high))
+  }
+
+  return {
+    points,
+    setColorTransferFunction,
+  }
 }
 
 export type ColorRangeControllerType = ReturnType<typeof ColorRangeController>

@@ -5,7 +5,12 @@ import { Line } from './Line'
 import { WheelZoom } from './WheelZoom'
 import { Background, BackgroundType } from './Background'
 import { ColorTransferFunction, logTransform } from './PiecewiseUtils'
-import { ColorRange, ColorRangeController, ColorRangeType } from './ColorRange'
+import {
+  ColorRange,
+  ColorRangeController,
+  ColorRangeControllerType,
+  ColorRangeType,
+} from './ColorRange'
 
 export { windowPointsForSort } from './PiecewiseUtils'
 
@@ -14,6 +19,7 @@ export class TransferFunctionEditor {
 
   private points: Points
   private colorRange: ColorRangeType
+  private colorRangeController: ColorRangeControllerType
   private line: Line
   private pointController: PointsController
   private container: ContainerType
@@ -34,7 +40,10 @@ export class TransferFunctionEditor {
     this.pointController = new PointsController(this.container, this.points)
 
     this.colorRange = ColorRange()
-    ColorRangeController(this.container, this.colorRange)
+    this.colorRangeController = ColorRangeController(
+      this.container,
+      this.colorRange,
+    )
     this.background = Background(this.container, this.points, this.colorRange)
 
     this.points.eventTarget.addEventListener('updated', (e) => {
@@ -86,6 +95,7 @@ export class TransferFunctionEditor {
 
   setColorTransferFunction(ctf: ColorTransferFunction) {
     this.background.setColorTransferFunction(ctf)
+    this.colorRangeController.setColorTransferFunction(ctf)
   }
 
   setHistogram(histogram: number[]) {

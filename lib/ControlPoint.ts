@@ -25,6 +25,7 @@ export class ControlPoint {
   private isHovered: boolean = false
   readonly point: Point
 
+  public deletable = true
   readonly DELETE_EVENT = 'deleteme'
   readonly eventTarget = new EventTarget()
 
@@ -74,7 +75,7 @@ export class ControlPoint {
 
   startInteraction(forceDragging = false) {
     this.isDragging = forceDragging
-    if (!this.isDragging) {
+    if (!this.isDragging && this.deletable) {
       this.element.setAttribute('stroke', 'red') // deleteable
     }
     const onPointerMove = (e: PointerEvent) => {
@@ -114,5 +115,9 @@ export class ControlPoint {
         this.element.setAttribute('stroke-width', '2')
       }
     })
+  }
+
+  setColor(color: string) {
+    this.element.setAttribute('fill', color)
   }
 }
