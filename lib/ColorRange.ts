@@ -3,25 +3,27 @@ import { ControlPoint } from './ControlPoint'
 import { ContainerType } from './Container'
 
 export const ColorRange = () => {
-  const pointStart = new Point(0, 0)
-  const pointEnd = new Point(1, 0)
+  const points = [new Point(0, 0), new Point(1, 0)]
+  const getPoints = () => points.sort((p1, p2) => p1.x - p2.x)
+  const getColorRange = () => getPoints().map((p) => p.x)
   const eventTarget = new EventTarget()
   const setupPoint = (point: Point) => {
     point.eventTarget.addEventListener('updated', () => {
       if (point.y !== 0) point.y = 0
       eventTarget.dispatchEvent(
-        new CustomEvent('updated', { detail: [pointStart.x, pointEnd.x] }),
+        new CustomEvent('updated', { detail: getColorRange() }),
       )
     })
   }
-  setupPoint(pointStart)
-  setupPoint(pointEnd)
+  points.forEach(setupPoint)
+
   return {
-    getPoints: () => [pointStart, pointEnd],
-    getColorRange: () => [pointStart.x, pointEnd.x],
-    setColorRange: (normalizedStart: number, normalizedEnd: number) => {
-      pointStart.x = normalizedStart
-      pointEnd.x = normalizedEnd
+    getPoints,
+    getColorRange,
+    setColorRange: (normalized: Array<number>) => {
+      getPoints().forEach((p, i) => {
+        p.x = normalized[i]
+      })
     },
     eventTarget,
   }

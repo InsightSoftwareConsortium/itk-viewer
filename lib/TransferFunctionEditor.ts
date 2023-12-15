@@ -71,8 +71,8 @@ export class TransferFunctionEditor {
     return this.colorRange.getColorRange()
   }
 
-  setColorRange(normalizedStart: number, normalizedEnd: number) {
-    return this.colorRange.setColorRange(normalizedStart, normalizedEnd)
+  setColorRange(normalized: Array<number>) {
+    return this.colorRange.setColorRange(normalized)
   }
 
   setViewBox(

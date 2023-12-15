@@ -41,7 +41,7 @@ const editorHome = document.querySelector<HTMLDivElement>('#editorHome')
 if (editorHome) {
   const editor = new TransferFunctionEditor(editorHome)
   editor.setColorTransferFunction(colorFunction)
-  editor.setColorRange(0.1, 0.5)
+  editor.setColorRange([0.2, 0.8])
 
   const updateViewerOpacityFunction = throttle((e) => {
     const points = (<CustomEvent>e).detail as Point[]
