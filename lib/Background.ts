@@ -87,6 +87,30 @@ export const Background = (
           colorCanvasWidth,
           Math.ceil(bottom - top),
         )
+        // fill left edge to head with first color
+        ctx.drawImage(
+          colorCanvas,
+          1,
+          0,
+          1,
+          1,
+          0,
+          Math.floor(top),
+          Math.floor(headXClamped),
+          Math.ceil(bottom - top),
+        )
+        // fill tail to right edge with last color
+        ctx.drawImage(
+          colorCanvas,
+          colorCanvas.width - 1,
+          0,
+          1,
+          1,
+          Math.floor(tailXClamped),
+          Math.floor(top),
+          width - tailXClamped,
+          Math.ceil(bottom - top),
+        )
       }
       ctx.restore()
     }
