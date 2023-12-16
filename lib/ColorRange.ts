@@ -42,16 +42,29 @@ export const ColorRangeController = (
     return cp
   })
 
-  // let colorTransferFunction: ColorTransferFunction
-  const setColorTransferFunction = (ctf: ColorTransferFunction) => {
+  let ctf: ColorTransferFunction
+
+  const updatePointColors = () => {
     const dataRange = ctf.getMappingRange()
     const low = [] as Array<number>
     ctf.getColor(dataRange[0], low)
     const high = [] as Array<number>
     ctf.getColor(dataRange[1], high)
-    points[0].setColor(rgbaToHexa(low))
-    points[1].setColor(rgbaToHexa(high))
+    const sorted = points.sort((p1, p2) => p1.point.x - p2.point.x)
+    sorted[0].setColor(rgbaToHexa(low))
+    sorted[1].setColor(rgbaToHexa(high))
   }
+
+  const setColorTransferFunction = (
+    colorTransferFunction: ColorTransferFunction,
+  ) => {
+    ctf = colorTransferFunction
+    updatePointColors()
+  }
+
+  colorRange.eventTarget.addEventListener('updated', () => {
+    updatePointColors()
+  })
 
   return {
     points,

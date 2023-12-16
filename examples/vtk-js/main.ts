@@ -60,7 +60,7 @@ if (editorHome) {
         (bound) => bound * delta,
       )
       if (start === end) return // vtk.js warns if 0 difference
-      colorFunction.setRange(start, end)
+      colorFunction.setMappingRange(start, end)
 
       globalThis.renderWindow.render()
     }, UPDATE_TF_DELAY),
