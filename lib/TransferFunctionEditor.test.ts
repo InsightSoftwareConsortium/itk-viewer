@@ -28,15 +28,14 @@ describe('TfEditor', () => {
     const [, , first, second] = root.querySelectorAll(
       '.controlPoint',
     ) as unknown as [Element, Element, Element, Element]
-    const { top, bottom, left, right } = root.getBoundingClientRect()
+    const { top, left, right } = root.getBoundingClientRect()
 
     expect(Number(first.getAttribute('cx'))).toBe(PADDING)
-    expect(Number(first.getAttribute('cy'))).toBe(bottom - PADDING)
+    expect(Number(first.getAttribute('cy'))).toBe(-PADDING)
 
     const width = right - left
     expect(Number(second.getAttribute('cx'))).toBe(width - PADDING)
-    const height = bottom - top
-    expect(Number(second.getAttribute('cy'))).toBe(height + PADDING)
+    expect(Number(second.getAttribute('cy'))).toBe(top - PADDING)
   })
 
   it('Remove detaches all children nodes', () => {

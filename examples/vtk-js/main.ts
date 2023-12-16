@@ -40,18 +40,17 @@ const colorFunction = globalThis.ctfun
 const editorHome = document.querySelector<HTMLDivElement>('#editorHome')
 if (editorHome) {
   const editor = new TransferFunctionEditor(editorHome)
-  editor.setColorTransferFunction(colorFunction)
-  editor.setColorRange([0.2, 0.8])
 
-  const updateViewerOpacityFunction = throttle((e) => {
-    const points = (<CustomEvent>e).detail as Point[]
-    const nodes = getNodes(DATA_RANGE, points)
-    opacityFunction.setNodes(nodes)
+  editor.eventTarget.addEventListener(
+    'updated',
+    throttle((e) => {
+      const points = (<CustomEvent>e).detail as Point[]
+      const nodes = getNodes(DATA_RANGE, points)
+      opacityFunction.setNodes(nodes)
 
-    globalThis.renderWindow.render()
-  }, UPDATE_TF_DELAY)
-
-  editor.eventTarget.addEventListener('updated', updateViewerOpacityFunction)
+      globalThis.renderWindow.render()
+    }, UPDATE_TF_DELAY),
+  )
 
   editor.eventTarget.addEventListener(
     'colorRange',
@@ -60,9 +59,17 @@ if (editorHome) {
       const [start, end] = ((<CustomEvent>e).detail as [number, number]).map(
         (bound) => bound * delta,
       )
+      if (start === end) return // vtk.js warns if 0 difference
       colorFunction.setRange(start, end)
 
       globalThis.renderWindow.render()
     }, UPDATE_TF_DELAY),
   )
+
+  editor.setColorTransferFunction(colorFunction)
+  editor.setColorRange([0.25, 0.75])
+  editor.setPoints([
+    [0.1, 0.2],
+    [0.9, 0.8],
+  ])
 }
