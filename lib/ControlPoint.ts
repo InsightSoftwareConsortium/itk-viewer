@@ -51,6 +51,9 @@ export class ControlPoint {
 
     container.appendChild(this.element)
     this.positionElement()
+    this.point.eventTarget.addEventListener('updated', () =>
+      this.positionElement(),
+    )
 
     this.setupInteraction()
     if (isNewPointFromPointer) this.startInteraction(true)

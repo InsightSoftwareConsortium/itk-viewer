@@ -45,6 +45,7 @@ export const ColorRangeController = (
   let ctf: ColorTransferFunction
 
   const updatePointColors = () => {
+    if (!ctf) return
     const dataRange = ctf.getMappingRange()
     const low = [] as Array<number>
     ctf.getColor(dataRange[0], low)
