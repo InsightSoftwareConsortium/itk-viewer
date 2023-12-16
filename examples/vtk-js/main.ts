@@ -57,7 +57,7 @@ if (editorHome) {
     throttle((e) => {
       const delta = DATA_RANGE[1] - DATA_RANGE[0]
       const [start, end] = ((<CustomEvent>e).detail as [number, number]).map(
-        (bound) => bound * delta,
+        (bound) => bound * delta + DATA_RANGE[0],
       )
       if (start === end) return // vtk.js warns if 0 difference
       colorFunction.setMappingRange(start, end)
@@ -69,7 +69,7 @@ if (editorHome) {
   editor.setColorTransferFunction(colorFunction)
   editor.setColorRange([0.25, 0.75])
   editor.setPoints([
-    [0.1, 0.2],
-    [0.9, 0.8],
+    [0.1, 0.1],
+    [0.9, 0.9],
   ])
 }

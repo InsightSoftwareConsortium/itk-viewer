@@ -8,12 +8,15 @@ export const ColorRange = () => {
   const getPoints = () => points.sort((p1, p2) => p1.x - p2.x)
   const getColorRange = () => getPoints().map((p) => p.x)
   const eventTarget = new EventTarget()
+  const dispachUpdated = () =>
+    eventTarget.dispatchEvent(
+      new CustomEvent('updated', { detail: getColorRange() }),
+    )
+  let batchUpdated = false
   const setupPoint = (point: Point) => {
     point.eventTarget.addEventListener('updated', () => {
       if (point.y !== 0) point.y = 0
-      eventTarget.dispatchEvent(
-        new CustomEvent('updated', { detail: getColorRange() }),
-      )
+      if (!batchUpdated) dispachUpdated()
     })
   }
   points.forEach(setupPoint)
@@ -22,9 +25,14 @@ export const ColorRange = () => {
     getPoints,
     getColorRange,
     setColorRange: (normalized: Array<number>) => {
+      // Wait for all points to be updated before dispatching
+      // Keeps update of first point from triggering update of second point in downstream app
+      batchUpdated = true
       getPoints().forEach((p, i) => {
         p.x = normalized[i]
       })
+      batchUpdated = false
+      dispachUpdated()
     },
     eventTarget,
   }
