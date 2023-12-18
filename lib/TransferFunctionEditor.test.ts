@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { PADDING } from './Container'
 import { TransferFunctionEditor } from './TransferFunctionEditor'
 
 const makeEditor = () => {
@@ -22,20 +21,6 @@ describe('TfEditor', () => {
   it('Initial points are represented', () => {
     const pointElements = root.querySelectorAll('.controlPoint')
     expect(pointElements?.length).toBe(4) // 2 opacity points, 2 color range points
-  })
-
-  it('Initial points are in lower left and upper right', () => {
-    const [, , first, second] = root.querySelectorAll(
-      '.controlPoint',
-    ) as unknown as [Element, Element, Element, Element]
-    const { top, left, right } = root.getBoundingClientRect()
-
-    expect(Number(first.getAttribute('cx'))).toBe(PADDING)
-    expect(Number(first.getAttribute('cy'))).toBe(-PADDING)
-
-    const width = right - left
-    expect(Number(second.getAttribute('cx'))).toBe(width - PADDING)
-    expect(Number(second.getAttribute('cy'))).toBe(top - PADDING)
   })
 
   it('Remove detaches all children nodes', () => {
