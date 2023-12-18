@@ -3,17 +3,20 @@ import { BackgroundType, Background } from './Background'
 import { ContainerType } from './Container'
 import { makeTestableContainer } from './Container.test'
 import { Points } from './Points'
+import { ColorRange, ColorRangeType } from './ColorRange'
 
 describe('Background', () => {
   let background: BackgroundType,
     container: ContainerType,
     parent: HTMLElement,
-    points: Points
+    points: Points,
+    colorRange: ColorRangeType
 
   beforeEach(() => {
     ;({ parent, container } = makeTestableContainer())
     points = new Points()
-    background = Background(container, points)
+    colorRange = ColorRange()
+    background = Background(container, points, colorRange)
   })
 
   it('Remove detaches background node', () => {

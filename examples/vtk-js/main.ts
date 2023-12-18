@@ -6,7 +6,7 @@ import {
 } from '../../lib/TransferFunctionEditor'
 import { Point } from '../../lib/Point'
 
-const OPACITY_UPDATE_DELAY = 100
+const UPDATE_TF_DELAY = 200
 const DATA_RANGE = [0, 255]
 
 declare global {
@@ -40,16 +40,36 @@ const colorFunction = globalThis.ctfun
 const editorHome = document.querySelector<HTMLDivElement>('#editorHome')
 if (editorHome) {
   const editor = new TransferFunctionEditor(editorHome)
+
+  editor.eventTarget.addEventListener(
+    'updated',
+    throttle((e) => {
+      const points = (<CustomEvent>e).detail as Point[]
+      const nodes = getNodes(DATA_RANGE, points)
+      opacityFunction.setNodes(nodes)
+
+      globalThis.renderWindow.render()
+    }, UPDATE_TF_DELAY),
+  )
+
+  editor.eventTarget.addEventListener(
+    'colorRange',
+    throttle((e) => {
+      const delta = DATA_RANGE[1] - DATA_RANGE[0]
+      const [start, end] = ((<CustomEvent>e).detail as [number, number]).map(
+        (bound) => bound * delta + DATA_RANGE[0],
+      )
+      if (start === end) return // vtk.js warns if 0 difference
+      colorFunction.setMappingRange(start, end)
+
+      globalThis.renderWindow.render()
+    }, UPDATE_TF_DELAY),
+  )
+
   editor.setColorTransferFunction(colorFunction)
-
-  const updateViewerOpacityFunction = throttle((e) => {
-    const points = (<CustomEvent>e).detail as Point[]
-    const nodes = getNodes(DATA_RANGE, points)
-    opacityFunction.setNodes(nodes)
-    colorFunction.setRange(nodes[0].x, nodes[nodes.length - 1].x)
-
-    globalThis.renderWindow.render()
-  }, OPACITY_UPDATE_DELAY)
-
-  editor.eventTarget.addEventListener('updated', updateViewerOpacityFunction)
+  editor.setColorRange([0.25, 0.75])
+  editor.setPoints([
+    [0.1, 0.1],
+    [0.9, 0.9],
+  ])
 }

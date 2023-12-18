@@ -5,14 +5,22 @@ import { Line } from './Line'
 import { WheelZoom } from './WheelZoom'
 import { Background, BackgroundType } from './Background'
 import { ColorTransferFunction, logTransform } from './PiecewiseUtils'
+import {
+  ColorRange,
+  ColorRangeController,
+  ColorRangeControllerType,
+  ColorRangeType,
+} from './ColorRange'
 
 export { windowPointsForSort } from './PiecewiseUtils'
 
 export class TransferFunctionEditor {
+  public eventTarget = new EventTarget()
+
   private points: Points
-  // @ts-ignore declared but never read
+  private colorRange: ColorRangeType
+  private colorRangeController: ColorRangeControllerType
   private line: Line
-  // @ts-ignore
   private pointController: PointsController
   private container: ContainerType
   private background: BackgroundType
@@ -28,10 +36,26 @@ export class TransferFunctionEditor {
     ] as [number, number][]
     this.points.setPoints(startPoints)
 
-    this.background = Background(this.container, this.points)
-
     this.line = new Line(this.container, this.points)
     this.pointController = new PointsController(this.container, this.points)
+
+    this.colorRange = ColorRange()
+    this.colorRangeController = ColorRangeController(
+      this.container,
+      this.colorRange,
+    )
+    this.background = Background(this.container, this.points, this.colorRange)
+
+    this.points.eventTarget.addEventListener('updated', (e) => {
+      this.eventTarget.dispatchEvent(
+        new CustomEvent('updated', { detail: (e as CustomEvent).detail }),
+      )
+    })
+    this.colorRange.eventTarget.addEventListener('updated', (e) => {
+      this.eventTarget.dispatchEvent(
+        new CustomEvent('colorRange', { detail: (e as CustomEvent).detail }),
+      )
+    })
   }
 
   remove() {
@@ -52,8 +76,12 @@ export class TransferFunctionEditor {
     this.background.render()
   }
 
-  get eventTarget() {
-    return this.points.eventTarget
+  getColorRange() {
+    return this.colorRange.getColorRange()
+  }
+
+  setColorRange(normalized: Array<number>) {
+    return this.colorRange.setColorRange(normalized)
   }
 
   setViewBox(
@@ -67,6 +95,7 @@ export class TransferFunctionEditor {
 
   setColorTransferFunction(ctf: ColorTransferFunction) {
     this.background.setColorTransferFunction(ctf)
+    this.colorRangeController.setColorTransferFunction(ctf)
   }
 
   setHistogram(histogram: number[]) {

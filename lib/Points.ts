@@ -1,7 +1,8 @@
 import { Point } from './Point'
 
-// add points at ends with y 0
-export const windowPoints = (points: [number, number][]) => {
+// if clamp is true, add points add points at ends with y = 0
+// else extend at to left and right closest y value
+export const windowPoints = (points: [number, number][], clamp = false) => {
   if (points.length === 0) {
     return [
       [0, 1],
@@ -19,7 +20,9 @@ export const windowPoints = (points: [number, number][]) => {
 
   const head = points[0]
   const tail = points[points.length - 1]
-  return [[head[0], 0], ...points, [tail[0], 0]]
+
+  if (clamp) return [[head[0], 0], ...points, [tail[0], 0]]
+  return [[0, head[1]], ...points, [1, tail[1]]]
 }
 
 export const pointsToWindowedPoints = (points: Point[]) =>
