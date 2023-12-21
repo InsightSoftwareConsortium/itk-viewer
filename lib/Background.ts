@@ -51,15 +51,16 @@ export const Background = (
       // width in pixels between head and tail, bounded by SVG size
       const [colorStart, colorEnd] = colorRange.getColorRange()
       const [headX] = container.normalizedToSvg(colorStart, 1)
-      const [rawTailX] = container.normalizedToSvg(colorEnd, 1)
+      const [tailX] = container.normalizedToSvg(colorEnd, 1)
       // ensure 2 pixel width color canvas to sample high and low color
-      const tailX = rawTailX - headX < 2 ? headX + 2 : rawTailX
       const headXClamped = Math.min(width, Math.max(0, headX))
-      const tailXClamped = Math.min(width, Math.max(0, tailX))
+      const tailXClampedRaw = Math.min(width, Math.max(0, tailX))
+      // ensure 2 pixel width color canvas to sample high and low color
+      const tailXClamped =
+        tailXClampedRaw - headXClamped < 2 ? headXClamped + 2 : tailXClampedRaw
       const colorCanvasWidth = Math.ceil(tailXClamped - headXClamped)
 
-      // color area not visible if 0 width
-      if (colorCanvasWidth && colorTransferFunction) {
+      if (colorTransferFunction) {
         // Compute visible data range
         const pointPixelWidth = tailX - headX
         const headClampAmount = (headXClamped - headX) / pointPixelWidth
