@@ -123,6 +123,7 @@ export const Container = (parent: HTMLElement) => {
     borderSize,
     remove,
     root,
+    svg,
   }
 }
 

@@ -1,5 +1,6 @@
 import { ContainerType } from './Container'
 import { Point } from './Point'
+import { addTooltip } from './addTooltip'
 
 export const CONTROL_POINT_CLASS = 'controlPoint'
 
@@ -34,7 +35,6 @@ const makeCircle = () => {
   )
   clickTarget.setAttribute('r', String(CLICK_RADIUS))
   clickTarget.setAttribute('fill', 'transparent')
-  // clickTarget.setAttribute('fill', 'blue')
   clickTarget.setAttribute('stroke', 'transparent')
   clickTarget.setAttribute('style', 'cursor: move;')
   group.appendChild(clickTarget)
@@ -45,6 +45,7 @@ const makeCircle = () => {
 export class ControlPoint {
   element: SVGGraphicsElement
   circle: SVGCircleElement
+  tooltip: ReturnType<typeof addTooltip>
   private container: ContainerType
   private isDragging: boolean = false
   private isHovered: boolean = false
@@ -55,6 +56,8 @@ export class ControlPoint {
   readonly eventTarget = new EventTarget()
   private grabX = 0
   private grabY = 0
+
+  static styleElement = undefined as HTMLStyleElement | undefined
 
   constructor(
     container: ContainerType,
@@ -67,6 +70,8 @@ export class ControlPoint {
     this.circle = circle
     this.point = point
     this.container = container
+
+    this.tooltip = addTooltip(this.container.svg)
 
     container.addSizeObserver(() => {
       this.positionElement()
@@ -89,6 +94,7 @@ export class ControlPoint {
   }
 
   remove() {
+    this.tooltip.remove()
     this.container.removeChild(this.element)
   }
 
@@ -97,6 +103,8 @@ export class ControlPoint {
     const [xSvg, ySvg] = this.container.normalizedToSvg(x, y)
     this.element.setAttribute('x', String(xSvg - FULL_RADIUS))
     this.element.setAttribute('y', String(ySvg - FULL_RADIUS))
+
+    this.tooltip.update(String(x), xSvg, ySvg)
   }
 
   movePoint(e: PointerEvent) {
@@ -105,10 +113,13 @@ export class ControlPoint {
     this.positionElement()
   }
 
-  updateStrokeWidth() {
+  update() {
     this.circle.setAttribute('stroke-width', String(STROKE))
     if (this.isHovered) {
       this.circle.setAttribute('stroke-width', String(STROKE + 1))
+      this.tooltip.show()
+    } else {
+      this.tooltip.hide()
     }
     if (this.isDragging) {
       this.circle.setAttribute('stroke-width', String(STROKE * 2))
@@ -136,7 +147,7 @@ export class ControlPoint {
         this.eventTarget.dispatchEvent(delEvent)
       }
       this.isDragging = false
-      this.updateStrokeWidth()
+      this.update()
     }
 
     document.addEventListener('pointerup', onPointerUp)
@@ -156,11 +167,11 @@ export class ControlPoint {
     })
     this.element.addEventListener('pointerenter', () => {
       this.isHovered = true
-      this.updateStrokeWidth()
+      this.update()
     })
     this.element.addEventListener('pointerleave', () => {
       this.isHovered = false
-      this.updateStrokeWidth()
+      this.update()
     })
   }
 
