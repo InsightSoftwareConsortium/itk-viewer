@@ -21,7 +21,7 @@ describe('PointsController', () => {
   beforeEach(() => {
     ;({ container } = makeTestableContainer())
     points = new Points()
-    controller = new PointsController(container, points)
+    controller = new PointsController(container, points, (x) => x)
   })
 
   it('Clicking adds a point', () => {

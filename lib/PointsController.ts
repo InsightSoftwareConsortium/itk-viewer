@@ -10,10 +10,16 @@ export class PointsController {
   private onPointsUpdated: () => void
   private controlPoints: ControlPoint[] = []
   private isNewPointFromPointer = false
+  private toDataSpace: (x: number) => number
 
-  constructor(container: ContainerType, points: Points) {
+  constructor(
+    container: ContainerType,
+    points: Points,
+    toDataSpace: (x: number) => number,
+  ) {
     this.container = container
     this.points = points
+    this.toDataSpace = toDataSpace
 
     // update model
     const { root } = container
@@ -60,6 +66,7 @@ export class PointsController {
         new ControlPoint(
           this.container,
           point,
+          this.toDataSpace,
           (e) => this.onControlPointDelete(e),
           this.isNewPointFromPointer,
         ),

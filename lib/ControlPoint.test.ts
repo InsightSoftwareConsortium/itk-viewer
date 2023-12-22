@@ -9,7 +9,7 @@ describe('ControlPoint', () => {
   beforeEach(() => {
     const { container } = makeTestableContainer()
     point = new Point(0, 0)
-    controlPoint = new ControlPoint(container, point)
+    controlPoint = new ControlPoint(container, point, (x) => x)
   })
 
   it('Clicking and dragging moves the model point', () => {
