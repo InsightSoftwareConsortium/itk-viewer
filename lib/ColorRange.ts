@@ -43,9 +43,10 @@ export type ColorRangeType = ReturnType<typeof ColorRange>
 export const ColorRangeController = (
   container: ContainerType,
   colorRange: ColorRangeType,
+  toDataSpace: (x: number) => number,
 ) => {
   const points = colorRange.getPoints().map((p) => {
-    const cp = new ControlPoint(container, p)
+    const cp = new ControlPoint(container, p, toDataSpace)
     cp.deletable = false
     return cp
   })

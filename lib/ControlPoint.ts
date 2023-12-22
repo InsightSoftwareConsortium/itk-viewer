@@ -57,11 +57,14 @@ export class ControlPoint {
   private grabX = 0
   private grabY = 0
 
+  private toDataSpace: (x: number) => number
+
   static styleElement = undefined as HTMLStyleElement | undefined
 
   constructor(
     container: ContainerType,
     point: Point,
+    toDataSpace: (x: number) => number,
     deleteEventCallback?: (event: CustomEvent) => void,
     isNewPointFromPointer = false,
   ) {
@@ -70,6 +73,7 @@ export class ControlPoint {
     this.circle = circle
     this.point = point
     this.container = container
+    this.toDataSpace = toDataSpace
 
     this.tooltip = addTooltip(this.container.svg)
 
@@ -104,7 +108,8 @@ export class ControlPoint {
     this.element.setAttribute('x', String(xSvg - FULL_RADIUS))
     this.element.setAttribute('y', String(ySvg - FULL_RADIUS))
 
-    this.tooltip.update(String(x), xSvg, ySvg)
+    const dataValue = this.toDataSpace(x)
+    this.tooltip.update(String(dataValue), xSvg, ySvg)
   }
 
   movePoint(e: PointerEvent) {

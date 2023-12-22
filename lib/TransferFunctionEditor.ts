@@ -14,6 +14,26 @@ import {
 
 export { windowPointsForSort } from './PiecewiseUtils'
 
+const makeToDataSpace = () => {
+  let colorTransferFunction: ColorTransferFunction | undefined
+  const setColorTransferFunction = (ctf: ColorTransferFunction) => {
+    colorTransferFunction = ctf
+  }
+
+  const toDataSpace = (x: number) => {
+    if (!colorTransferFunction) return x
+
+    const [start, end] = colorTransferFunction.getMappingRange()
+    const width = end - start
+    return x * width + start
+  }
+
+  return {
+    setColorTransferFunction,
+    toDataSpace,
+  }
+}
+
 export class TransferFunctionEditor {
   public eventTarget = new EventTarget()
 
@@ -24,6 +44,8 @@ export class TransferFunctionEditor {
   private pointController: PointsController
   private container: ContainerType
   private background: BackgroundType
+
+  private dataSpaceConverter = makeToDataSpace()
 
   constructor(root: HTMLElement) {
     this.container = Container(root)
@@ -37,12 +59,17 @@ export class TransferFunctionEditor {
     this.points.setPoints(startPoints)
 
     this.line = new Line(this.container, this.points)
-    this.pointController = new PointsController(this.container, this.points)
+    this.pointController = new PointsController(
+      this.container,
+      this.points,
+      this.dataSpaceConverter.toDataSpace,
+    )
 
     this.colorRange = ColorRange()
     this.colorRangeController = ColorRangeController(
       this.container,
       this.colorRange,
+      this.dataSpaceConverter.toDataSpace,
     )
     this.background = Background(this.container, this.points, this.colorRange)
 
@@ -94,6 +121,7 @@ export class TransferFunctionEditor {
   }
 
   setColorTransferFunction(ctf: ColorTransferFunction) {
+    this.dataSpaceConverter.setColorTransferFunction(ctf)
     this.background.setColorTransferFunction(ctf)
     this.colorRangeController.setColorTransferFunction(ctf)
   }
