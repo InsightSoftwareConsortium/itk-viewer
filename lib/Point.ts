@@ -1,5 +1,3 @@
-const clamp0to1 = (x: number) => Math.max(0, Math.min(1, x))
-
 export class Point {
   private _x!: number
   private _y!: number
@@ -15,7 +13,7 @@ export class Point {
   }
 
   set x(newX: number) {
-    this._x = clamp0to1(newX)
+    this._x = newX
     this.dispatchUpdatedEvent()
   }
 
@@ -24,7 +22,7 @@ export class Point {
   }
 
   set y(newY: number) {
-    this._y = clamp0to1(newY)
+    this._y = newY
     this.dispatchUpdatedEvent()
   }
 

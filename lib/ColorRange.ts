@@ -3,6 +3,16 @@ import { ControlPoint } from './ControlPoint'
 import { ContainerType } from './Container'
 import { ColorTransferFunction, rgbaToHexa } from './PiecewiseUtils'
 
+const Y_OFFSET = -2.75 // pixels dom space
+
+class ColorControlPoint extends ControlPoint {
+  positionElement() {
+    super.positionElement()
+    const [, bottom] = this.container.normalizedToSvg(0, 0)
+    this.element.setAttribute('y', String(bottom + Y_OFFSET))
+  }
+}
+
 export const ColorRange = () => {
   const points = [new Point(0, 0), new Point(1, 0)]
   const getPoints = () => points.sort((p1, p2) => p1.x - p2.x)
@@ -15,7 +25,6 @@ export const ColorRange = () => {
   let batchUpdated = false
   const setupPoint = (point: Point) => {
     point.eventTarget.addEventListener('updated', () => {
-      if (point.y !== 0) point.y = 0
       if (!batchUpdated) dispachUpdated()
     })
   }
@@ -45,10 +54,33 @@ export const ColorRangeController = (
   colorRange: ColorRangeType,
   toDataSpace: (x: number) => number,
 ) => {
+  const levelPoint = new Point(0.5, Y_OFFSET)
+
+  const levelControlPoint = new ColorControlPoint(
+    container,
+    levelPoint,
+    toDataSpace,
+  )
+  levelControlPoint.deletable = false
+
   const points = colorRange.getPoints().map((p) => {
-    const cp = new ControlPoint(container, p, toDataSpace)
+    const cp = new ColorControlPoint(container, p, toDataSpace)
     cp.deletable = false
+
     return cp
+  })
+
+  // optimizations to avoid circular update
+  let updatingRangePoints = false
+  let updatingCenter = false
+
+  levelPoint.eventTarget.addEventListener('updated', () => {
+    if (updatingCenter) return
+    updatingRangePoints = true
+    const width = points[1].point.x - points[0].point.x
+    points[0].point.x = levelPoint.x - width / 2
+    points[1].point.x = levelPoint.x + width / 2
+    updatingRangePoints = false
   })
 
   let ctf: ColorTransferFunction
@@ -63,6 +95,11 @@ export const ColorRangeController = (
     const sorted = points.sort((p1, p2) => p1.point.x - p2.point.x)
     sorted[0].setColor(rgbaToHexa(low))
     sorted[1].setColor(rgbaToHexa(high))
+
+    const middle = [] as Array<number>
+    const center = (dataRange[1] - dataRange[0]) / 2 + dataRange[0]
+    ctf.getColor(center, middle)
+    levelControlPoint.setColor(rgbaToHexa(middle))
   }
 
   const setColorTransferFunction = (
@@ -73,7 +110,14 @@ export const ColorRangeController = (
   }
 
   colorRange.eventTarget.addEventListener('updated', () => {
+    if (updatingRangePoints) return
     updatePointColors()
+    const pointCount = colorRange.getPoints().length
+    const center =
+      colorRange.getPoints().reduce((sum, p) => sum + p.x, 0) / pointCount
+    updatingCenter = true
+    levelPoint.x = center
+    updatingCenter = false
   })
 
   return {

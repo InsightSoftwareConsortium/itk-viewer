@@ -4,6 +4,8 @@ import { addTooltip } from './addTooltip'
 
 export const CONTROL_POINT_CLASS = 'controlPoint'
 
+const clamp0to1 = (x: number) => Math.max(0, Math.min(1, x))
+
 const STROKE = 2
 const VISIBLE_RADIUS = 8
 const CLICK_RADIUS = 14
@@ -46,9 +48,9 @@ export class ControlPoint {
   element: SVGGraphicsElement
   circle: SVGCircleElement
   tooltip: ReturnType<typeof addTooltip>
-  private container: ContainerType
-  private isDragging: boolean = false
-  private isHovered: boolean = false
+  protected container: ContainerType
+  protected isDragging: boolean = false
+  protected isHovered: boolean = false
   readonly point: Point
 
   public deletable = true
@@ -102,7 +104,7 @@ export class ControlPoint {
     this.container.removeChild(this.element)
   }
 
-  private positionElement() {
+  positionElement() {
     const { x, y } = this.point
     const [xSvg, ySvg] = this.container.normalizedToSvg(x, y)
     this.element.setAttribute('x', String(xSvg - FULL_RADIUS))
@@ -114,7 +116,7 @@ export class ControlPoint {
 
   movePoint(e: PointerEvent) {
     const [x, y] = this.container.domToNormalized(e.clientX, e.clientY)
-    this.point.setPosition(x + this.grabX, y + this.grabY)
+    this.point.setPosition(clamp0to1(x + this.grabX), clamp0to1(y + this.grabY))
     this.positionElement()
   }
 

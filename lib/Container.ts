@@ -1,6 +1,7 @@
 import { arrayEquals } from './PiecewiseUtils'
 
-export const PADDING = 10
+export const PADDING = 11
+const BOTTOM_PADDING = 2 * PADDING
 
 const makeSvg = () => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -70,7 +71,7 @@ export const Container = (parent: HTMLElement) => {
     const { top, left, width, height } = root.getBoundingClientRect()
     return {
       width: width - 2 * PADDING,
-      height: height - 2 * PADDING,
+      height: height - (BOTTOM_PADDING + PADDING),
       top: top + PADDING,
       left: left + PADDING,
     }

@@ -18,6 +18,7 @@ const setupTooltipStyles = () => {
         padding: 8px;
         visibility: hidden;
         max-width: 150px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       }
     `
   document.head.appendChild(style)
