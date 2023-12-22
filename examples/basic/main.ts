@@ -34,6 +34,7 @@ if (editorHome) {
   })
 
   editor.setColorRange([0.2, 0.8])
+  editor.setRange([0, 10])
 
   // eslint-disable-next-line no-console
   console.log('Control points', editor.getPoints())

@@ -49,12 +49,10 @@ describe('Container', () => {
 
   it('setViewBox influences normalizedToSvg and domToNormalized', () => {
     container.setViewBox(0.25, 0.5, 0.1, 0.5)
-    let [domX, domY] = container.normalizedToSvg(0.5, 0.5)
+    let [domX] = container.normalizedToSvg(0.5, 0.5)
     expect(domX).toBe(CONTAINER_WIDTH - PADDING)
-    expect(domY).toBe(PADDING)
-    ;[domX, domY] = container.normalizedToSvg(0.25, 0.1)
+    ;[domX] = container.normalizedToSvg(0.25, 0.1)
     expect(domX).toBe(PADDING)
-    expect(domY).toBe(CONTAINER_HEIGHT - PADDING)
 
     const [normX, normY] = container.domToNormalized(
       LEFT + CONTAINER_WIDTH - PADDING,

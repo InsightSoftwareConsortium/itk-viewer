@@ -20,7 +20,7 @@ describe('TfEditor', () => {
 
   it('Initial points are represented', () => {
     const pointElements = root.querySelectorAll('.controlPoint')
-    expect(pointElements?.length).toBe(4) // 2 opacity points, 2 color range points
+    expect(pointElements?.length).toBe(5) // 2 opacity points, 3 color range points
   })
 
   it('Remove detaches all children nodes', () => {

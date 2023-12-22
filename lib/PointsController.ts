@@ -1,5 +1,5 @@
 import { ContainerType } from './Container'
-import { ControlPoint } from './ControlPoint'
+import { ControlPoint, clamp0to1 } from './ControlPoint'
 import { Point } from './Point'
 import { Points } from './Points'
 
@@ -37,7 +37,9 @@ export class PointsController {
   }
 
   onPointerDown(event: PointerEvent) {
-    const [x, y] = this.container.domToNormalized(event.clientX, event.clientY)
+    const [x, y] = this.container
+      .domToNormalized(event.clientX, event.clientY)
+      .map(clamp0to1)
     this.isNewPointFromPointer = true
     this.points.addPoint(x, y)
     this.isNewPointFromPointer = false

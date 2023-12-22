@@ -15,21 +15,19 @@ import {
 export { windowPointsForSort } from './PiecewiseUtils'
 
 const makeToDataSpace = () => {
-  let colorTransferFunction: ColorTransferFunction | undefined
-  const setColorTransferFunction = (ctf: ColorTransferFunction) => {
-    colorTransferFunction = ctf
+  let range = [0, 1] as [number, number]
+  const setRange = (newRange: [number, number]) => {
+    range = newRange
   }
 
   const toDataSpace = (x: number) => {
-    if (!colorTransferFunction) return x
-
-    const [start, end] = colorTransferFunction.getMappingRange()
+    const [start, end] = range
     const width = end - start
     return x * width + start
   }
 
   return {
-    setColorTransferFunction,
+    setRange,
     toDataSpace,
   }
 }
@@ -121,12 +119,15 @@ export class TransferFunctionEditor {
   }
 
   setColorTransferFunction(ctf: ColorTransferFunction) {
-    this.dataSpaceConverter.setColorTransferFunction(ctf)
     this.background.setColorTransferFunction(ctf)
     this.colorRangeController.setColorTransferFunction(ctf)
   }
 
   setHistogram(histogram: number[]) {
     this.background.setHistogram(logTransform(histogram))
+  }
+
+  setRange(range: [number, number]) {
+    this.dataSpaceConverter.setRange(range)
   }
 }

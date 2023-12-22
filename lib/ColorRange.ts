@@ -1,5 +1,5 @@
 import { Point } from './Point'
-import { ControlPoint } from './ControlPoint'
+import { ControlPoint, FULL_RADIUS } from './ControlPoint'
 import { ContainerType } from './Container'
 import { ColorTransferFunction, rgbaToHexa } from './PiecewiseUtils'
 
@@ -7,9 +7,14 @@ const Y_OFFSET = -2.75 // pixels dom space
 
 class ColorControlPoint extends ControlPoint {
   positionElement() {
-    super.positionElement()
-    const [, bottom] = this.container.normalizedToSvg(0, 0)
-    this.element.setAttribute('y', String(bottom + Y_OFFSET))
+    const { x } = this.point
+    const [xSvg, bottom] = this.container.normalizedToSvg(x, 0)
+    const ySvg = bottom + Y_OFFSET
+    this.element.setAttribute('x', String(xSvg - FULL_RADIUS))
+    this.element.setAttribute('y', String(ySvg))
+
+    const dataValue = this.toDataSpace(x)
+    this.tooltip.update(dataValue.toPrecision(4), xSvg, ySvg)
   }
 }
 
@@ -54,11 +59,11 @@ export const ColorRangeController = (
   colorRange: ColorRangeType,
   toDataSpace: (x: number) => number,
 ) => {
-  const levelPoint = new Point(0.5, Y_OFFSET)
+  const center = new Point(0.5, Y_OFFSET)
 
   const levelControlPoint = new ColorControlPoint(
     container,
-    levelPoint,
+    center,
     toDataSpace,
   )
   levelControlPoint.deletable = false
@@ -74,12 +79,12 @@ export const ColorRangeController = (
   let updatingRangePoints = false
   let updatingCenter = false
 
-  levelPoint.eventTarget.addEventListener('updated', () => {
+  center.eventTarget.addEventListener('updated', () => {
     if (updatingCenter) return
     updatingRangePoints = true
     const width = points[1].point.x - points[0].point.x
-    points[0].point.x = levelPoint.x - width / 2
-    points[1].point.x = levelPoint.x + width / 2
+    points[0].point.x = center.x - width / 2
+    points[1].point.x = center.x + width / 2
     updatingRangePoints = false
   })
 
@@ -113,10 +118,9 @@ export const ColorRangeController = (
     if (updatingRangePoints) return
     updatePointColors()
     const pointCount = colorRange.getPoints().length
-    const center =
-      colorRange.getPoints().reduce((sum, p) => sum + p.x, 0) / pointCount
     updatingCenter = true
-    levelPoint.x = center
+    center.x =
+      colorRange.getPoints().reduce((sum, p) => sum + p.x, 0) / pointCount
     updatingCenter = false
   })
 

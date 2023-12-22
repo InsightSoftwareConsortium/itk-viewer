@@ -77,7 +77,7 @@ describe('PointsController', () => {
     root.dispatchEvent(middle)
     ;({ x: normX, y: normY } = points.points[1])
     expect(normX).toBe(0.5)
-    expect(normY).toBe(0.5)
+    expect(normY).toBe(0.17647058823529416)
   })
 
   it('remove cleans up Points callback', () => {

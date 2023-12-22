@@ -53,6 +53,7 @@ export function addTooltip(svgElement: SVGGraphicsElement) {
     const svgBox = svgElement.getBBox()
     const tooltipBox = tooltip.getBoundingClientRect()
 
+    // if text goes off the SVG edge, move up and/or left
     if (posX > svgBox.width - tooltipBox.width) {
       posX = x - tooltipBox.width - mouseOffset[0]
     }

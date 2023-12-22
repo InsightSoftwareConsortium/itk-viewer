@@ -72,4 +72,5 @@ if (editorHome) {
     [0.1, 0.1],
     [0.9, 0.9],
   ])
+  editor.setRange(DATA_RANGE as [number, number])
 }

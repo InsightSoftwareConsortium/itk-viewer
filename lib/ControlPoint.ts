@@ -4,12 +4,12 @@ import { addTooltip } from './addTooltip'
 
 export const CONTROL_POINT_CLASS = 'controlPoint'
 
-const clamp0to1 = (x: number) => Math.max(0, Math.min(1, x))
+export const clamp0to1 = (x: number) => Math.max(0, Math.min(1, x))
 
 const STROKE = 2
 const VISIBLE_RADIUS = 8
 const CLICK_RADIUS = 14
-const FULL_RADIUS = CLICK_RADIUS
+export const FULL_RADIUS = CLICK_RADIUS
 
 const makeCircle = () => {
   const group = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
@@ -59,7 +59,7 @@ export class ControlPoint {
   private grabX = 0
   private grabY = 0
 
-  private toDataSpace: (x: number) => number
+  protected toDataSpace: (x: number) => number
 
   static styleElement = undefined as HTMLStyleElement | undefined
 
@@ -111,7 +111,7 @@ export class ControlPoint {
     this.element.setAttribute('y', String(ySvg - FULL_RADIUS))
 
     const dataValue = this.toDataSpace(x)
-    this.tooltip.update(String(dataValue), xSvg, ySvg)
+    this.tooltip.update(dataValue.toPrecision(4), xSvg, ySvg)
   }
 
   movePoint(e: PointerEvent) {
@@ -125,11 +125,12 @@ export class ControlPoint {
     if (this.isHovered) {
       this.circle.setAttribute('stroke-width', String(STROKE + 1))
       this.tooltip.show()
-    } else {
-      this.tooltip.hide()
     }
     if (this.isDragging) {
       this.circle.setAttribute('stroke-width', String(STROKE * 2))
+    }
+    if (!this.isDragging && !this.isHovered) {
+      this.tooltip.hide()
     }
   }
 
