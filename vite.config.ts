@@ -10,6 +10,7 @@ export default defineConfig({
       name: 'TransferFunctionEditor',
       fileName: (format) => `TransferFunctionEditor.${format}.js`,
     },
+    sourcemap: true,
   },
   test: {
     setupFiles: ['./vitest.setup.ts'],

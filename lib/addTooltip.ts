@@ -49,7 +49,7 @@ export function addTooltip(svgElement: SVGGraphicsElement) {
     let posX = x + mouseOffset[0]
     let posY = y + mouseOffset[1]
 
-    tooltip.innerHTML = text
+    tooltip.textContent = text
     const svgBox = svgElement.getBBox()
     const tooltipBox = tooltip.getBoundingClientRect()
 

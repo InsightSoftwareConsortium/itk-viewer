@@ -4,8 +4,7 @@ export class Point {
   eventTarget = new EventTarget()
 
   constructor(x: number, y: number) {
-    this.x = x
-    this.y = y
+    this.setPosition(x, y)
   }
 
   get x() {
@@ -27,8 +26,8 @@ export class Point {
   }
 
   setPosition(x: number, y: number) {
-    this.x = x
-    this.y = y
+    this._x = x
+    this._y = y
     this.dispatchUpdatedEvent()
   }
 

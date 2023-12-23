@@ -104,26 +104,35 @@ export class ControlPoint {
     this.container.removeChild(this.element)
   }
 
-  positionElement() {
+  getSvgPosition() {
     const { x, y } = this.point
-    const [xSvg, ySvg] = this.container.normalizedToSvg(x, y)
+    return this.container.normalizedToSvg(x, y)
+  }
+
+  updateTooltip(xySvg: [number, number] | undefined = undefined) {
+    const { x } = this.point
+    const dataValue = this.toDataSpace(x)
+    const [xSvg, ySvg] = xySvg ?? this.getSvgPosition()
+    this.tooltip.update(dataValue.toPrecision(4), xSvg, ySvg)
+  }
+
+  positionElement() {
+    const [xSvg, ySvg] = this.getSvgPosition()
     this.element.setAttribute('x', String(xSvg - FULL_RADIUS))
     this.element.setAttribute('y', String(ySvg - FULL_RADIUS))
-
-    const dataValue = this.toDataSpace(x)
-    this.tooltip.update(dataValue.toPrecision(4), xSvg, ySvg)
+    this.updateTooltip([xSvg, ySvg])
   }
 
   movePoint(e: PointerEvent) {
     const [x, y] = this.container.domToNormalized(e.clientX, e.clientY)
     this.point.setPosition(clamp0to1(x + this.grabX), clamp0to1(y + this.grabY))
-    this.positionElement()
   }
 
   update() {
     this.circle.setAttribute('stroke-width', String(STROKE))
     if (this.isHovered) {
       this.circle.setAttribute('stroke-width', String(STROKE + 1))
+      this.updateTooltip()
       this.tooltip.show()
     }
     if (this.isDragging) {
@@ -140,8 +149,10 @@ export class ControlPoint {
       this.circle.setAttribute('stroke', 'red') // deleteable
     }
     const onPointerMove = (e: PointerEvent) => {
+      if (!this.isDragging) {
+        this.circle.setAttribute('stroke', 'black')
+      }
       this.isDragging = true
-      this.circle.setAttribute('stroke', 'black')
       this.movePoint(e)
     }
     document.addEventListener('pointermove', onPointerMove)
