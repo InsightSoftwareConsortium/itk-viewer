@@ -24,6 +24,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
+    "@itk-viewer/io": "workspace:^",
     "@itk-viewer/viewer": "workspace:^",
     "imjoy-rpc": "^0.5.44"
   }
