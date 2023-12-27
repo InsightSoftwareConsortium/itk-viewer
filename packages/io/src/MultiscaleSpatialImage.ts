@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { mat4, vec3 } from 'gl-matrix';
-import { Image, ImageType, setMatrixElement } from 'itk-wasm';
+import {
+  mat4,
+  vec3,
+  mat3,
+  ReadonlyMat3,
+  ReadonlyVec3,
+  ReadonlyMat4,
+} from 'gl-matrix';
+import { Image, ImageType, TypedArray } from 'itk-wasm';
 import WebworkerPromise from 'webworker-promise';
 
 import { getDtype } from '@itk-viewer/wasm-utils/dtypeUtils.js';
@@ -23,10 +30,17 @@ import {
   SpatialDimensions,
   TypedArrayConstructor,
 } from './types.js';
-import { mat3 } from 'gl-matrix';
-import { ReadonlyVec3 } from 'gl-matrix';
-import { ReadonlyMat3 } from 'gl-matrix';
-import { ReadonlyMat4 } from 'gl-matrix';
+
+// from itk-wasm
+function setMatrixElement(
+  matrixData: TypedArray,
+  columns: number,
+  row: number,
+  column: number,
+  value: number | bigint,
+): void {
+  matrixData[column + row * columns] = value;
+}
 
 const imageDataFromChunksWorker = new Worker(
   new URL('./ImageDataFromChunks.worker.js', import.meta.url),

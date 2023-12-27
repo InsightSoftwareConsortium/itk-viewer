@@ -2,8 +2,8 @@
 import { PropertyValues, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { Ref, createRef, ref } from 'lit/directives/ref.js';
-import { SelectorController } from 'xstate-lit/dist/select-controller.js';
-import { ActorStatus } from 'xstate';
+import { SelectorController } from 'xstate-lit';
+import {} from 'xstate';
 
 import {
   RemoteActor,
@@ -139,7 +139,8 @@ export class ItkRemoteViewport extends ItkViewport {
     this.renderLoopRunning = true;
 
     const render = () => {
-      if (!this.isConnected || this.remote.status === ActorStatus.Stopped) {
+      const remoteSnap = this.remote.getSnapshot();
+      if (!this.isConnected || remoteSnap.status === 'stopped') {
         this.renderLoopRunning = false;
         return;
       }

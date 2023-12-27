@@ -1,7 +1,7 @@
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
 
-const pipelineWorkerUrl = '/itk/web-workers/bundles/pipeline.worker.js';
+const pipelineWorkerUrl = '/itk/web-workers/itk-wasm-pipeline.min.worker.js';
 setPipelineWorkerUrl(pipelineWorkerUrl);
 const pipelineBaseUrl = '/itk/pipelines';
 setPipelinesBaseUrl(pipelineBaseUrl);

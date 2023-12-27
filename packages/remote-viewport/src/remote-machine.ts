@@ -525,11 +525,12 @@ export const remoteMachine = createMachine(
                         target: 'idle',
                       },
                       onError: {
-                        actions: (e) =>
+                        actions: (e) => {
                           console.error(
                             `Error while sending commands.`,
-                            (e.event.data as Error).stack ?? e.event.data,
-                          ),
+                            (e.event.error as Error).stack ?? e.event.error,
+                          );
+                        },
                         target: 'idle', // soldier on
                       },
                     },
@@ -582,7 +583,7 @@ export const remoteMachine = createMachine(
                         actions: (e) =>
                           console.error(
                             `Error while updating renderer.`,
-                            (e.event.data as Error).stack ?? e.event.data,
+                            (e.event.error as Error).stack ?? e.event.error,
                           ),
                         target: 'idle', // soldier on
                       },

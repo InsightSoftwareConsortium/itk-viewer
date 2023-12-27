@@ -10,7 +10,7 @@ import {
   LookAtParams,
   createCamera,
 } from '@itk-viewer/viewer/camera-machine.js';
-import { SelectorController } from 'xstate-lit/dist/select-controller.js';
+import { SelectorController } from 'xstate-lit';
 
 const PAN_SPEED = 1;
 const ZOOM_SPEED = 0.0002;

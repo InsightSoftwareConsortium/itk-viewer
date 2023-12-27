@@ -120,7 +120,7 @@ const IMAGE_BASELINES = [
 ] as const;
 
 before(() => {
-  const pipelineWorkerUrl = '/itk/web-workers/bundles/pipeline.worker.js';
+  const pipelineWorkerUrl = '/itk/web-workers/itk-wasm-pipeline.min.worker.js';
   setPipelineWorkerUrl(pipelineWorkerUrl);
   const pipelineBaseUrl = '/itk/pipelines';
   setPipelinesBaseUrl(pipelineBaseUrl);

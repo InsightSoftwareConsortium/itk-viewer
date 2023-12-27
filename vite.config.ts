@@ -8,7 +8,7 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: './packages/io/node_modules/itk-wasm/dist/web-workers/*',
+          src: './packages/io/node_modules/itk-wasm/dist/pipeline/web-workers/bundles/itk-wasm-pipeline.min.worker.js',
           dest: 'itk/web-workers',
         },
         {

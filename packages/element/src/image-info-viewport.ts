@@ -1,7 +1,7 @@
 import { css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 
-import { SelectorController } from 'xstate-lit/dist/select-controller.js';
+import { SelectorController } from 'xstate-lit';
 
 import { ItkViewport } from './itk-viewport.js';
 
