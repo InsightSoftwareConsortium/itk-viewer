@@ -20,7 +20,8 @@ export const view2dLogic = createMachine({
     events:
       | Events
       | SetContainerEvent
-      | { type: 'imageBuilt'; image: BuiltImage };
+      | { type: 'imageBuilt'; image: BuiltImage }
+      | { type: 'setSlice'; slice: number };
     actions:
       | { type: 'setup'; context: Context }
       | { type: 'setContainer'; event: SetContainerEvent }
@@ -46,6 +47,9 @@ export const view2dLogic = createMachine({
       entry: [{ type: 'setup' }],
       on: {
         setImage: {
+          actions: sendTo('view2d', ({ event }) => event),
+        },
+        setSlice: {
           actions: sendTo('view2d', ({ event }) => event),
         },
         setContainer: {

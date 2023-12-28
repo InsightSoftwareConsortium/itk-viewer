@@ -34,7 +34,6 @@ type SendImageToViewports = {
 };
 
 type context = {
-  _nextId: number;
   nextId: string;
   viewports: Record<string, ActorRefFrom<AnyActorLogic>>;
   images: Record<string, MultiscaleSpatialImage>;
@@ -52,7 +51,6 @@ export const viewerMachine = createMachine({
   id: 'viewer',
   initial: 'active',
   context: {
-    _nextId: 0,
     nextId: '0',
     viewports: {},
     images: {},
@@ -86,8 +84,7 @@ export const viewerMachine = createMachine({
                   [id]: view,
                 };
               },
-              _nextId: ({ context }) => context._nextId + 1,
-              nextId: ({ context }) => String(context._nextId),
+              nextId: ({ context }) => String(Number(context.nextId) + 1),
             }),
           ],
         },

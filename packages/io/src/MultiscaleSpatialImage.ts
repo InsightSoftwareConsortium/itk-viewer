@@ -591,6 +591,7 @@ export const getBytes = (
   return bytesPerElement * components * voxelCount;
 };
 
+// union in of imageType fixes this problem https://github.com/microsoft/TypeScript/issues/47663#issuecomment-1519138189
 export type BuiltImage = Awaited<
   ReturnType<MultiscaleSpatialImage['buildImage']>
->;
+> & { imageType: ImageType };

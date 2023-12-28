@@ -33,23 +33,39 @@ export class ItkView2dVtkjs extends LitElement {
     return this.actor;
   }
 
+  setActor(actor: View2dVtkjsActor) {
+    this.actor = actor;
+    this.dispatchActor();
+  }
+
   setViewer(system: Viewer) {
     this.actorId = system.getSnapshot().context.nextId;
     system.send({
       type: 'createViewport',
       logic: createView2dVtkjs(),
     });
-    this.actor = system.getSnapshot().children[
+    const actor = system.getSnapshot().children[
       this.actorId
     ] as View2dVtkjsActor;
+    this.setActor(actor);
     this.sendContainer();
   }
 
-  sendContainer() {
+  protected dispatchActor() {
+    const event = new CustomEvent('actorCreated', {
+      bubbles: true,
+      composed: true,
+      detail: { actor: this.actor },
+    });
+
+    this.dispatchEvent(event);
+  }
+
+  protected sendContainer() {
     this.actor.send({ type: 'setContainer', container: this.container });
   }
 
-  onContainer(container: Element | undefined) {
+  protected onContainer(container: Element | undefined) {
     if (container instanceof HTMLElement || container == undefined) {
       this.container = container;
       this.sendContainer();
@@ -57,14 +73,12 @@ export class ItkView2dVtkjs extends LitElement {
   }
 
   render() {
-    return html`
-      <h1>View 2D</h1>
-      <div class="container" ${ref(this.onContainer)}></div>
-    `;
+    return html`<div class="container" ${ref(this.onContainer)}></div>`;
   }
 
   static styles = css`
     :host {
+      flex: 1;
       display: flex;
       flex-direction: column;
     }

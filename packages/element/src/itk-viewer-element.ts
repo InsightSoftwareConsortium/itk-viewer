@@ -2,7 +2,7 @@ import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { provide } from '@lit/context';
 
-import { Viewer, createViewer } from '@itk-viewer/viewer/viewer.js';
+import { createViewer } from '@itk-viewer/viewer/viewer.js';
 import { viewerContext } from './viewer-context.js';
 
 @customElement('itk-viewer')
@@ -14,7 +14,7 @@ export class ItkViewer extends LitElement {
     super();
   }
 
-  getActor(): Viewer {
+  getActor() {
     return this.viewer;
   }
 
