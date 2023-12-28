@@ -7,7 +7,7 @@ import { viewportMachine } from './viewport-machine.js';
 
 const context = {
   slice: 0,
-  imageScale: 0,
+  scale: 0,
 };
 
 export const view2d = setup({
@@ -16,26 +16,27 @@ export const view2d = setup({
     events:
       | { type: 'setImage' }
       | { type: 'imageAssigned'; image: MultiscaleSpatialImage }
-      | { type: 'setSlice'; slice: number };
+      | { type: 'setSlice'; slice: number }
+      | { type: 'setScale'; scale: number };
   },
   actors: {
     viewport: viewportMachine,
     imageBuilder: fromPromise(
       async ({
-        input: { image, imageScale, slice },
+        input: { image, scale, slice },
       }: {
         input: {
           image: MultiscaleSpatialImage;
-          imageScale: number;
+          scale: number;
           slice: number;
         };
       }) => {
-        const worldBounds = await image.getWorldBounds(imageScale);
+        const worldBounds = await image.getWorldBounds(scale);
         const zWidth = worldBounds[5] - worldBounds[4];
         const worldZ = worldBounds[4] + zWidth * slice;
         worldBounds[4] = worldZ;
         worldBounds[5] = worldZ;
-        const builtImage = await image.getImage(imageScale, worldBounds);
+        const builtImage = await image.getImage(scale, worldBounds);
         return builtImage as BuiltImage;
       },
     ),
@@ -59,9 +60,9 @@ export const view2d = setup({
         imageAssigned: {
           actions: [
             assign({
-              imageScale: ({ event }) => event.image.coarsestScale,
-              slice: ({ event: { image } }) => {
-                return image.coarsestScale;
+              scale: ({ event }) => event.image.coarsestScale,
+              slice: () => {
+                return 0;
               },
             }),
           ],
@@ -69,6 +70,10 @@ export const view2d = setup({
         },
         setSlice: {
           actions: [assign({ slice: ({ event }) => event.slice })],
+          target: '.buildingImage',
+        },
+        setScale: {
+          actions: [assign({ scale: ({ event }) => event.scale })],
           target: '.buildingImage',
         },
       },
@@ -83,7 +88,7 @@ export const view2d = setup({
                 .children.viewport.getSnapshot().context;
               return {
                 image,
-                imageScale: context.imageScale,
+                scale: context.scale,
                 slice: context.slice,
               };
             },
