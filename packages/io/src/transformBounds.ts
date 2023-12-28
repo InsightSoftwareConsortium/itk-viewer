@@ -1,9 +1,13 @@
 import { ReadonlyMat4, vec3 } from 'gl-matrix';
-import type { Bounds, Vector3 } from './types.js';
+import type { Bounds, ReadonlyBounds, Vector3 } from './types.js';
 
 // from vtk.js/Sources/Common/DataModel/BoundingBox
 // Computes the two corners with minimal and maximal coordinates
-function computeCornerPoints(bounds: Bounds, point1: Vector3, point2: Vector3) {
+function computeCornerPoints(
+  bounds: ReadonlyBounds,
+  point1: Vector3,
+  point2: Vector3,
+) {
   point1[0] = bounds[0];
   point1[1] = bounds[2];
   point1[2] = bounds[4];
@@ -37,7 +41,7 @@ function computeBoundsFromPoints(
 
 export const transformBounds = (
   transformingMat4: ReadonlyMat4,
-  bounds: Bounds,
+  bounds: ReadonlyBounds,
 ) => {
   const in1: Vector3 = Array(3) as Vector3;
   const in2: Vector3 = Array(3) as Vector3;

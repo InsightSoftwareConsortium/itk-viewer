@@ -1,4 +1,4 @@
-import { assign, fromPromise, sendParent, sendTo, setup } from 'xstate';
+import { Actor, assign, fromPromise, sendParent, sendTo, setup } from 'xstate';
 import {
   MultiscaleSpatialImage,
   BuiltImage,
@@ -22,11 +22,20 @@ export const view2d = setup({
     viewport: viewportMachine,
     imageBuilder: fromPromise(
       async ({
-        input: { imageScale, image },
+        input: { image, imageScale, slice },
       }: {
-        input: { imageScale: number; image: MultiscaleSpatialImage };
+        input: {
+          image: MultiscaleSpatialImage;
+          imageScale: number;
+          slice: number;
+        };
       }) => {
-        const builtImage = await image.getImage(imageScale);
+        const worldBounds = await image.getWorldBounds(imageScale);
+        const zWidth = worldBounds[5] - worldBounds[4];
+        const worldZ = worldBounds[4] + zWidth * slice;
+        worldBounds[4] = worldZ;
+        worldBounds[5] = worldZ;
+        const builtImage = await image.getImage(imageScale, worldBounds);
         return builtImage as BuiltImage;
       },
     ),
@@ -58,6 +67,10 @@ export const view2d = setup({
           ],
           target: '.buildingImage',
         },
+        setSlice: {
+          actions: [assign({ slice: ({ event }) => event.slice })],
+          target: '.buildingImage',
+        },
       },
       initial: 'idle',
       states: {
@@ -68,7 +81,11 @@ export const view2d = setup({
               const { image } = self
                 .getSnapshot()
                 .children.viewport.getSnapshot().context;
-              return { imageScale: context.imageScale, image };
+              return {
+                image,
+                imageScale: context.imageScale,
+                slice: context.slice,
+              };
             },
             src: 'imageBuilder',
             onDone: {
@@ -87,3 +104,5 @@ export const view2d = setup({
     },
   },
 });
+
+export type View2dActor = Actor<typeof view2d>;

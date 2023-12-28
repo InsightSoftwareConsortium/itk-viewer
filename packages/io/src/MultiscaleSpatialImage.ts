@@ -25,6 +25,7 @@ import { transformBounds } from './transformBounds.js';
 import {
   Bounds,
   Extent,
+  ReadonlyBounds,
   ReadOnlyDimensionBounds,
   ScaleInfo,
   SpatialDimensions,
@@ -185,7 +186,7 @@ export const worldBoundsToIndexBounds = ({
   fullIndexBounds,
   worldToIndex,
 }: {
-  bounds: Bounds | undefined;
+  bounds: ReadonlyBounds | undefined;
   fullIndexBounds: ReadOnlyDimensionBounds;
   worldToIndex: ReadonlyMat4;
 }) => {
@@ -501,7 +502,10 @@ export class MultiscaleSpatialImage {
   }
 
   /* Retrieve bounded image at scale. */
-  async getImage(requestedScale: number, worldBounds = undefined) {
+  async getImage(
+    requestedScale: number,
+    worldBounds: ReadonlyBounds | undefined = undefined,
+  ) {
     const scale = Math.min(requestedScale, this.scaleInfos.length - 1);
     const indexToWorld = await this.scaleIndexToWorld(scale);
 

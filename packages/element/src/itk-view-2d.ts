@@ -1,13 +1,13 @@
-import { View2dVtkjsActor } from '@itk-viewer/vtkjs/view-2d-vtkjs.js';
+import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { PropertyValues, LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 @customElement('itk-view-2d')
 export class ItkView2d extends LitElement {
   @property({ type: Number })
-  slice = 0;
+  slice = 0.5;
 
-  actor: View2dVtkjsActor | undefined;
+  actor: View2dActor | undefined;
 
   constructor() {
     super();
@@ -42,8 +42,8 @@ export class ItkView2d extends LitElement {
           @change="${this.onSlice}"
           type="range"
           min="0"
-          max="70.0"
-          step="1.0"
+          max="1"
+          step=".01"
         />
       </div>
       <slot

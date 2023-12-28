@@ -49,9 +49,6 @@ export const view2dLogic = createMachine({
         setImage: {
           actions: sendTo('view2d', ({ event }) => event),
         },
-        setSlice: {
-          actions: sendTo('view2d', ({ event }) => event),
-        },
         setContainer: {
           actions: [{ type: 'setContainer' }],
         },

@@ -52,10 +52,11 @@ export class ItkView2dVtkjs extends LitElement {
   }
 
   protected dispatchActor() {
+    const actor = this.actor.getSnapshot().children.view2d;
     const event = new CustomEvent('actorCreated', {
       bubbles: true,
       composed: true,
-      detail: { actor: this.actor },
+      detail: { actor },
     });
 
     this.dispatchEvent(event);

@@ -49,11 +49,13 @@ const setupContainer = (
   return { actor, mapper, renderer, renderWindow };
 };
 
-const createConfig = () => {
+const createImplementation = () => {
   let actor: vtkImageSlice.vtkImageSlice | undefined = undefined;
   let mapper: vtkImageMapper.vtkImageMapper | undefined = undefined;
   let renderer: vtkRenderer.vtkRenderer | undefined = undefined;
   let renderWindow: vtkRenderWindow.vtkRenderWindow | undefined = undefined;
+
+  let addedActorToRenderer = false;
 
   const cleanupContainer = (rendererContainer: vtkGenericRenderWindow) => {
     actor?.delete();
@@ -91,11 +93,15 @@ const createConfig = () => {
         const { image } = event;
         const vtkImage = vtkITKHelper.convertItkToVtkImage(image);
         mapper!.setInputData(vtkImage);
-        mapper!.setSliceAtFocalPoint(true);
+        // mapper!.setSliceAtFocalPoint(true);
         mapper!.setSlicingMode(Constants.SlicingMode.Z);
 
         // add actor to renderer after mapper has data to avoid vtkjs message
-        renderer!.addActor(actor!);
+        if (!addedActorToRenderer) {
+          addedActorToRenderer = true;
+          renderer!.addActor(actor!);
+          renderer!.resetCamera();
+        }
         renderer!.resetCamera();
         renderWindow!.render();
       },
@@ -113,7 +119,7 @@ const createConfig = () => {
 export type Logic = typeof view2dLogic;
 
 export const createView2dVtkjs: () => Logic = () => {
-  return view2dLogic.provide(createConfig());
+  return view2dLogic.provide(createImplementation());
 };
 
 export type View2dVtkjsActor = ReturnType<typeof createActor<Logic>>;
