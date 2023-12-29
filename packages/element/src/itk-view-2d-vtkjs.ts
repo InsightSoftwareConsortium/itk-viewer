@@ -25,19 +25,6 @@ export class ItkView2dVtkjs extends LitElement {
     },
   });
 
-  constructor() {
-    super();
-  }
-
-  getActor(): View2dVtkjsActor {
-    return this.actor;
-  }
-
-  setActor(actor: View2dVtkjsActor) {
-    this.actor = actor;
-    this.dispatchActor();
-  }
-
   setViewer(system: Viewer) {
     this.actorId = system.getSnapshot().context.nextId;
     system.send({
@@ -49,6 +36,15 @@ export class ItkView2dVtkjs extends LitElement {
     ] as View2dVtkjsActor;
     this.setActor(actor);
     this.sendContainer();
+  }
+
+  getActor(): View2dVtkjsActor {
+    return this.actor;
+  }
+
+  setActor(actor: View2dVtkjsActor) {
+    this.actor = actor;
+    this.dispatchActor();
   }
 
   protected dispatchActor() {

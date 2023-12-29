@@ -100,7 +100,6 @@ const createImplementation = () => {
         if (!addedActorToRenderer) {
           addedActorToRenderer = true;
           renderer!.addActor(actor!);
-          renderer!.resetCamera();
         }
         renderer!.resetCamera();
         renderWindow!.render();

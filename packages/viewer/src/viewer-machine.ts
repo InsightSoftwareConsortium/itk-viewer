@@ -1,6 +1,7 @@
 import {
   ActorRefFrom,
   AnyActorLogic,
+  assertEvent,
   assign,
   createMachine,
   raise,
@@ -76,7 +77,8 @@ export const viewerMachine = createMachine({
           actions: [
             assign({
               viewports: ({ spawn, event, context }) => {
-                const { logic } = event as CreateViewport;
+                assertEvent(event, 'createViewport');
+                const { logic } = event;
                 const id = context.nextId;
                 const view = spawn(logic, { id });
                 return {
