@@ -92,7 +92,7 @@ export const viewerMachine = createMachine({
           actions: [
             assign({
               images: ({
-                event: { image, name = 'mainImage' },
+                event: { image, name = 'image' },
                 context,
               }: {
                 event: SetImageEvent;
@@ -108,7 +108,6 @@ export const viewerMachine = createMachine({
             })),
           ],
         },
-
         sendImageToViewports: {
           actions: [
             ({ context, event }) => {

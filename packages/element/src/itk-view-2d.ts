@@ -1,16 +1,14 @@
 import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
-import { PropertyValues, LitElement, css, html, nothing } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { LitElement, css, html, nothing } from 'lit';
+import { customElement } from 'lit/decorators.js';
 import { SelectorController } from 'xstate-lit';
 
 @customElement('itk-view-2d')
 export class ItkView2d extends LitElement {
-  @property({ type: Number })
-  slice = 0.5;
-
-  actor: View2dActor | undefined;
+  view2d: View2dActor | undefined;
   scale: SelectorController<View2dActor, number> | undefined;
   scaleCount: SelectorController<View2dActor, number> | undefined;
+  slice: SelectorController<View2dActor, number> | undefined;
 
   constructor() {
     super();
@@ -18,14 +16,20 @@ export class ItkView2d extends LitElement {
 
   handleSlotActorCreated(e: Event) {
     e.stopPropagation();
-    this.actor = (e as CustomEvent).detail.actor;
-    if (!this.actor) return;
+    this.view2d = (e as CustomEvent).detail.actor;
+    if (!this.view2d) return;
+
+    this.slice = new SelectorController(
+      this,
+      this.view2d,
+      (state) => state.context.slice,
+    );
     this.scale = new SelectorController(
       this,
-      this.actor,
+      this.view2d,
       (state) => state.context.scale,
     );
-    this.scaleCount = new SelectorController(this, this.actor, (state) => {
+    this.scaleCount = new SelectorController(this, this.view2d, (state) => {
       // @ts-expect-error getSnapshot not returning object with context for unknown reason
       const image = state.children.viewport?.getSnapshot()?.context.image;
       if (!image) return 1;
@@ -33,27 +37,26 @@ export class ItkView2d extends LitElement {
     });
   }
 
+  getActor() {
+    return this.view2d?.getSnapshot().children.viewport;
+  }
+
   onSlice(event: Event) {
     const target = event.target as HTMLInputElement;
-    this.slice = target.valueAsNumber;
+    this.view2d!.send({
+      type: 'setSlice',
+      slice: target.valueAsNumber,
+    });
   }
 
   onScale(event: Event) {
     const target = event.target as HTMLInputElement;
     const scale = Number(target.value);
-    this.actor?.send({ type: 'setScale', scale });
-  }
-
-  willUpdate(changedProperties: PropertyValues<this>) {
-    if (changedProperties.has('slice')) {
-      this.actor?.send({
-        type: 'setSlice',
-        slice: this.slice,
-      });
-    }
+    this.view2d!.send({ type: 'setScale', scale });
   }
 
   render() {
+    const slice = this.slice?.value ?? 0;
     const scale = this.scale?.value ?? 0;
     const numScales = this.scaleCount?.value ?? 1;
     const scaleOptions = Array.from(
@@ -64,9 +67,9 @@ export class ItkView2d extends LitElement {
     return html`
       <h1>View 2D</h1>
       <div>
-        Slice: ${this.slice}
+        Slice: ${slice}
         <input
-          .valueAsNumber=${this.slice}
+          .valueAsNumber=${slice}
           @change="${this.onSlice}"
           type="range"
           min="0"

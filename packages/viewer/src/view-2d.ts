@@ -6,7 +6,7 @@ import {
 import { viewportMachine } from './viewport-machine.js';
 
 const context = {
-  slice: 0,
+  slice: 0.5,
   scale: 0,
 };
 
@@ -62,7 +62,7 @@ export const view2d = setup({
             assign({
               scale: ({ event }) => event.image.coarsestScale,
               slice: () => {
-                return 0;
+                return 0.5;
               },
             }),
           ],
