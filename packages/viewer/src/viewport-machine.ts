@@ -1,4 +1,11 @@
-import { assign, createMachine, sendParent } from 'xstate';
+import {
+  AnyActorLogic,
+  assertEvent,
+  assign,
+  createMachine,
+  enqueueActions,
+  sendParent,
+} from 'xstate';
 
 import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera } from './camera-machine.js';
@@ -9,6 +16,7 @@ type Context = {
   camera?: Camera;
   cameraSubscription?: ReturnType<Camera['subscribe']>;
   resolution: [number, number];
+  viewIds: string[];
 };
 
 type SetImageEvent = {
@@ -30,7 +38,10 @@ export type Events =
   | SetImageEvent
   | SetCameraEvent
   | CameraPoseUpdatedEvent
-  | { type: 'setResolution'; resolution: [number, number] };
+  | { type: 'setResolution'; resolution: [number, number] }
+  | { type: 'addView'; logic: AnyActorLogic };
+
+let nextChildId = 0;
 
 export const viewportMachine = createMachine(
   {
@@ -45,6 +56,7 @@ export const viewportMachine = createMachine(
       camera: undefined,
       cameraSubscription: undefined,
       resolution: [0, 0],
+      viewIds: [],
     },
     states: {
       active: {
@@ -55,7 +67,7 @@ export const viewportMachine = createMachine(
                 image: ({ event: { image } }: { event: SetImageEvent }) =>
                   image,
               }),
-              'sendImageAssigned',
+              'sendImage',
               'resetCameraPose',
             ],
           },
@@ -93,6 +105,9 @@ export const viewportMachine = createMachine(
               'forwardToParent',
             ],
           },
+          addView: {
+            actions: ['addView'],
+          },
         },
       },
     },
@@ -102,9 +117,10 @@ export const viewportMachine = createMachine(
       forwardToParent: sendParent(({ event }) => {
         return event;
       }),
-      sendImageAssigned: sendParent(({ event }) => {
-        const { image } = event as SetImageEvent;
-        return { type: 'imageAssigned', image };
+      sendImage: enqueueActions(({ context, enqueue }) => {
+        context.viewIds.forEach((id) => {
+          enqueue.sendTo(id, { type: 'setImage', image: context.image });
+        });
       }),
       resetCameraPose: async ({ context: { image, camera } }) => {
         if (!image || !camera) return;
@@ -153,6 +169,15 @@ export const viewportMachine = createMachine(
           lookAt: { eye, center: center, up },
         });
       },
+
+      addView: enqueueActions(({ event, enqueue }) => {
+        assertEvent(event, 'addView');
+        const id = String(nextChildId++);
+        enqueue.spawnChild(event.logic, { id });
+        enqueue.assign({
+          viewIds: ({ context: { viewIds } }) => [...viewIds, id],
+        });
+      }),
     },
   },
 );

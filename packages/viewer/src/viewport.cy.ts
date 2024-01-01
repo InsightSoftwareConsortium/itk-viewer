@@ -1,5 +1,6 @@
 import { mat4 } from 'gl-matrix';
-
+import { createMachine } from 'xstate';
+import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { createViewport } from './viewport.js';
 import { createCamera } from './camera-machine.js';
@@ -46,5 +47,33 @@ describe('Viewport', () => {
     });
 
     cy.wrap(cameraPose).should('deep.equal', targetCameraPose);
+  });
+
+  it('spawns view actors', async () => {
+    let childStarted = false;
+    let childImage: MultiscaleSpatialImage | object = {};
+    const view = createMachine({
+      entry: [
+        () => {
+          childStarted = true;
+        },
+      ],
+      on: {
+        setImage: {
+          actions: ({ event }) => {
+            childImage = event.image;
+          },
+        },
+      },
+    });
+    const viewport = createViewport();
+    viewport.send({ type: 'addView', logic: view });
+    expect(childStarted).to.be.true;
+
+    const image = await ZarrMultiscaleSpatialImage.fromUrl(
+      new URL('/astronaut.zarr', document.location.origin),
+    );
+    viewport.send({ type: 'setImage', image });
+    expect(childImage).equals(image);
   });
 });
