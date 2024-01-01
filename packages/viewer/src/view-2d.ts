@@ -1,26 +1,37 @@
-import { Actor, assign, fromPromise, sendParent, sendTo, setup } from 'xstate';
+import {
+  Actor,
+  AnyActorLogic,
+  assign,
+  enqueueActions,
+  fromPromise,
+  sendParent,
+  setup,
+} from 'xstate';
 import {
   MultiscaleSpatialImage,
   BuiltImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { viewportMachine } from './viewport-machine.js';
+
+let nextChildId = 0;
 
 const context = {
   slice: 0.5,
   scale: 0,
+  rendererIds: [] as Array<string>,
+  image: undefined as MultiscaleSpatialImage | undefined,
 };
 
 export const view2d = setup({
   types: {} as {
     context: typeof context;
     events:
-      | { type: 'setImage' }
+      | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'imageAssigned'; image: MultiscaleSpatialImage }
       | { type: 'setSlice'; slice: number }
-      | { type: 'setScale'; scale: number };
+      | { type: 'setScale'; scale: number }
+      | { type: 'addRenderer'; logic: AnyActorLogic };
   },
   actors: {
-    viewport: viewportMachine,
     imageBuilder: fromPromise(
       async ({
         input: { image, scale, slice },
@@ -42,20 +53,38 @@ export const view2d = setup({
     ),
   },
 }).createMachine({
-  context: () => JSON.parse(JSON.stringify(context)),
+  context: () => {
+    return JSON.parse(JSON.stringify(context));
+  },
   id: 'view2d',
-  type: 'parallel',
+  initial: 'view2d',
   states: {
-    viewport: {
-      invoke: {
-        id: 'viewport',
-        src: 'viewport',
-      },
-    },
     view2d: {
       on: {
+        addRenderer: {
+          actions: [
+            enqueueActions(({ enqueue, event }) => {
+              const id = String(nextChildId++);
+              // @ts-expect-error cannot spawn actor of type that is not in setup()
+              enqueue.spawnChild(event.logic, { id });
+              enqueue.assign({
+                rendererIds: ({ context: { rendererIds } }) => [
+                  ...rendererIds,
+                  id,
+                ],
+              });
+            }),
+          ],
+        },
         setImage: {
-          actions: [sendTo('viewport', ({ event }) => event)],
+          actions: [
+            assign({ image: ({ event }) => event.image }),
+            enqueueActions(({ context, enqueue }) => {
+              context.rendererIds.forEach((id) => {
+                enqueue.sendTo(id, { type: 'setImage', image: context.image });
+              });
+            }),
+          ],
         },
         imageAssigned: {
           actions: [
