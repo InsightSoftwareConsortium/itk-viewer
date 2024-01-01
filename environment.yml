@@ -1,4 +1,4 @@
-name: itk-viewer-test
+name: itk-viewer
 channels:
   - conda-forge
 dependencies:
