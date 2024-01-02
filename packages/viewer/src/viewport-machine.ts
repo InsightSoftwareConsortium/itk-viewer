@@ -1,4 +1,5 @@
 import {
+  Actor,
   AnyActorLogic,
   assertEvent,
   assign,
@@ -17,6 +18,7 @@ type Context = {
   cameraSubscription?: ReturnType<Camera['subscribe']>;
   resolution: [number, number];
   viewIds: string[];
+  lastId: string;
 };
 
 type SetImageEvent = {
@@ -39,9 +41,7 @@ export type Events =
   | SetCameraEvent
   | CameraPoseUpdatedEvent
   | { type: 'setResolution'; resolution: [number, number] }
-  | { type: 'addView'; logic: AnyActorLogic };
-
-let nextChildId = 0;
+  | { type: 'createView'; logic: AnyActorLogic };
 
 export const viewportMachine = createMachine(
   {
@@ -57,6 +57,7 @@ export const viewportMachine = createMachine(
       cameraSubscription: undefined,
       resolution: [0, 0],
       viewIds: [],
+      lastId: '0',
     },
     states: {
       active: {
@@ -105,8 +106,8 @@ export const viewportMachine = createMachine(
               'forwardToParent',
             ],
           },
-          addView: {
-            actions: ['addView'],
+          createView: {
+            actions: ['createView'],
           },
         },
       },
@@ -170,9 +171,12 @@ export const viewportMachine = createMachine(
         });
       },
 
-      addView: enqueueActions(({ event, enqueue }) => {
-        assertEvent(event, 'addView');
-        const id = String(nextChildId++);
+      createView: enqueueActions(({ event, enqueue, context }) => {
+        assertEvent(event, 'createView');
+        const id = String(Number(context.lastId) + 1);
+        enqueue.assign({
+          lastId: id,
+        });
         enqueue.spawnChild(event.logic, { id });
         enqueue.assign({
           viewIds: ({ context: { viewIds } }) => [...viewIds, id],
@@ -181,3 +185,5 @@ export const viewportMachine = createMachine(
     },
   },
 );
+
+export type ViewportActor = Actor<typeof viewportMachine>;

@@ -1,7 +1,7 @@
 import { html } from 'lit';
 
 import './itk-viewer-element.js';
-import './image-info-viewport.js';
+import './itk-image-info-viewport.js';
 
 describe('ImageInfoViewport', () => {
   it('mounts', () => {

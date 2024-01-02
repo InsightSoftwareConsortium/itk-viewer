@@ -1,64 +1,47 @@
 import { LitElement, css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { ref } from 'lit/directives/ref.js';
-import { ContextConsumer } from '@lit/context';
 
 import {
-  createView2d,
   View2dVtkjsActor,
-  createView2dVtkjs,
+  createRenderer,
 } from '@itk-viewer/vtkjs/view-2d-vtkjs.js';
-import { type Viewer, viewerContext } from './viewer-context.js';
 
 @customElement('itk-view-2d-vtkjs')
 export class ItkView2dVtkjs extends LitElement {
   actorId: string = 'view2d';
-  actor: View2dVtkjsActor = createView2d(this.actorId);
+  actor: View2dVtkjsActor | undefined;
   container: HTMLElement | undefined;
 
-  // @ts-expect-error viewerContext unused
-  private viewerContext = new ContextConsumer(this, {
-    context: viewerContext,
-    subscribe: true,
-    callback: (viewer: Viewer) => {
-      this.setViewer(viewer);
-    },
-  });
-
-  setViewer(system: Viewer) {
-    this.actorId = system.getSnapshot().context.nextId;
-    system.send({
-      type: 'createViewport',
-      logic: createView2dVtkjs(),
-    });
-    const actor = system.getSnapshot().children[
-      this.actorId
-    ] as View2dVtkjsActor;
-    this.setActor(actor);
-    this.sendContainer();
-  }
-
-  getActor(): View2dVtkjsActor {
+  getActor() {
     return this.actor;
   }
 
   setActor(actor: View2dVtkjsActor) {
     this.actor = actor;
-    this.dispatchActor();
+    this.sendContainer();
   }
 
-  protected dispatchActor() {
-    const actor = this.actor.getSnapshot().children.view2d;
-    const event = new CustomEvent('actorCreated', {
+  protected dispatchLogic() {
+    const event = new CustomEvent('rendererConnected', {
       bubbles: true,
       composed: true,
-      detail: { actor },
+      detail: {
+        logic: createRenderer(),
+        setActor: (actor: View2dVtkjsActor) => this.setActor(actor),
+      },
     });
 
     this.dispatchEvent(event);
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    this.dispatchLogic();
+  }
+
   protected sendContainer() {
+    if (!this.actor) return;
     this.actor.send({ type: 'setContainer', container: this.container });
   }
 

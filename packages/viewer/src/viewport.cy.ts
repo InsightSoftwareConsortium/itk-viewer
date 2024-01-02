@@ -1,9 +1,20 @@
 import { mat4 } from 'gl-matrix';
-import { createMachine } from 'xstate';
+import { createActor, createMachine } from 'xstate';
 import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
-import { createViewport } from './viewport.js';
 import { createCamera } from './camera-machine.js';
+import { viewportMachine } from './viewport-machine.js';
+
+const noop = () => {};
+const createViewport = () =>
+  createActor(
+    viewportMachine.provide({
+      actions: {
+        // if not spawned in system, don't error trying to send to parent
+        forwardToParent: noop,
+      },
+    }),
+  ).start();
 
 describe('Viewport', () => {
   it('constructs', () => {
@@ -53,11 +64,9 @@ describe('Viewport', () => {
     let childStarted = false;
     let childImage: MultiscaleSpatialImage | object = {};
     const view = createMachine({
-      entry: [
-        () => {
-          childStarted = true;
-        },
-      ],
+      entry: () => {
+        childStarted = true;
+      },
       on: {
         setImage: {
           actions: ({ event }) => {
@@ -67,7 +76,7 @@ describe('Viewport', () => {
       },
     });
     const viewport = createViewport();
-    viewport.send({ type: 'addView', logic: view });
+    viewport.send({ type: 'createView', logic: view });
     expect(childStarted).to.be.true;
 
     const image = await ZarrMultiscaleSpatialImage.fromUrl(

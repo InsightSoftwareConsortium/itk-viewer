@@ -4,7 +4,7 @@ import { view2d } from './view-2d.js';
 
 describe('view 2d', () => {
   it('constructs', () => {
-    expect(createActor(view2d)).to.be.ok;
+    expect(createActor(view2d).start()).to.be.ok;
   });
 
   it('spawns renderer actors and forwards them setImage', async () => {
@@ -25,7 +25,7 @@ describe('view 2d', () => {
       },
     });
     const view = createActor(view2d).start();
-    view.send({ type: 'addRenderer', logic: renderer });
+    view.send({ type: 'createRenderer', logic: renderer });
     expect(childStarted).to.be.true;
 
     const image = await ZarrMultiscaleSpatialImage.fromUrl(

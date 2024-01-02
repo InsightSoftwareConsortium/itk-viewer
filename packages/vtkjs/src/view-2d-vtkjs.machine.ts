@@ -1,8 +1,7 @@
-import { createMachine, sendTo } from 'xstate';
+import { createMachine } from 'xstate';
 import GenericRenderWindow, {
   vtkGenericRenderWindow,
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
-import type { Events } from '@itk-viewer/viewer/viewport-machine.js';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 export type Context = {
@@ -18,7 +17,6 @@ export const view2dLogic = createMachine({
   types: {} as {
     context: Context;
     events:
-      | Events
       | SetContainerEvent
       | { type: 'imageBuilt'; image: BuiltImage }
       | { type: 'setSlice'; slice: number };
@@ -35,20 +33,11 @@ export const view2dLogic = createMachine({
     };
   },
   id: 'view2dVtkjs',
-  type: 'parallel',
+  initial: 'vtkjs',
   states: {
-    view2d: {
-      invoke: {
-        id: 'view2d',
-        src: 'view2d',
-      },
-    },
     vtkjs: {
       entry: [{ type: 'setup' }],
       on: {
-        setImage: {
-          actions: sendTo('view2d', ({ event }) => event),
-        },
         setContainer: {
           actions: [{ type: 'setContainer' }],
         },

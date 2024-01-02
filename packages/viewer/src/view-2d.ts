@@ -4,7 +4,6 @@ import {
   assign,
   enqueueActions,
   fromPromise,
-  sendParent,
   setup,
 } from 'xstate';
 import {
@@ -12,24 +11,22 @@ import {
   BuiltImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
-let nextChildId = 0;
-
-const context = {
+const viewContext = {
   slice: 0.5,
   scale: 0,
   rendererIds: [] as Array<string>,
   image: undefined as MultiscaleSpatialImage | undefined,
+  lastId: '0',
 };
 
 export const view2d = setup({
   types: {} as {
-    context: typeof context;
+    context: typeof viewContext;
     events:
       | { type: 'setImage'; image: MultiscaleSpatialImage }
-      | { type: 'imageAssigned'; image: MultiscaleSpatialImage }
       | { type: 'setSlice'; slice: number }
       | { type: 'setScale'; scale: number }
-      | { type: 'addRenderer'; logic: AnyActorLogic };
+      | { type: 'createRenderer'; logic: AnyActorLogic };
   },
   actors: {
     imageBuilder: fromPromise(
@@ -54,17 +51,20 @@ export const view2d = setup({
   },
 }).createMachine({
   context: () => {
-    return JSON.parse(JSON.stringify(context));
+    return JSON.parse(JSON.stringify(viewContext));
   },
   id: 'view2d',
   initial: 'view2d',
   states: {
     view2d: {
       on: {
-        addRenderer: {
+        createRenderer: {
           actions: [
-            enqueueActions(({ enqueue, event }) => {
-              const id = String(nextChildId++);
+            enqueueActions(({ enqueue, event, context }) => {
+              const id = String(Number(context.lastId) + 1);
+              enqueue.assign({
+                lastId: id,
+              });
               // @ts-expect-error cannot spawn actor of type that is not in setup()
               enqueue.spawnChild(event.logic, { id });
               enqueue.assign({
@@ -78,21 +78,15 @@ export const view2d = setup({
         },
         setImage: {
           actions: [
-            assign({ image: ({ event }) => event.image }),
+            assign({
+              image: ({ event }) => event.image,
+              scale: ({ event }) => event.image.coarsestScale,
+              slice: 0.5,
+            }),
             enqueueActions(({ context, enqueue }) => {
               context.rendererIds.forEach((id) => {
                 enqueue.sendTo(id, { type: 'setImage', image: context.image });
               });
-            }),
-          ],
-        },
-        imageAssigned: {
-          actions: [
-            assign({
-              scale: ({ event }) => event.image.coarsestScale,
-              slice: () => {
-                return 0.5;
-              },
             }),
           ],
           target: '.buildingImage',
@@ -111,24 +105,25 @@ export const view2d = setup({
         idle: {},
         buildingImage: {
           invoke: {
-            input: ({ context, self }) => {
-              const { image } = self
-                .getSnapshot()
-                .children.viewport.getSnapshot().context;
+            input: ({ context }) => {
+              const { image, scale, slice } = context;
+              if (!image) throw new Error('No image available');
               return {
                 image,
-                scale: context.scale,
-                slice: context.slice,
+                scale,
+                slice,
               };
             },
             src: 'imageBuilder',
             onDone: {
               actions: [
-                sendParent(({ event: { output } }) => {
-                  return {
-                    type: 'imageBuilt',
-                    image: output,
-                  };
+                enqueueActions(({ context, enqueue, event: { output } }) => {
+                  context.rendererIds.forEach((id) => {
+                    enqueue.sendTo(id, {
+                      type: 'imageBuilt',
+                      image: output,
+                    });
+                  });
                 }),
               ],
             },

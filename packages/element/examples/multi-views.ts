@@ -17,12 +17,14 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   viewer.send({ type: 'setImage', image, name: 'image' });
 
+  const bigView = document.querySelectorAll('itk-view-2d')[0];
+  bigView.getActor()?.send({ type: 'setScale', scale: 0 });
+
   const viewportElement = document.querySelectorAll('itk-view-2d')[1];
   if (!viewportElement) throw new Error('Could not find viewport element');
-  const viewActor = viewportElement.view2d;
+  const viewActor = viewportElement.getActor();
   if (!viewActor) throw new Error('No view actor');
   viewActor.send({ type: 'setSlice', slice: 0.8 });
-  viewActor.send({ type: 'setScale', scale: 0 });
 
   const viewportLast = document.querySelectorAll('itk-view-2d')[2];
   const image2dUrl = new URL(

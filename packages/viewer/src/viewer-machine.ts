@@ -35,7 +35,7 @@ type SendImageToViewports = {
 };
 
 type context = {
-  nextId: string;
+  lastId: string;
   viewports: Record<string, ActorRefFrom<AnyActorLogic>>;
   images: Record<string, MultiscaleSpatialImage>;
 };
@@ -52,7 +52,7 @@ export const viewerMachine = createMachine({
   id: 'viewer',
   initial: 'active',
   context: {
-    nextId: '0',
+    lastId: '0',
     viewports: {},
     images: {},
   },
@@ -76,30 +76,26 @@ export const viewerMachine = createMachine({
         createViewport: {
           actions: [
             assign({
+              lastId: ({ context }) => String(Number(context.lastId) + 1),
+            }),
+            assign({
               viewports: ({ spawn, event, context }) => {
                 assertEvent(event, 'createViewport');
                 const { logic } = event;
-                const id = context.nextId;
+                const id = context.lastId;
                 const view = spawn(logic, { id });
                 return {
                   ...context.viewports,
                   [id]: view,
                 };
               },
-              nextId: ({ context }) => String(Number(context.nextId) + 1),
             }),
           ],
         },
         setImage: {
           actions: [
             assign({
-              images: ({
-                event: { image, name = 'image' },
-                context,
-              }: {
-                event: SetImageEvent;
-                context: context;
-              }) => ({
+              images: ({ event: { image, name = 'image' }, context }) => ({
                 ...context.images,
                 [name]: image,
               }),
@@ -112,8 +108,7 @@ export const viewerMachine = createMachine({
         },
         sendImageToViewports: {
           actions: [
-            ({ context, event }) => {
-              const { image } = event as SendImageToViewports;
+            ({ context, event: { image } }) => {
               Object.values(context.viewports).forEach((viewport) => {
                 viewport.send({
                   type: 'setImage',
