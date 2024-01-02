@@ -45,7 +45,7 @@
   },
   "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
-    "typescript": "^5.2.2",
+    "typescript": "^5.3.3",
     "vite": "^4.4.11",
     "vite-plugin-static-copy": "^0.17.0"
   },
@@ -54,12 +54,12 @@
     "@itk-viewer/remote-viewport": "workspace:^",
     "@itk-viewer/viewer": "workspace:^",
     "@itk-viewer/vtkjs": "workspace:^",
-    "@lit/context": "^1.0.1",
+    "@lit/context": "^1.1.0",
     "gl-matrix": "^3.4.3",
-    "itk-wasm": "1.0.0-b.133",
-    "lit": "^3.0.0",
+    "itk-wasm": "1.0.0-b.160",
+    "lit": "^3.1.0",
     "orbit-camera": "^1.0.0",
-    "xstate": "5.0.0-beta.34",
-    "xstate-lit": "^2.0.1"
+    "xstate": "5.4.1",
+    "xstate-lit": "^2.0.4"
   }
 }

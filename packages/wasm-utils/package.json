@@ -41,10 +41,10 @@
   },
   "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.3"
   },
   "dependencies": {
-    "itk-wasm": "1.0.0-b.133"
+    "itk-wasm": "1.0.0-b.160"
   },
   "eslintConfig": {
     "env": {

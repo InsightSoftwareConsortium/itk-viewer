@@ -9,14 +9,24 @@
     <script type="module" src="../src/itk-viewer-element.ts"></script>
     <script type="module" src="../src/itk-view-2d.ts"></script>
     <script type="module" src="../src/itk-view-2d-vtkjs.ts"></script>
+    <script type="module" src="./multi-views.ts"></script>
   </head>
 
   <body>
     <itk-viewer class="fill">
-      <itk-view-2d class="fill">
-        <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
-      </itk-view-2d>
+      <div class="fill row">
+        <itk-view-2d class="fill">
+          <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
+        </itk-view-2d>
+        <div class="fill">
+          <itk-view-2d class="fill">
+            <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
+          </itk-view-2d>
+          <itk-view-2d class="fill">
+            <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
+          </itk-view-2d>
+        </div>
+      </div>
     </itk-viewer>
   </body>
-  <script type="module" src="./view-2d-main.ts"></script>
 </html>

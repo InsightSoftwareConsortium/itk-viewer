@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import glob from 'glob';
+import * as glob from 'glob';
 import svgToMiniDataURI from 'mini-svg-data-uri';
 
 const __filename = fileURLToPath(import.meta.url);

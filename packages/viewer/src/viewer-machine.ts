@@ -1,6 +1,7 @@
 import {
   ActorRefFrom,
   AnyActorLogic,
+  assertEvent,
   assign,
   createMachine,
   raise,
@@ -34,7 +35,6 @@ type SendImageToViewports = {
 };
 
 type context = {
-  _nextId: number;
   nextId: string;
   viewports: Record<string, ActorRefFrom<AnyActorLogic>>;
   images: Record<string, MultiscaleSpatialImage>;
@@ -52,7 +52,6 @@ export const viewerMachine = createMachine({
   id: 'viewer',
   initial: 'active',
   context: {
-    _nextId: 0,
     nextId: '0',
     viewports: {},
     images: {},
@@ -78,7 +77,8 @@ export const viewerMachine = createMachine({
           actions: [
             assign({
               viewports: ({ spawn, event, context }) => {
-                const { logic } = event as CreateViewport;
+                assertEvent(event, 'createViewport');
+                const { logic } = event;
                 const id = context.nextId;
                 const view = spawn(logic, { id });
                 return {
@@ -86,8 +86,7 @@ export const viewerMachine = createMachine({
                   [id]: view,
                 };
               },
-              _nextId: ({ context }) => context._nextId + 1,
-              nextId: ({ context }) => String(context._nextId),
+              nextId: ({ context }) => String(Number(context.nextId) + 1),
             }),
           ],
         },
@@ -95,7 +94,7 @@ export const viewerMachine = createMachine({
           actions: [
             assign({
               images: ({
-                event: { image, name = 'mainImage' },
+                event: { image, name = 'image' },
                 context,
               }: {
                 event: SetImageEvent;
@@ -111,7 +110,6 @@ export const viewerMachine = createMachine({
             })),
           ],
         },
-
         sendImageToViewports: {
           actions: [
             ({ context, event }) => {

@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { mat4, vec3 } from 'gl-matrix';
-import { Image, ImageType, setMatrixElement } from 'itk-wasm';
+import {
+  mat4,
+  vec3,
+  mat3,
+  ReadonlyMat3,
+  ReadonlyVec3,
+  ReadonlyMat4,
+} from 'gl-matrix';
+import { Image, ImageType, TypedArray } from 'itk-wasm';
 import WebworkerPromise from 'webworker-promise';
 
 import { getDtype } from '@itk-viewer/wasm-utils/dtypeUtils.js';
@@ -18,15 +25,23 @@ import { transformBounds } from './transformBounds.js';
 import {
   Bounds,
   Extent,
+  ReadonlyBounds,
   ReadOnlyDimensionBounds,
   ScaleInfo,
   SpatialDimensions,
   TypedArrayConstructor,
 } from './types.js';
-import { mat3 } from 'gl-matrix';
-import { ReadonlyVec3 } from 'gl-matrix';
-import { ReadonlyMat3 } from 'gl-matrix';
-import { ReadonlyMat4 } from 'gl-matrix';
+
+// from itk-wasm
+function setMatrixElement(
+  matrixData: TypedArray,
+  columns: number,
+  row: number,
+  column: number,
+  value: number | bigint,
+): void {
+  matrixData[column + row * columns] = value;
+}
 
 const imageDataFromChunksWorker = new Worker(
   new URL('./ImageDataFromChunks.worker.js', import.meta.url),
@@ -171,7 +186,7 @@ export const worldBoundsToIndexBounds = ({
   fullIndexBounds,
   worldToIndex,
 }: {
-  bounds: Bounds | undefined;
+  bounds: ReadonlyBounds | undefined;
   fullIndexBounds: ReadOnlyDimensionBounds;
   worldToIndex: ReadonlyMat4;
 }) => {
@@ -487,7 +502,10 @@ export class MultiscaleSpatialImage {
   }
 
   /* Retrieve bounded image at scale. */
-  async getImage(requestedScale: number, worldBounds = undefined) {
+  async getImage(
+    requestedScale: number,
+    worldBounds: ReadonlyBounds | undefined = undefined,
+  ) {
     const scale = Math.min(requestedScale, this.scaleInfos.length - 1);
     const indexToWorld = await this.scaleIndexToWorld(scale);
 
@@ -577,6 +595,7 @@ export const getBytes = (
   return bytesPerElement * components * voxelCount;
 };
 
+// union in of imageType fixes this problem https://github.com/microsoft/TypeScript/issues/47663#issuecomment-1519138189
 export type BuiltImage = Awaited<
   ReturnType<MultiscaleSpatialImage['buildImage']>
->;
+> & { imageType: ImageType };
