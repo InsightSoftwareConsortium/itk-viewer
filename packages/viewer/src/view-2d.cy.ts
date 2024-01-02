@@ -7,7 +7,7 @@ describe('view 2d', () => {
     expect(createActor(view2d)).to.be.ok;
   });
 
-  it('spawns renderer actors', async () => {
+  it('spawns renderer actors and forwards them setImage', async () => {
     let childStarted = false;
     let childImage: ZarrMultiscaleSpatialImage | object = {};
     const renderer = createMachine({

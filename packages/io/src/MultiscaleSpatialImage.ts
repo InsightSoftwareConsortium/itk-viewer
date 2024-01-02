@@ -7,7 +7,7 @@ import {
   ReadonlyVec3,
   ReadonlyMat4,
 } from 'gl-matrix';
-import { Image, ImageType, TypedArray } from 'itk-wasm';
+import { ImageType, TypedArray } from 'itk-wasm';
 import WebworkerPromise from 'webworker-promise';
 
 import { getDtype } from '@itk-viewer/wasm-utils/dtypeUtils.js';
@@ -237,7 +237,7 @@ function isContained(
 
 type ImageCache = Map<
   number,
-  Array<{ bounds: ReadOnlyDimensionBounds; image: Image }>
+  Array<{ bounds: ReadOnlyDimensionBounds; image: ImageWithMeta }>
 >;
 
 function findImageInBounds({
@@ -255,7 +255,7 @@ function findImageInBounds({
   )?.image;
 }
 
-export function storeImage({
+function storeImage({
   cache,
   scale,
   bounds,
@@ -264,7 +264,7 @@ export function storeImage({
   cache: ImageCache;
   scale: number;
   bounds: ReadOnlyDimensionBounds;
-  image: Image;
+  image: ImageWithMeta;
 }) {
   cache.set(scale, [{ bounds, image }]);
 }
@@ -596,6 +596,11 @@ export const getBytes = (
 };
 
 // union in of imageType fixes this problem https://github.com/microsoft/TypeScript/issues/47663#issuecomment-1519138189
-export type BuiltImage = Awaited<
+export type ImageWithMeta = Awaited<
   ReturnType<MultiscaleSpatialImage['buildImage']>
+>;
+
+// union in of imageType fixes this problem https://github.com/microsoft/TypeScript/issues/47663#issuecomment-1519138189
+export type BuiltImage = Awaited<
+  ReturnType<MultiscaleSpatialImage['getImage']>
 > & { imageType: ImageType };
