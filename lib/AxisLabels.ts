@@ -1,14 +1,12 @@
 import { ContainerType, PADDING } from './Container'
+import { DataRange } from './DataRange'
 
 // pixels dom space
 const X_OFFSET = PADDING - 3
-const Y_OFFSET = -5
+const Y_OFFSET = -2
 const FONT_SIZE = 12
 
-export const AxisLabels = (
-  container: ContainerType,
-  toDataSpace: (x: number) => number,
-) => {
+export const AxisLabels = (container: ContainerType, dataRange: DataRange) => {
   const getSvgPosition = (xNormalized: number) => {
     const [xSvg, bottom] = container.normalizedToSvg(xNormalized, 0)
     const ySvg = bottom + Y_OFFSET + FONT_SIZE
@@ -36,7 +34,7 @@ export const AxisLabels = (
     xNormalized: number,
     xOffset: number,
   ) => {
-    const value = toDataSpace(xNormalized)
+    const value = dataRange.toDataSpace(xNormalized)
     label.textContent = value === 0 ? '0' : `${value.toPrecision(4)}`
     const [x, y] = getSvgPosition(xNormalized)
     label.setAttribute('x', String(x + xOffset))
@@ -51,4 +49,11 @@ export const AxisLabels = (
 
   updateLabels()
   addSizeObserver(updateLabels)
+  dataRange.eventTarget.addEventListener('updated', updateLabels)
+
+  const setVisibility = (visibility: boolean) => {
+    low.setAttribute('visibility', visibility ? 'visible' : 'hidden')
+    high.setAttribute('visibility', visibility ? 'visible' : 'hidden')
+  }
+  return setVisibility
 }

@@ -12,26 +12,9 @@ import {
   ColorRangeType,
 } from './ColorRange'
 import { AxisLabels } from './AxisLabels'
+import { createDataRange } from './DataRange'
 
 export { windowPointsForSort } from './PiecewiseUtils'
-
-const makeToDataSpace = () => {
-  let range = [0, 1] as [number, number]
-  const setRange = (newRange: [number, number]) => {
-    range = newRange
-  }
-
-  const toDataSpace = (x: number) => {
-    const [start, end] = range
-    const width = end - start
-    return x * width + start
-  }
-
-  return {
-    setRange,
-    toDataSpace,
-  }
-}
 
 export class TransferFunctionEditor {
   public eventTarget = new EventTarget()
@@ -44,13 +27,13 @@ export class TransferFunctionEditor {
   private container: ContainerType
   private background: BackgroundType
 
-  private dataSpaceConverter = makeToDataSpace()
+  private dataRange = createDataRange()
 
   constructor(root: HTMLElement) {
     this.container = Container(root)
     WheelZoom(this.container)
 
-    AxisLabels(this.container, this.dataSpaceConverter.toDataSpace)
+    AxisLabels(this.container, this.dataRange)
 
     this.points = new Points()
     const startPoints = [
@@ -63,14 +46,14 @@ export class TransferFunctionEditor {
     this.pointController = new PointsController(
       this.container,
       this.points,
-      this.dataSpaceConverter.toDataSpace,
+      this.dataRange.toDataSpace,
     )
 
     this.colorRange = ColorRange()
     this.colorRangeController = ColorRangeController(
       this.container,
       this.colorRange,
-      this.dataSpaceConverter.toDataSpace,
+      this.dataRange.toDataSpace,
     )
     this.background = Background(this.container, this.points, this.colorRange)
 
@@ -131,6 +114,6 @@ export class TransferFunctionEditor {
   }
 
   setRange(range: [number, number]) {
-    this.dataSpaceConverter.setRange(range)
+    this.dataRange.setRange(range)
   }
 }
