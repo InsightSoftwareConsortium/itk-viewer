@@ -1,9 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import {
-  viewportMachine,
-  ViewportActor,
-} from '@itk-viewer/viewer/viewport-machine.js';
+import { viewportMachine, ViewportActor } from '@itk-viewer/viewer/viewport.js';
 
 @customElement('itk-viewport')
 export class ItkViewport extends LitElement {

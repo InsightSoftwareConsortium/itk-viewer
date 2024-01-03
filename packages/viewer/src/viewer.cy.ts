@@ -1,7 +1,7 @@
 import { createActor, createMachine } from 'xstate';
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { viewerMachine } from './viewer-machine.js';
+import { viewerMachine } from './viewer.js';
 
 export const createViewer = () => {
   return createActor(viewerMachine).start();

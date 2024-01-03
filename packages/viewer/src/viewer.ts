@@ -8,7 +8,7 @@ import {
 } from 'xstate';
 
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { viewportMachine } from './viewport-machine.js';
+import { viewportMachine } from './viewport.js';
 
 type ViewportActor = ActorRefFrom<typeof viewportMachine>;
 

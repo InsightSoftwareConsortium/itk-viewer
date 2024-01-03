@@ -9,9 +9,9 @@ import {
 } from 'xstate';
 import type { Image } from '@itk-wasm/htj2k';
 
-import { Viewport } from '@itk-viewer/viewer/viewport.js';
-import { fpsWatcher } from '@itk-viewer/viewer/fps-watcher-machine.js';
-import { viewportMachine } from '@itk-viewer/viewer/viewport-machine.js';
+// import { Viewport } from '@itk-viewer/viewer/viewport.js';
+import { fpsWatcher } from '@itk-viewer/viewer/fps-watcher.js';
+import { viewportMachine } from '@itk-viewer/viewer/viewport.js';
 import {
   MultiscaleSpatialImage,
   getVoxelCount,
@@ -191,7 +191,7 @@ export const remoteMachine = createMachine(
       events: Event;
     },
     id: 'remote',
-    context: ({ input }: { input: { viewport: Viewport } }) => ({
+    context: ({ spawn }) => ({
       rendererState: {
         density: 30,
         cameraPose: mat4.create(),
@@ -210,7 +210,7 @@ export const remoteMachine = createMachine(
       imageWorldToIndex: mat4.create(),
 
       maxImageBytes: MAX_IMAGE_BYTES_DEFAULT,
-      ...input,
+      viewport: spawn(viewportMachine, { id: 'viewport' }),
     }),
     type: 'parallel',
     states: {
@@ -382,11 +382,6 @@ export const remoteMachine = createMachine(
       },
       // root state captures initial updateRenderer events, even when disconnected
       root: {
-        entry: [
-          assign({
-            viewport: ({ spawn }) => spawn(viewportMachine, { id: 'viewport' }),
-          }),
-        ],
         on: {
           updateRenderer: {
             actions: [

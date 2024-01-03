@@ -1,14 +1,12 @@
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { provide } from '@lit/context';
 
-import { createViewer } from '@itk-viewer/viewer/viewer.js';
-import { viewerContext } from './viewer-context.js';
+import { viewerMachine } from '@itk-viewer/viewer/viewer.js';
+import { createActor } from 'xstate';
 
 @customElement('itk-viewer')
 export class ItkViewer extends LitElement {
-  @provide({ context: viewerContext })
-  viewer = createViewer();
+  viewer = createActor(viewerMachine).start();
 
   constructor() {
     super();

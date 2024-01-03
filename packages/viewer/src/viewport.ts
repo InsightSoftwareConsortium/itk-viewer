@@ -9,7 +9,7 @@ import {
 } from 'xstate';
 
 import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { Camera } from './camera-machine.js';
+import { Camera } from './camera.js';
 import { ReadonlyMat4, vec3 } from 'gl-matrix';
 
 type Context = {

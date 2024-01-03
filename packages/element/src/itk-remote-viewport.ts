@@ -17,7 +17,7 @@ import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
 import { Bounds } from '@itk-viewer/io/types.js';
 import { chunk } from '@itk-viewer/io/dimensionUtils.js';
-import { viewportMachine } from '@itk-viewer/viewer/viewport-machine.js';
+import { viewportMachine } from '@itk-viewer/viewer/viewport.js';
 
 @customElement('itk-remote-viewport')
 export class ItkRemoteViewport extends ItkViewport {

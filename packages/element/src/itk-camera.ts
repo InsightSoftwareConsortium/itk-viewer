@@ -4,12 +4,12 @@ import { ReadonlyMat4, mat4 } from 'gl-matrix';
 import createOrbitCamera from 'orbit-camera';
 import type { OrbitCamera } from 'orbit-camera';
 
-import { Viewport } from '@itk-viewer/viewer/viewport.js';
+import { ViewportActor } from '@itk-viewer/viewer/viewport.js';
 import {
   Camera,
   LookAtParams,
   createCamera,
-} from '@itk-viewer/viewer/camera-machine.js';
+} from '@itk-viewer/viewer/camera.js';
 import { SelectorController } from 'xstate-lit';
 
 const PAN_SPEED = 1;
@@ -129,7 +129,7 @@ const bindCamera = (
 @customElement('itk-camera')
 export class ItkCamera extends LitElement {
   @property({ attribute: false })
-  viewport: Viewport | undefined;
+  viewport: ViewportActor | undefined;
 
   camera: Camera;
 

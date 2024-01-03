@@ -2,8 +2,8 @@ import { mat4 } from 'gl-matrix';
 import { createActor, createMachine } from 'xstate';
 import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
-import { createCamera } from './camera-machine.js';
-import { viewportMachine } from './viewport-machine.js';
+import { createCamera } from './camera.js';
+import { viewportMachine } from './viewport.js';
 
 const noop = () => {};
 const createViewport = () =>

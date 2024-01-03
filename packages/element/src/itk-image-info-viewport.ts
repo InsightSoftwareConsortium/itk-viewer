@@ -2,7 +2,7 @@ import { css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { SelectorController } from 'xstate-lit';
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { ViewportActor } from '@itk-viewer/viewer/viewport-machine.js';
+import { ViewportActor } from '@itk-viewer/viewer/viewport.js';
 import { ItkViewport } from './itk-viewport.js';
 
 @customElement('itk-image-info-viewport')
