@@ -77,6 +77,15 @@ export const ColorRangeController = (
   )
   levelControlPoint.deletable = false
 
+  const updateLineVisibility = () => {
+    const visibility = levelControlPoint.getIsHovered() ? 'visible' : 'hidden'
+    line.setAttribute('visibility', visibility)
+  }
+  levelControlPoint.eventTarget.addEventListener('hovered-updated', () => {
+    updateLineVisibility()
+  })
+  updateLineVisibility()
+
   const points = colorRange.getPoints().map((p) => {
     const cp = new ColorControlPoint(container, p, toDataSpace)
     cp.deletable = false

@@ -51,6 +51,7 @@ export class ControlPoint {
   protected container: ContainerType
   protected isDragging: boolean = false
   protected isHovered: boolean = false
+  protected pointerEntered: boolean = false
   readonly point: Point
 
   public deletable = true
@@ -104,6 +105,30 @@ export class ControlPoint {
     this.container.removeChild(this.element)
   }
 
+  getIsDragging() {
+    return this.isDragging
+  }
+
+  protected setIsDragging(isDragging: boolean) {
+    if (this.isDragging === isDragging) return
+    this.isDragging = isDragging
+    this.eventTarget.dispatchEvent(new Event('dragging-updated'))
+  }
+
+  getIsHovered() {
+    return this.isHovered
+  }
+
+  protected setIsHovered(isHovered: boolean) {
+    if (this.isHovered === isHovered) return
+
+    if (isHovered) this.tooltip.show()
+    else this.tooltip.hide()
+
+    this.isHovered = isHovered
+    this.eventTarget.dispatchEvent(new Event('hovered-updated'))
+  }
+
   getSvgPosition() {
     const { x, y } = this.point
     return this.container.normalizedToSvg(x, y)
@@ -131,21 +156,22 @@ export class ControlPoint {
 
   update() {
     this.circle.setAttribute('stroke-width', String(STROKE))
-    if (this.isHovered) {
+    if (this.pointerEntered) {
       this.circle.setAttribute('stroke-width', String(STROKE + 1))
       this.updateTooltip()
-      this.tooltip.show()
+
+      this.setIsHovered(true)
     }
     if (this.isDragging) {
       this.circle.setAttribute('stroke-width', String(STROKE * 2))
     }
-    if (!this.isDragging && !this.isHovered) {
-      this.tooltip.hide()
+    if (!this.isDragging && !this.pointerEntered) {
+      this.setIsHovered(false)
     }
   }
 
   startInteraction(forceDragging = false) {
-    this.isDragging = forceDragging
+    this.setIsDragging(forceDragging)
     if (!this.isDragging && this.deletable) {
       this.circle.setAttribute('stroke', 'red') // deleteable
     }
@@ -153,7 +179,7 @@ export class ControlPoint {
       if (!this.isDragging) {
         this.circle.setAttribute('stroke', 'black')
       }
-      this.isDragging = true
+      this.setIsDragging(true)
       this.movePoint(e)
     }
     document.addEventListener('pointermove', onPointerMove)
@@ -166,7 +192,7 @@ export class ControlPoint {
         const delEvent = new CustomEvent(this.DELETE_EVENT, { detail: this })
         this.eventTarget.dispatchEvent(delEvent)
       }
-      this.isDragging = false
+      this.setIsDragging(false)
       this.update()
     }
 
@@ -186,11 +212,11 @@ export class ControlPoint {
       this.startInteraction()
     })
     this.element.addEventListener('pointerenter', () => {
-      this.isHovered = true
+      this.pointerEntered = true
       this.update()
     })
     this.element.addEventListener('pointerleave', () => {
-      this.isHovered = false
+      this.pointerEntered = false
       this.update()
     })
   }

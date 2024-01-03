@@ -1,7 +1,7 @@
 import { ContainerType, PADDING } from './Container'
 
 // pixels dom space
-const X_OFFSET = PADDING - 4
+const X_OFFSET = PADDING - 3
 const Y_OFFSET = -5
 const FONT_SIZE = 12
 
@@ -19,8 +19,6 @@ export const AxisLabels = (
 
   const createLabel = (anchor: 'start' | 'end') => {
     const label = document.createElementNS('http://www.w3.org/2000/svg', 'text')
-    label.setAttribute('x', '0')
-    label.setAttribute('y', '0')
     label.setAttribute('text-anchor', anchor)
     label.setAttribute('dominant-baseline', 'hanging')
     label.setAttribute('fill', 'black')
