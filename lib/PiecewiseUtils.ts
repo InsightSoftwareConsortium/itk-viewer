@@ -82,7 +82,7 @@ export const updateColorCanvas = (
     true,
   )
 
-  const ctx = workCanvas.getContext('2d')
+  const ctx = workCanvas.getContext('2d', { willReadFrequently: true })
   if (ctx) {
     const pixelsArea = ctx.getImageData(0, 0, width, CANVAS_HEIGHT)
     for (let lineIdx = 0; lineIdx < CANVAS_HEIGHT; lineIdx++) {

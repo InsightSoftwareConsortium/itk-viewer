@@ -11,6 +11,7 @@ import {
   ColorRangeControllerType,
   ColorRangeType,
 } from './ColorRange'
+import { AxisLabels } from './AxisLabels'
 
 export { windowPointsForSort } from './PiecewiseUtils'
 
@@ -48,6 +49,8 @@ export class TransferFunctionEditor {
   constructor(root: HTMLElement) {
     this.container = Container(root)
     WheelZoom(this.container)
+
+    AxisLabels(this.container, this.dataSpaceConverter.toDataSpace)
 
     this.points = new Points()
     const startPoints = [

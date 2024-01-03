@@ -9,15 +9,13 @@ const setupTooltipStyles = () => {
         color: black;
         background-color: rgba(255, 255, 255, 0.95);
         position: absolute;
-        transform: translate(178px, 410.19px);
         border-style: solid;
         border-color: black;
         border-width: 1px;
         border-radius: 2px;
         font-size: 12px;
-        padding: 8px;
+        padding: 6px;
         visibility: hidden;
-        max-width: 150px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
       }
     `
