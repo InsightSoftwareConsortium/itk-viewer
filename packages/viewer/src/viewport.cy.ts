@@ -1,8 +1,20 @@
 import { mat4 } from 'gl-matrix';
-
+import { createActor, createMachine } from 'xstate';
+import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
-import { createViewport } from './viewport.js';
-import { createCamera } from './camera-machine.js';
+import { createCamera } from './camera.js';
+import { viewportMachine } from './viewport.js';
+
+const noop = () => {};
+const createViewport = () =>
+  createActor(
+    viewportMachine.provide({
+      actions: {
+        // if not spawned in system, don't error trying to send to parent
+        forwardToParent: noop,
+      },
+    }),
+  ).start();
 
 describe('Viewport', () => {
   it('constructs', () => {
@@ -46,5 +58,31 @@ describe('Viewport', () => {
     });
 
     cy.wrap(cameraPose).should('deep.equal', targetCameraPose);
+  });
+
+  it('spawns view actors', async () => {
+    let childStarted = false;
+    let childImage: MultiscaleSpatialImage | object = {};
+    const view = createMachine({
+      entry: () => {
+        childStarted = true;
+      },
+      on: {
+        setImage: {
+          actions: ({ event }) => {
+            childImage = event.image;
+          },
+        },
+      },
+    });
+    const viewport = createViewport();
+    viewport.send({ type: 'createView', logic: view });
+    expect(childStarted).to.be.true;
+
+    const image = await ZarrMultiscaleSpatialImage.fromUrl(
+      new URL('/astronaut.zarr', document.location.origin),
+    );
+    viewport.send({ type: 'setImage', image });
+    expect(childImage).equals(image);
   });
 });

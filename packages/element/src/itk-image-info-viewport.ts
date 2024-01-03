@@ -1,20 +1,28 @@
 import { css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-
 import { SelectorController } from 'xstate-lit';
-
+import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { ViewportActor } from '@itk-viewer/viewer/viewport.js';
 import { ItkViewport } from './itk-viewport.js';
 
 @customElement('itk-image-info-viewport')
 export class ImageInfoViewport extends ItkViewport {
-  image = new SelectorController(
-    this,
-    this.actor,
-    (state) => state?.context.image,
-  );
+  image:
+    | SelectorController<ViewportActor, MultiscaleSpatialImage | undefined>
+    | undefined;
+
+  setActor(actor: ViewportActor) {
+    super.setActor(actor);
+    if (!this.actor) return;
+    this.image = new SelectorController(
+      this,
+      this.actor,
+      (state) => state.context.image,
+    );
+  }
 
   render() {
-    const image = this.image.value;
+    const image = this.image?.value;
     if (!image) return html`<h1>No Image</h1>`;
 
     const { name, imageType, spatialDims, direction } = image;

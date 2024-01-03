@@ -7,24 +7,33 @@
     <title>itk-view-2d</title>
     <link rel="stylesheet" href="../src/index.css" />
     <script type="module" src="../src/itk-viewer-element.ts"></script>
+    <script type="module" src="../src/itk-viewport.ts"></script>
     <script type="module" src="../src/itk-view-2d.ts"></script>
     <script type="module" src="../src/itk-view-2d-vtkjs.ts"></script>
+    <script type="module" src="../src/itk-image-info-viewport.ts"></script>
     <script type="module" src="./multi-views.ts"></script>
   </head>
 
   <body>
     <itk-viewer class="fill">
       <div class="fill row">
-        <itk-view-2d class="fill">
-          <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
-        </itk-view-2d>
+        <itk-viewport class="fill">
+          <itk-view-2d class="fill">
+            <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
+          </itk-view-2d>
+        </itk-viewport>
         <div class="fill">
-          <itk-view-2d class="fill">
-            <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
-          </itk-view-2d>
-          <itk-view-2d class="fill">
-            <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
-          </itk-view-2d>
+          <itk-image-info-viewport></itk-image-info-viewport>
+          <itk-viewport class="fill">
+            <itk-view-2d class="fill">
+              <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
+            </itk-view-2d>
+          </itk-viewport>
+          <itk-viewport class="fill">
+            <itk-view-2d class="fill">
+              <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
+            </itk-view-2d>
+          </itk-viewport>
         </div>
       </div>
     </itk-viewer>

@@ -117,19 +117,8 @@ const createImplementation = () => {
 // These type annotations are needed: https://github.com/microsoft/TypeScript/issues/47663#issuecomment-1519138189
 export type Logic = typeof view2dLogic;
 
-export const createView2dVtkjs: () => Logic = () => {
+export const createRenderer: () => Logic = () => {
   return view2dLogic.provide(createImplementation());
 };
 
 export type View2dVtkjsActor = ReturnType<typeof createActor<Logic>>;
-
-export const createView2d: (id: string | undefined) => View2dVtkjsActor = (
-  id,
-) => {
-  const logic = createView2dVtkjs();
-  return createActor(logic, {
-    systemId: id,
-  }).start();
-};
-
-export type View2dActor = ReturnType<typeof createView2d>;

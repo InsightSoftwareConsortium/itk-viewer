@@ -1,26 +1,34 @@
-import { Actor, assign, fromPromise, sendParent, sendTo, setup } from 'xstate';
+import {
+  Actor,
+  AnyActorLogic,
+  assign,
+  enqueueActions,
+  fromPromise,
+  setup,
+} from 'xstate';
 import {
   MultiscaleSpatialImage,
   BuiltImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { viewportMachine } from './viewport-machine.js';
 
-const context = {
+const viewContext = {
   slice: 0.5,
   scale: 0,
+  rendererIds: [] as Array<string>,
+  image: undefined as MultiscaleSpatialImage | undefined,
+  lastId: '0',
 };
 
 export const view2d = setup({
   types: {} as {
-    context: typeof context;
+    context: typeof viewContext;
     events:
-      | { type: 'setImage' }
-      | { type: 'imageAssigned'; image: MultiscaleSpatialImage }
+      | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'setSlice'; slice: number }
-      | { type: 'setScale'; scale: number };
+      | { type: 'setScale'; scale: number }
+      | { type: 'createRenderer'; logic: AnyActorLogic };
   },
   actors: {
-    viewport: viewportMachine,
     imageBuilder: fromPromise(
       async ({
         input: { image, scale, slice },
@@ -42,28 +50,43 @@ export const view2d = setup({
     ),
   },
 }).createMachine({
-  context: () => JSON.parse(JSON.stringify(context)),
+  context: () => {
+    return JSON.parse(JSON.stringify(viewContext));
+  },
   id: 'view2d',
-  type: 'parallel',
+  initial: 'view2d',
   states: {
-    viewport: {
-      invoke: {
-        id: 'viewport',
-        src: 'viewport',
-      },
-    },
     view2d: {
       on: {
-        setImage: {
-          actions: [sendTo('viewport', ({ event }) => event)],
+        createRenderer: {
+          actions: [
+            enqueueActions(({ enqueue, event, context }) => {
+              const id = String(Number(context.lastId) + 1);
+              enqueue.assign({
+                lastId: id,
+              });
+              // @ts-expect-error cannot spawn actor of type that is not in setup()
+              enqueue.spawnChild(event.logic, { id });
+              enqueue.assign({
+                rendererIds: ({ context: { rendererIds } }) => [
+                  ...rendererIds,
+                  id,
+                ],
+              });
+            }),
+          ],
         },
-        imageAssigned: {
+        setImage: {
           actions: [
             assign({
+              image: ({ event }) => event.image,
               scale: ({ event }) => event.image.coarsestScale,
-              slice: () => {
-                return 0.5;
-              },
+              slice: 0.5,
+            }),
+            enqueueActions(({ context, enqueue }) => {
+              context.rendererIds.forEach((id) => {
+                enqueue.sendTo(id, { type: 'setImage', image: context.image });
+              });
             }),
           ],
           target: '.buildingImage',
@@ -82,24 +105,25 @@ export const view2d = setup({
         idle: {},
         buildingImage: {
           invoke: {
-            input: ({ context, self }) => {
-              const { image } = self
-                .getSnapshot()
-                .children.viewport.getSnapshot().context;
+            input: ({ context }) => {
+              const { image, scale, slice } = context;
+              if (!image) throw new Error('No image available');
               return {
                 image,
-                scale: context.scale,
-                slice: context.slice,
+                scale,
+                slice,
               };
             },
             src: 'imageBuilder',
             onDone: {
               actions: [
-                sendParent(({ event: { output } }) => {
-                  return {
-                    type: 'imageBuilt',
-                    image: output,
-                  };
+                enqueueActions(({ context, enqueue, event: { output } }) => {
+                  context.rendererIds.forEach((id) => {
+                    enqueue.sendTo(id, {
+                      type: 'imageBuilt',
+                      image: output,
+                    });
+                  });
                 }),
               ],
             },

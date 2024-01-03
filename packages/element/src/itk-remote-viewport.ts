@@ -3,7 +3,7 @@ import { PropertyValues, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { Ref, createRef, ref } from 'lit/directives/ref.js';
 import { SelectorController } from 'xstate-lit';
-import {} from 'xstate';
+import { ActorRefFrom } from 'xstate';
 
 import {
   RemoteActor,
@@ -17,6 +17,7 @@ import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
 import { Bounds } from '@itk-viewer/io/types.js';
 import { chunk } from '@itk-viewer/io/dimensionUtils.js';
+import { viewportMachine } from '@itk-viewer/viewer/viewport.js';
 
 @customElement('itk-remote-viewport')
 export class ItkRemoteViewport extends ItkViewport {
@@ -31,6 +32,7 @@ export class ItkRemoteViewport extends ItkViewport {
 
   camera: Ref<HTMLElement> = createRef();
 
+  viewport: ActorRefFrom<typeof viewportMachine>;
   remote: RemoteActor;
 
   remoteOnline: SelectorController<RemoteActor, boolean>;
@@ -63,7 +65,7 @@ export class ItkRemoteViewport extends ItkViewport {
         number,
       ];
 
-      this.actor.send({
+      this.viewport.send({
         type: 'setResolution',
         resolution,
       });
@@ -75,7 +77,7 @@ export class ItkRemoteViewport extends ItkViewport {
     const { remote, viewport } = createRemoteViewport(
       createHyphaMachineConfig(),
     );
-    this.actor = viewport;
+    this.viewport = viewport;
     this.remote = remote;
     this.remoteOnline = new SelectorController(this, this.remote, (state) =>
       state.matches('root.online'),
@@ -258,7 +260,7 @@ export class ItkRemoteViewport extends ItkViewport {
         `,
       )}
 
-      <itk-camera ${ref(this.camera)} .viewport=${this.actor} class="camera">
+      <itk-camera ${ref(this.camera)} .viewport=${this.viewport} class="camera">
         <canvas ${ref(this.canvas)} class="canvas"></canvas>
       </itk-camera>
     `;

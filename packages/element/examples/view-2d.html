@@ -7,15 +7,18 @@
     <title>itk-view-2d</title>
     <link rel="stylesheet" href="../src/index.css" />
     <script type="module" src="../src/itk-viewer-element.ts"></script>
+    <script type="module" src="../src/itk-viewport.ts"></script>
     <script type="module" src="../src/itk-view-2d.ts"></script>
     <script type="module" src="../src/itk-view-2d-vtkjs.ts"></script>
   </head>
 
   <body>
     <itk-viewer class="fill">
-      <itk-view-2d class="fill">
-        <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
-      </itk-view-2d>
+      <itk-viewport class="fill">
+        <itk-view-2d class="fill">
+          <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
+        </itk-view-2d>
+      </itk-viewport>
     </itk-viewer>
   </body>
   <script type="module" src="./view-2d-main.ts"></script>

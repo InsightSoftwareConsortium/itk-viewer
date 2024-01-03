@@ -1,47 +1,40 @@
-import { createViewport } from './viewport.js';
-import { createViewer } from './viewer.js';
+import { createActor, createMachine } from 'xstate';
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
+import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { viewerMachine } from './viewer.js';
+
+export const createViewer = () => {
+  return createActor(viewerMachine).start();
+};
 
 describe('Viewer', () => {
   it('constructs', () => {
     expect(createViewer()).to.be.ok;
   });
 
-  it('accepts a viewport', () => {
+  it('spawns viewport actors that get setImage events', async () => {
+    let childStarted = false;
+    let childImage: MultiscaleSpatialImage | object = {};
+    const logic = createMachine({
+      entry: () => {
+        childStarted = true;
+      },
+      on: {
+        setImage: {
+          actions: ({ event }) => {
+            childImage = event.image;
+          },
+        },
+      },
+    });
     const viewer = createViewer();
-    const viewport = createViewport();
+    viewer.send({ type: 'createViewport', logic });
+    expect(childStarted).to.be.true;
 
-    viewer.send({ type: 'addViewport', name: 'first', viewport });
-
-    // should have property 'first' with value viewport
-    cy.wrap(viewer.getSnapshot().context.viewports).should(
-      'have.property',
-      'first',
-      viewport,
+    const image = await ZarrMultiscaleSpatialImage.fromUrl(
+      new URL('/astronaut.zarr', document.location.origin),
     );
-  });
-
-  it('adding a image triggers update in added viewports', async () => {
-    const viewer = createViewer();
-    const viewport = createViewport();
-
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    const watcher = { viewportUpdated: () => {} };
-    cy.spy(watcher, 'viewportUpdated');
-    const sub = viewport.subscribe(watcher.viewportUpdated);
-
-    viewer.send({ type: 'addViewport', name: 'first', viewport });
-
-    const storeURL = new URL(
-      '/ome-ngff-prototypes/single_image/v0.4/yx.ome.zarr',
-      document.location.origin,
-    );
-    const image = await ZarrMultiscaleSpatialImage.fromUrl(storeURL);
-    viewer.send({ type: 'setImage', name: 'zarr', image });
-
-    expect(watcher.viewportUpdated).to.be.called;
-    expect(viewport.getSnapshot().context.image).to.be.equal(image);
-
-    sub.unsubscribe();
+    viewer.send({ type: 'setImage', image });
+    expect(childImage).equals(image);
   });
 });
