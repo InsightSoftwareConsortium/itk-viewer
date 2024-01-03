@@ -6,7 +6,7 @@ import {
 } from '../../lib/TransferFunctionEditor'
 import { Point } from '../../lib/Point'
 
-const UPDATE_TF_DELAY = 200
+const UPDATE_TF_DELAY = 50
 const DATA_RANGE = [0, 255]
 
 declare global {

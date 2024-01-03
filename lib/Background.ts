@@ -23,7 +23,7 @@ export const Background = (
   let histogram: number[]
   const colorCanvas = document.createElement('canvas')
 
-  const render = () => {
+  const draw = () => {
     if (!ctx) return
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -135,6 +135,15 @@ export const Background = (
         fillStyle: HISTOGRAM_COLOR,
       })
     }
+  }
+
+  // debounce render to draw background once, even if multiple points are updated in one event callback
+  let debounceTimeout: ReturnType<typeof setTimeout>
+  const render = () => {
+    clearTimeout(debounceTimeout)
+    debounceTimeout = setTimeout(() => {
+      draw()
+    }, 0)
   }
 
   container.addSizeObserver(render)

@@ -109,6 +109,7 @@ export class ControlPoint {
     return this.container.normalizedToSvg(x, y)
   }
 
+  // Pass xySvg to avoid recomputing
   updateTooltip(xySvg: [number, number] | undefined = undefined) {
     const { x } = this.point
     const dataValue = this.toDataSpace(x)
