@@ -16,6 +16,8 @@ import { createDataRange } from './DataRange'
 
 export { windowPointsForSort } from './PiecewiseUtils'
 
+const ZOOM_AXIS_LABELS_TIMEOUT = 2000
+
 export class TransferFunctionEditor {
   public eventTarget = new EventTarget()
 
@@ -33,7 +35,10 @@ export class TransferFunctionEditor {
     this.container = Container(root)
     WheelZoom(this.container)
 
-    AxisLabels(this.container, this.dataRange)
+    const { createSetVisibilityGate } = AxisLabels(
+      this.container,
+      this.dataRange,
+    )
 
     this.points = new Points()
     const startPoints = [
@@ -67,6 +72,33 @@ export class TransferFunctionEditor {
         new CustomEvent('colorRange', { detail: (e as CustomEvent).detail }),
       )
     })
+
+    // show axis labels when hovering on Control Point or changing viewbox (zooming)
+    const setOpacityHovering = createSetVisibilityGate()
+    this.pointController.eventTarget.addEventListener(
+      'hovered-updated',
+      (e) => {
+        const { hovered } = (e as CustomEvent).detail
+        setOpacityHovering(hovered)
+      },
+    )
+    const setColorHovering = createSetVisibilityGate()
+    this.colorRangeController.eventTarget.addEventListener(
+      'hovered-updated',
+      (e) => {
+        const { hovered } = (e as CustomEvent).detail
+        setColorHovering(hovered)
+      },
+    )
+    const setZooming = createSetVisibilityGate()
+    let debounceTimeout: ReturnType<typeof setTimeout>
+    this.container.eventTarget.addEventListener('viewbox-updated', () => {
+      setZooming(true)
+      clearTimeout(debounceTimeout)
+      debounceTimeout = setTimeout(() => {
+        setZooming(false)
+      }, ZOOM_AXIS_LABELS_TIMEOUT)
+    })
   }
 
   remove() {
@@ -78,7 +110,7 @@ export class TransferFunctionEditor {
     return this.points.points.map(({ x, y }) => [x, y])
   }
 
-  // No Points update event on setPoints to avoid emitting 'update' event to user code.
+  // No Points update event emitted on setPoints event to user code.  Avoids circular
   // User code responsible for updating downstream piecewise function without update in setPoints case.
   setPoints(points: [number, number][]) {
     this.points.setPoints(points)

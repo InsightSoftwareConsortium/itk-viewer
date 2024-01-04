@@ -70,18 +70,18 @@ export const ColorRangeController = (
   container.appendChild(line)
 
   const center = new Point(0.5, Y_OFFSET)
-  const levelControlPoint = new ColorControlPoint(
+  const centerControlPoint = new ColorControlPoint(
     container,
     center,
     toDataSpace,
   )
-  levelControlPoint.deletable = false
+  centerControlPoint.deletable = false
 
   const updateLineVisibility = () => {
-    const visibility = levelControlPoint.getIsHovered() ? 'visible' : 'hidden'
+    const visibility = centerControlPoint.getIsHovered() ? 'visible' : 'hidden'
     line.setAttribute('visibility', visibility)
   }
-  levelControlPoint.eventTarget.addEventListener('hovered-updated', () => {
+  centerControlPoint.eventTarget.addEventListener('hovered-updated', () => {
     updateLineVisibility()
   })
   updateLineVisibility()
@@ -89,7 +89,6 @@ export const ColorRangeController = (
   const points = colorRange.getPoints().map((p) => {
     const cp = new ColorControlPoint(container, p, toDataSpace)
     cp.deletable = false
-
     return cp
   })
 
@@ -138,7 +137,7 @@ export const ColorRangeController = (
     const middle = [] as Array<number>
     const center = (dataRange[1] - dataRange[0]) / 2 + dataRange[0]
     ctf.getColor(center, middle)
-    levelControlPoint.setColor(rgbaToHexa(middle))
+    centerControlPoint.setColor(rgbaToHexa(middle))
   }
 
   const setColorTransferFunction = (
@@ -159,9 +158,29 @@ export const ColorRangeController = (
     updatingCenter = false
   })
 
+  const eventTarget = new EventTarget()
+  let hovered = false
+
+  const updateHovered = (isHovered: boolean) => {
+    if (isHovered !== hovered) {
+      hovered = isHovered
+      eventTarget.dispatchEvent(
+        new CustomEvent('hovered-updated', {
+          detail: { hovered },
+        }),
+      )
+    }
+  }
+  ;[centerControlPoint, ...points].forEach((cp) =>
+    cp.eventTarget.addEventListener('hovered-updated', () =>
+      updateHovered(cp.getIsHovered()),
+    ),
+  )
+
   return {
     points,
     setColorTransferFunction,
+    eventTarget,
   }
 }
 

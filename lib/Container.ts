@@ -29,13 +29,13 @@ export const Container = (parent: HTMLElement) => {
   const { svg, overlay, underlay } = makeSvg()
   root.appendChild(svg)
 
-  const sizeEmitter = new EventTarget()
+  const eventTarget = new EventTarget()
   const addSizeObserver = (cb: () => void) => {
-    sizeEmitter.addEventListener('sizeupdated', cb)
+    eventTarget.addEventListener('sizeupdated', cb)
   }
 
   const resizeObserver = new ResizeObserver(() => {
-    sizeEmitter.dispatchEvent(new Event('sizeupdated'))
+    eventTarget.dispatchEvent(new Event('sizeupdated'))
   })
   resizeObserver.observe(root)
 
@@ -77,7 +77,8 @@ export const Container = (parent: HTMLElement) => {
     const oldViewBox = viewBox
     viewBox = [valueStart, valueEnd, opacityMin, opacityMax]
     if (!arrayEquals(oldViewBox, viewBox)) {
-      sizeEmitter.dispatchEvent(new Event('sizeupdated'))
+      eventTarget.dispatchEvent(new Event('sizeupdated'))
+      eventTarget.dispatchEvent(new Event('viewbox-updated'))
     }
   }
 
@@ -139,6 +140,7 @@ export const Container = (parent: HTMLElement) => {
     remove,
     root,
     overlay,
+    eventTarget,
   }
 }
 

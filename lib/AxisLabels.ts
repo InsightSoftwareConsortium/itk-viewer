@@ -1,5 +1,6 @@
 import { ContainerType } from './Container'
 import { DataRange } from './DataRange'
+import { createOrGates } from './utils'
 
 // pixels dom space
 const Y_OFFSET = -2
@@ -47,8 +48,11 @@ export const AxisLabels = (container: ContainerType, dataRange: DataRange) => {
   dataRange.eventTarget.addEventListener('updated', updateLabels)
 
   const setVisibility = (visibility: boolean) => {
-    low.setAttribute('visibility', visibility ? 'visible' : 'hidden')
-    high.setAttribute('visibility', visibility ? 'visible' : 'hidden')
+    const visibilityString = visibility ? 'visible' : 'hidden'
+    low.setAttribute('visibility', visibilityString)
+    high.setAttribute('visibility', visibilityString)
   }
-  return setVisibility
+
+  const createSetVisibilityGate = createOrGates(setVisibility)
+  return { createSetVisibilityGate }
 }
