@@ -141,6 +141,7 @@ export const Container = (parent: HTMLElement) => {
     root,
     overlay,
     eventTarget,
+    paddedBorder,
   }
 }
 

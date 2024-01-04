@@ -101,6 +101,9 @@ export class ControlPoint {
   }
 
   remove() {
+    // send hover and dragging update events for downstream listeners
+    this.pointerEntered = false
+    this.update()
     this.tooltip.remove()
     this.container.removeChild(this.element)
   }

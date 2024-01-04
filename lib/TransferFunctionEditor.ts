@@ -35,11 +35,6 @@ export class TransferFunctionEditor {
     this.container = Container(root)
     WheelZoom(this.container)
 
-    const { createSetVisibilityGate } = AxisLabels(
-      this.container,
-      this.dataRange,
-    )
-
     this.points = new Points()
     const startPoints = [
       [0, 0],
@@ -52,6 +47,11 @@ export class TransferFunctionEditor {
       this.container,
       this.points,
       this.dataRange.toDataSpace,
+    )
+
+    const { createSetVisibilityGate } = AxisLabels(
+      this.container,
+      this.dataRange,
     )
 
     this.colorRange = ColorRange()
