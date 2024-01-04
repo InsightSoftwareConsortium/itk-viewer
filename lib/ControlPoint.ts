@@ -78,7 +78,7 @@ export class ControlPoint {
     this.container = container
     this.toDataSpace = toDataSpace
 
-    this.tooltip = addTooltip(this.container.svg)
+    this.tooltip = addTooltip(this.container.overlay)
 
     container.addSizeObserver(() => {
       this.positionElement()
