@@ -12,11 +12,11 @@ const setupTooltipStyles = () => {
         border-style: solid;
         border-color: black;
         border-width: 1px;
-        border-radius: 2px;
         font-size: 12px;
-        padding: 6px;
+        padding: 4px 6px;
         visibility: hidden;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        transition: opacity 0.2s ease-in-out;
       }
     `
   document.head.appendChild(style)
@@ -63,11 +63,11 @@ export function addTooltip(svgElement: SVGGraphicsElement) {
   }
 
   function show() {
-    tooltip.style.visibility = 'visible'
+    tooltip.style.opacity = '1'
   }
 
   function hide() {
-    tooltip.style.visibility = 'hidden'
+    tooltip.style.opacity = '0'
   }
 
   const remove = () => {
