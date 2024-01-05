@@ -86,14 +86,6 @@ export class TransferFunctionEditor {
         setOpacityHovering(hovered)
       },
     )
-    const setColorHovering = createSetVisibilityGate()
-    this.colorRangeController.eventTarget.addEventListener(
-      'hovered-updated',
-      (e) => {
-        const { hovered } = (e as CustomEvent).detail
-        setColorHovering(hovered)
-      },
-    )
     const setZooming = createSetVisibilityGate()
     let debounceTimeout: ReturnType<typeof setTimeout>
     this.container.eventTarget.addEventListener('viewbox-updated', () => {

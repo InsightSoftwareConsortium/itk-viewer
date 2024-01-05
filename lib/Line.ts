@@ -15,8 +15,8 @@ const createLine = () => {
 }
 
 export class Line {
-  private readonly points: Points
-  private container: ContainerType
+  protected readonly points: Points
+  protected container: ContainerType
   private onPointsUpdated: () => void
   element: SVGPolylineElement
   clickabeElement: SVGPolylineElement
@@ -66,14 +66,17 @@ export class Line {
       this.clickabeElement.setAttribute('points', '')
       return
     }
-
-    const stringPoints = pointsToExtendedPoints(this.points.points)
-      .map(([x, y]) => this.container.normalizedToSvg(x, y))
-      .map(([x, y]) => `${x},${y}`)
-      .join(' ')
+    const stringPoints = this.computeStringPoints()
 
     this.element.setAttribute('points', stringPoints)
     this.clickabeElement.setAttribute('points', stringPoints)
+  }
+
+  computeStringPoints() {
+    return pointsToExtendedPoints(this.points.points)
+      .map(([x, y]) => this.container.normalizedToSvg(x, y))
+      .map(([x, y]) => `${x},${y}`)
+      .join(' ')
   }
 
   drag(e: PointerEvent) {
@@ -81,6 +84,10 @@ export class Line {
     const [x, y] = this.container.domToNormalized(e.movementX, e.movementY)
     const movementX = x - originX
     const movementY = y - originY
+    this.applyOffset(movementX, movementY)
+  }
+
+  applyOffset(movementX: number, movementY: number) {
     this.points.points.forEach((point) => {
       point.setPosition(point.x + movementX, point.y + movementY)
     })

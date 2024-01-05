@@ -1,22 +1,57 @@
 import { Point } from './Point'
+import { Points } from './Points'
 import { ControlPoint, FULL_RADIUS } from './ControlPoint'
 import { ContainerType } from './Container'
 import { ColorTransferFunction, rgbaToHexa } from './PiecewiseUtils'
+import { Line } from './Line'
 
 const Y_OFFSET = -2.75 // pixels dom space
 
 class ColorControlPoint extends ControlPoint {
+  fadedOpacity = '1'
   getSvgPosition() {
     const { x } = this.point
     const [xSvg, bottom] = this.container.normalizedToSvg(x, 0)
     const ySvg = bottom + Y_OFFSET + FULL_RADIUS
     return [xSvg, ySvg]
   }
+
+  movePoint(e: PointerEvent) {
+    super.movePoint(e)
+    this.point.setPosition(this.point.x, 0)
+  }
+}
+
+class ColorLine extends Line {
+  constructor(container: ContainerType, points: Points) {
+    super(container, points)
+    this.element.removeAttribute('clip-path')
+    this.clickabeElement.removeAttribute('clip-path')
+  }
+
+  computeStringPoints() {
+    return this.points.points
+      .map(({ x, y }) => [x, y])
+      .map(([x, y]) => this.container.normalizedToSvg(x, y))
+      .map(([x, y]) => `${x},${y + Y_OFFSET + FULL_RADIUS}`)
+      .join(' ')
+  }
+
+  applyOffset(movementX: number, _: number) {
+    this.points.points.forEach((point) => {
+      point.setPosition(point.x + movementX, point.y)
+    })
+  }
 }
 
 export const ColorRange = () => {
-  const points = [new Point(0, 0), new Point(1, 0)]
-  const getPoints = () => points.sort((p1, p2) => p1.x - p2.x)
+  const points = new Points()
+  points.addPoints([
+    [0, 0],
+    [1, 0],
+  ])
+
+  const getPoints = () => points.points.sort((p1, p2) => p1.x - p2.x)
   const getColorRange = () => getPoints().map((p) => p.x)
   const eventTarget = new EventTarget()
   const dispachUpdated = () =>
@@ -29,7 +64,7 @@ export const ColorRange = () => {
       if (!batchUpdated) dispachUpdated()
     })
   }
-  points.forEach(setupPoint)
+  points.points.forEach(setupPoint)
 
   return {
     getPoints,
@@ -45,18 +80,8 @@ export const ColorRange = () => {
       dispachUpdated()
     },
     eventTarget,
+    points,
   }
-}
-
-const createLine = () => {
-  const line = document.createElementNS(
-    'http://www.w3.org/2000/svg',
-    'polyline',
-  )
-  line.setAttribute('fill', 'none')
-  line.setAttribute('stroke', 'black')
-  line.setAttribute('stroke-width', '1')
-  return line
 }
 
 export type ColorRangeType = ReturnType<typeof ColorRange>
@@ -66,60 +91,11 @@ export const ColorRangeController = (
   colorRange: ColorRangeType,
   toDataSpace: (x: number) => number,
 ) => {
-  const line = createLine()
-  container.appendChild(line)
-
-  const center = new Point(0.5, Y_OFFSET)
-  const centerControlPoint = new ColorControlPoint(
-    container,
-    center,
-    toDataSpace,
-  )
-  centerControlPoint.deletable = false
-
-  const updateLineVisibility = () => {
-    const visibility = centerControlPoint.getIsHovered() ? 'visible' : 'hidden'
-    line.setAttribute('visibility', visibility)
-  }
-  centerControlPoint.eventTarget.addEventListener('hovered-updated', () => {
-    updateLineVisibility()
-  })
-  updateLineVisibility()
-
+  const line = new ColorLine(container, colorRange.points)
   const points = colorRange.getPoints().map((p) => {
     const cp = new ColorControlPoint(container, p, toDataSpace)
     cp.deletable = false
     return cp
-  })
-
-  const updateLine = () => {
-    const [, bottom] = container.normalizedToSvg(0, 0)
-    const svgY = bottom + Y_OFFSET + FULL_RADIUS
-
-    const stringPoints = points
-      .map((p) => [p.point.x, p.point.y])
-      .map(([x, y]) => container.normalizedToSvg(x, y))
-      .map(([x]) => `${x},${svgY}`)
-      .join(' ')
-    line.setAttribute('points', stringPoints)
-  }
-
-  container.addSizeObserver(() => {
-    updateLine()
-  })
-
-  // optimizations to avoid circular update
-  let updatingRangePoints = false
-  let updatingCenter = false
-
-  center.eventTarget.addEventListener('updated', () => {
-    if (updatingCenter) return
-    const width = points[1].point.x - points[0].point.x
-    updatingRangePoints = true
-    points[0].point.x = center.x - width / 2
-    points[1].point.x = center.x + width / 2
-    updatingRangePoints = false
-    updateLine()
   })
 
   let ctf: ColorTransferFunction
@@ -134,10 +110,6 @@ export const ColorRangeController = (
     const sorted = points.sort((p1, p2) => p1.point.x - p2.point.x)
     sorted[0].setColor(rgbaToHexa(low))
     sorted[1].setColor(rgbaToHexa(high))
-    const middle = [] as Array<number>
-    const center = (dataRange[1] - dataRange[0]) / 2 + dataRange[0]
-    ctf.getColor(center, middle)
-    centerControlPoint.setColor(rgbaToHexa(middle))
   }
 
   const setColorTransferFunction = (
@@ -148,14 +120,7 @@ export const ColorRangeController = (
   }
 
   colorRange.eventTarget.addEventListener('updated', () => {
-    if (updatingRangePoints) return
     updatePointColors()
-    const pointCount = colorRange.getPoints().length
-    updatingCenter = true
-    center.x =
-      colorRange.getPoints().reduce((sum, p) => sum + p.x, 0) / pointCount
-    updateLine()
-    updatingCenter = false
   })
 
   const eventTarget = new EventTarget()
@@ -171,7 +136,7 @@ export const ColorRangeController = (
       )
     }
   }
-  ;[centerControlPoint, ...points].forEach((cp) =>
+  ;[...points].forEach((cp) =>
     cp.eventTarget.addEventListener('hovered-updated', () =>
       updateHovered(cp.getIsHovered()),
     ),
@@ -179,6 +144,7 @@ export const ColorRangeController = (
 
   return {
     points,
+    line,
     setColorTransferFunction,
     eventTarget,
   }

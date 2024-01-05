@@ -30,7 +30,7 @@ const makeCircle = () => {
   circle.setAttribute('stroke-width', String(STROKE))
   circle.setAttribute('class', CONTROL_POINT_CLASS)
 
-  circle.style.transition = 'opacity 0.1s ease-in-out'
+  circle.style.transition = 'opacity 0.05s ease-in-out'
   group.appendChild(circle)
 
   const clickTarget = document.createElementNS(
@@ -50,6 +50,7 @@ export class ControlPoint {
   element: SVGGraphicsElement
   circle: SVGCircleElement
   tooltip: ReturnType<typeof addTooltip>
+  fadedOpacity = '0'
   protected container: ContainerType
   protected isDragging: boolean = false
   protected isHovered: boolean = false
@@ -159,7 +160,7 @@ export class ControlPoint {
       this.point.y > 1 ||
       this.point.y < 0
     ) {
-      this.circle.style.opacity = '0'
+      this.circle.style.opacity = this.fadedOpacity
     } else {
       this.circle.style.opacity = '1'
     }
