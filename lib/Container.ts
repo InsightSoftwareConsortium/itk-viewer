@@ -15,7 +15,9 @@ const makeSvg = () => {
   svg.appendChild(underlay)
   const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'g')
   svg.appendChild(overlay)
-  return { svg, underlay, overlay }
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
+  svg.appendChild(defs)
+  return { svg, underlay, overlay, defs }
 }
 
 export const Container = (parent: HTMLElement) => {
@@ -26,7 +28,7 @@ export const Container = (parent: HTMLElement) => {
   )
   parent.appendChild(root)
 
-  const { svg, overlay, underlay } = makeSvg()
+  const { svg, overlay, underlay, defs } = makeSvg()
   root.appendChild(svg)
 
   const eventTarget = new EventTarget()
@@ -46,6 +48,20 @@ export const Container = (parent: HTMLElement) => {
   underlay.appendChild(paddedBorder)
   paddedBorder.setAttribute('fill', 'none')
   paddedBorder.setAttribute('stroke', 'black')
+  paddedBorder.setAttribute('id', 'tfeditor-border')
+
+  const clipBorder = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'clipPath',
+  )
+  clipBorder.setAttribute('id', 'border-clip')
+  defs.appendChild(clipBorder)
+  const useBorder = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'use',
+  )
+  useBorder.setAttribute('href', '#tfeditor-border')
+  clipBorder.appendChild(useBorder)
 
   const appendChild = (
     shape: SVGGraphicsElement,

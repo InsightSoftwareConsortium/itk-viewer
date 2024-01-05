@@ -29,6 +29,8 @@ const makeCircle = () => {
   circle.setAttribute('stroke', 'black')
   circle.setAttribute('stroke-width', String(STROKE))
   circle.setAttribute('class', CONTROL_POINT_CLASS)
+
+  circle.style.transition = 'opacity 0.1s ease-in-out'
   group.appendChild(circle)
 
   const clickTarget = document.createElementNS(
@@ -150,6 +152,17 @@ export class ControlPoint {
     this.element.setAttribute('x', String(xSvg - FULL_RADIUS))
     this.element.setAttribute('y', String(ySvg - FULL_RADIUS))
     this.updateTooltip([xSvg, ySvg])
+
+    if (
+      this.point.x > 1 ||
+      this.point.x < 0 ||
+      this.point.y > 1 ||
+      this.point.y < 0
+    ) {
+      this.circle.style.opacity = '0'
+    } else {
+      this.circle.style.opacity = '1'
+    }
   }
 
   movePoint(e: PointerEvent) {

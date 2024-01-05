@@ -1,8 +1,8 @@
 import { Point } from './Point'
 
-// if clamp is true, add points add points at ends with y = 0
-// else extend at to left and right closest y value
-export const windowPoints = (points: [number, number][], clamp = false) => {
+// if clampEnds is true, add points at ends with y = 0
+// else extend left and right points to 0 and 1 with left/right y value
+export const extendPoints = (points: [number, number][], clampEnds = false) => {
   if (points.length === 0) {
     return [
       [0, 1],
@@ -21,12 +21,23 @@ export const windowPoints = (points: [number, number][], clamp = false) => {
   const head = points[0]
   const tail = points[points.length - 1]
 
-  if (clamp) return [[head[0], 0], ...points, [tail[0], 0]]
-  return [[0, head[1]], ...points, [1, tail[1]]]
+  if (clampEnds) return [[head[0], 0], ...points, [tail[0], 0]]
+
+  // Extend head and tail to the left and right if not already outside [0, 1]
+  const extendedPoints = []
+  if (head[0] > 0) {
+    extendedPoints.push([0, head[1]])
+  }
+  extendedPoints.push(...points)
+  if (tail[0] < 1) {
+    extendedPoints.push([1, tail[1]])
+  }
+
+  return extendedPoints
 }
 
-export const pointsToWindowedPoints = (points: Point[]) =>
-  windowPoints(points.map(({ x, y }) => [x, y]))
+export const pointsToExtendedPoints = (points: Point[]) =>
+  extendPoints(points.map(({ x, y }) => [x, y]))
 
 export class Points {
   private _points: Point[] = []

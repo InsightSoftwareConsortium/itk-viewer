@@ -14,7 +14,7 @@ import {
 import { AxisLabels } from './AxisLabels'
 import { createDataRange } from './DataRange'
 
-export { windowPointsForSort } from './PiecewiseUtils'
+export { windowPointsForSort, getNodes } from './PiecewiseUtils'
 
 const ZOOM_AXIS_LABELS_TIMEOUT = 2000
 
@@ -46,6 +46,7 @@ export class TransferFunctionEditor {
     this.points.setPoints(startPoints)
 
     this.line = new Line(this.container, this.points)
+
     this.pointController = new PointsController(
       this.container,
       this.points,
