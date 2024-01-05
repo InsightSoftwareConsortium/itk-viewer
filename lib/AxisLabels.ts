@@ -26,7 +26,7 @@ const setupStyles = () => {
         font-size: ${FONT_SIZE}px;
         padding: 2px 6px;
         box-sizing: border-box;
-        transition: opacity 0.2s ease-in-out;
+        transition: opacity 0.1s ease-in-out;
       }
     `
   document.head.appendChild(style)

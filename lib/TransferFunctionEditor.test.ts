@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { TransferFunctionEditor } from './TransferFunctionEditor'
+import { makeTestableContainer } from './Container.test'
 
 const makeEditor = () => {
-  const root = document.createElement('div')
-  const editor = new TransferFunctionEditor(root)
+  const { container, parent: root } = makeTestableContainer()
+  const editor = new TransferFunctionEditor(root, container)
   return { root, editor }
 }
 

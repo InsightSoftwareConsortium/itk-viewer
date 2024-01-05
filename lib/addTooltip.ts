@@ -14,9 +14,9 @@ const setupTooltipStyles = () => {
         border-width: 1px;
         font-size: 12px;
         padding: 4px 6px;
-        visibility: hidden;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        transition: opacity 0.2s ease-in-out;
+        transition: opacity 0.1s ease-in-out;
+        opacity: 0;
       }
     `
   document.head.appendChild(style)
