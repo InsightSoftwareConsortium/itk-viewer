@@ -155,10 +155,10 @@ export class ControlPoint {
     this.updateTooltip([xSvg, ySvg])
 
     if (
-      this.point.x > 1 ||
-      this.point.x < 0 ||
-      this.point.y > 1 ||
-      this.point.y < 0
+      this.point.x > 1.001 ||
+      this.point.x < -0.001 ||
+      this.point.y > 1.001 ||
+      this.point.y < -0.001
     ) {
       this.circle.style.opacity = this.fadedOpacity
     } else {

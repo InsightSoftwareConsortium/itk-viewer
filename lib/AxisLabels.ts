@@ -87,7 +87,7 @@ export const AxisLabels = (container: ContainerType, dataRange: DataRange) => {
     const yOffset = box.height / 2
     label.style.transform = `translate(${x + xOffset}px,${y - yOffset}px)`
 
-    // match padded border attrributs to invisible hover border
+    // match padded border attributes to invisible hover border
     ;['x', 'y', 'width', 'height'].forEach((attr) => {
       const value = paddedBorder.getAttribute(attr)
       value !== null && invisibleHoverBorder.setAttribute(attr, value)

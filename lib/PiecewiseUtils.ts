@@ -1,4 +1,3 @@
-import { Point } from './Point'
 import { extendPoints } from './Points'
 
 export type ChartStyle = {
@@ -138,8 +137,8 @@ export function rgbaToHexa(rgba: Array<number>) {
 
 // Returns vtk.js piecewise function nodes
 // rescaled into data range space.
-export const getNodes = (range: number[], points: Point[]) => {
-  const findY1Intercepts = (points: Point[]): number[] => {
+export const getNodes = (range: number[], points: Array<[number, number]>) => {
+  const findY1Intercepts = (points: Array<[number, number]>): number[] => {
     const xPositions: number[] = []
 
     for (let i = 0; i < points.length - 1; i++) {
@@ -148,13 +147,13 @@ export const getNodes = (range: number[], points: Point[]) => {
 
       // Check if the line between point1 and point2 intersects y=1
       if (
-        (point1.y <= 1 && point2.y >= 1) ||
-        (point1.y >= 1 && point2.y <= 1)
+        (point1[1] <= 1 && point2[1] >= 1) ||
+        (point1[1] >= 1 && point2[1] <= 1)
       ) {
         // Calculate the x position of the intersection point using linear interpolation
         const x =
-          point1.x +
-          ((1 - point1.y) / (point2.y - point1.y)) * (point2.x - point1.x)
+          point1[0] +
+          ((1 - point1[1]) / (point2[1] - point1[1])) * (point2[0] - point1[0])
         xPositions.push(x)
       }
     }
@@ -162,10 +161,10 @@ export const getNodes = (range: number[], points: Point[]) => {
     return xPositions
   }
   const xPositions = findY1Intercepts(points)
-  const withIntercepts = [...points, ...xPositions.map((x) => ({ x, y: 1 }))]
+  const withIntercepts = [...points, ...xPositions.map((x) => [x, 1])]
 
   const windowedPoints = windowPointsForSort(
-    withIntercepts.map(({ x, y }) => [x, y]),
+    withIntercepts as Array<[number, number]>,
   )
 
   const delta = range[1] - range[0]

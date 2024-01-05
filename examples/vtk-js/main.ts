@@ -34,7 +34,10 @@ if (editorHome) {
     'updated',
     throttle((e) => {
       const points = (<CustomEvent>e).detail as Point[]
-      const nodes = getNodes(DATA_RANGE, points)
+      const arrayPoints = points.map((p) => [p.x, p.y]) as Array<
+        [number, number]
+      >
+      const nodes = getNodes(DATA_RANGE, arrayPoints)
       opacityFunction.setNodes(nodes)
 
       globalThis.renderWindow.render()
