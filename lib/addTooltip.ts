@@ -9,16 +9,14 @@ const setupTooltipStyles = () => {
         color: black;
         background-color: rgba(255, 255, 255, 0.95);
         position: absolute;
-        transform: translate(178px, 410.19px);
         border-style: solid;
         border-color: black;
         border-width: 1px;
-        border-radius: 2px;
         font-size: 12px;
-        padding: 8px;
-        visibility: hidden;
-        max-width: 150px;
+        padding: 4px 6px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        transition: opacity 0.1s ease-in-out;
+        opacity: 0;
       }
     `
   document.head.appendChild(style)
@@ -65,11 +63,11 @@ export function addTooltip(svgElement: SVGGraphicsElement) {
   }
 
   function show() {
-    tooltip.style.visibility = 'visible'
+    tooltip.style.opacity = '1'
   }
 
   function hide() {
-    tooltip.style.visibility = 'hidden'
+    tooltip.style.opacity = '0'
   }
 
   const remove = () => {

@@ -2,11 +2,11 @@ import './style.css'
 import { throttle } from '@kitware/vtk.js/macros'
 import {
   TransferFunctionEditor,
-  windowPointsForSort,
+  getNodes,
 } from '../../lib/TransferFunctionEditor'
 import { Point } from '../../lib/Point'
 
-const UPDATE_TF_DELAY = 200
+const UPDATE_TF_DELAY = 50
 const DATA_RANGE = [0, 255]
 
 declare global {
@@ -23,17 +23,6 @@ app.innerHTML = `
     <div id='editorHome'></div>
   </div>
 `
-// rescales into data range space
-const getNodes = (range: number[], points: Point[]) => {
-  const delta = range[1] - range[0]
-  const windowedPoints = windowPointsForSort(points.map(({ x, y }) => [x, y]))
-  return windowedPoints.map(([x, y]) => ({
-    x: range[0] + delta * x,
-    y,
-    midpoint: 0.5,
-    sharpness: 0,
-  }))
-}
 
 const opacityFunction = globalThis.ofun
 const colorFunction = globalThis.ctfun
@@ -45,7 +34,10 @@ if (editorHome) {
     'updated',
     throttle((e) => {
       const points = (<CustomEvent>e).detail as Point[]
-      const nodes = getNodes(DATA_RANGE, points)
+      const arrayPoints = points.map((p) => [p.x, p.y]) as Array<
+        [number, number]
+      >
+      const nodes = getNodes(DATA_RANGE, arrayPoints)
       opacityFunction.setNodes(nodes)
 
       globalThis.renderWindow.render()

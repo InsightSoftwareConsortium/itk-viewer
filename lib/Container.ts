@@ -3,13 +3,21 @@ import { arrayEquals } from './PiecewiseUtils'
 export const PADDING = 11
 const BOTTOM_PADDING = 2 * PADDING
 
+type Layer = 'underlay' | 'overlay'
+
 const makeSvg = () => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
   svg.setAttribute(
     'style',
     'position: absolute; top: 0; left: 0; z-index: 2; box-sizing: border-box; width: 100%; height: 100%;',
   )
-  return svg
+  const underlay = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  svg.appendChild(underlay)
+  const overlay = document.createElementNS('http://www.w3.org/2000/svg', 'g')
+  svg.appendChild(overlay)
+  const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs')
+  svg.appendChild(defs)
+  return { svg, underlay, overlay, defs }
 }
 
 export const Container = (parent: HTMLElement) => {
@@ -20,16 +28,16 @@ export const Container = (parent: HTMLElement) => {
   )
   parent.appendChild(root)
 
-  const svg = makeSvg()
+  const { svg, overlay, underlay, defs } = makeSvg()
   root.appendChild(svg)
 
-  const sizeEmitter = new EventTarget()
+  const eventTarget = new EventTarget()
   const addSizeObserver = (cb: () => void) => {
-    sizeEmitter.addEventListener('sizeupdated', cb)
+    eventTarget.addEventListener('sizeupdated', cb)
   }
 
   const resizeObserver = new ResizeObserver(() => {
-    sizeEmitter.dispatchEvent(new Event('sizeupdated'))
+    eventTarget.dispatchEvent(new Event('sizeupdated'))
   })
   resizeObserver.observe(root)
 
@@ -37,16 +45,38 @@ export const Container = (parent: HTMLElement) => {
     'http://www.w3.org/2000/svg',
     'rect',
   )
-  svg.appendChild(paddedBorder)
+  underlay.appendChild(paddedBorder)
   paddedBorder.setAttribute('fill', 'none')
   paddedBorder.setAttribute('stroke', 'black')
+  paddedBorder.setAttribute('id', 'tfeditor-border')
 
-  const appendChild = (shape: SVGGraphicsElement) => {
-    svg.appendChild(shape)
+  const clipBorder = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'clipPath',
+  )
+  clipBorder.setAttribute('id', 'border-clip')
+  defs.appendChild(clipBorder)
+  const useBorder = document.createElementNS(
+    'http://www.w3.org/2000/svg',
+    'use',
+  )
+  useBorder.setAttribute('href', '#tfeditor-border')
+  clipBorder.appendChild(useBorder)
+
+  const appendChild = (
+    shape: SVGGraphicsElement,
+    layer: Layer = 'underlay',
+  ) => {
+    const element = layer === 'underlay' ? underlay : overlay
+    element.appendChild(shape)
   }
 
-  const removeChild = (shape: SVGGraphicsElement) => {
-    svg.removeChild(shape)
+  const removeChild = (
+    shape: SVGGraphicsElement,
+    layer: Layer = 'underlay',
+  ) => {
+    const element = layer === 'underlay' ? underlay : overlay
+    element.removeChild(shape)
   }
 
   // xmin, xmax, ymin, ymax
@@ -63,7 +93,8 @@ export const Container = (parent: HTMLElement) => {
     const oldViewBox = viewBox
     viewBox = [valueStart, valueEnd, opacityMin, opacityMax]
     if (!arrayEquals(oldViewBox, viewBox)) {
-      sizeEmitter.dispatchEvent(new Event('sizeupdated'))
+      eventTarget.dispatchEvent(new Event('sizeupdated'))
+      eventTarget.dispatchEvent(new Event('viewbox-updated'))
     }
   }
 
@@ -124,7 +155,9 @@ export const Container = (parent: HTMLElement) => {
     borderSize,
     remove,
     root,
-    svg,
+    overlay,
+    eventTarget,
+    paddedBorder,
   }
 }
 

@@ -11,26 +11,12 @@ import {
   ColorRangeControllerType,
   ColorRangeType,
 } from './ColorRange'
+import { AxisLabels } from './AxisLabels'
+import { createDataRange } from './DataRange'
 
-export { windowPointsForSort } from './PiecewiseUtils'
+export { windowPointsForSort, getNodes } from './PiecewiseUtils'
 
-const makeToDataSpace = () => {
-  let range = [0, 1] as [number, number]
-  const setRange = (newRange: [number, number]) => {
-    range = newRange
-  }
-
-  const toDataSpace = (x: number) => {
-    const [start, end] = range
-    const width = end - start
-    return x * width + start
-  }
-
-  return {
-    setRange,
-    toDataSpace,
-  }
-}
+const ZOOM_AXIS_LABELS_TIMEOUT = 2000
 
 export class TransferFunctionEditor {
   public eventTarget = new EventTarget()
@@ -43,10 +29,13 @@ export class TransferFunctionEditor {
   private container: ContainerType
   private background: BackgroundType
 
-  private dataSpaceConverter = makeToDataSpace()
+  private dataRange = createDataRange()
 
-  constructor(root: HTMLElement) {
-    this.container = Container(root)
+  constructor(
+    root: HTMLElement,
+    container: ContainerType | undefined = undefined,
+  ) {
+    this.container = container || Container(root)
     WheelZoom(this.container)
 
     this.points = new Points()
@@ -57,17 +46,23 @@ export class TransferFunctionEditor {
     this.points.setPoints(startPoints)
 
     this.line = new Line(this.container, this.points)
+
     this.pointController = new PointsController(
       this.container,
       this.points,
-      this.dataSpaceConverter.toDataSpace,
+      this.dataRange.toDataSpace,
+    )
+
+    const { createSetVisibilityGate } = AxisLabels(
+      this.container,
+      this.dataRange,
     )
 
     this.colorRange = ColorRange()
     this.colorRangeController = ColorRangeController(
       this.container,
       this.colorRange,
-      this.dataSpaceConverter.toDataSpace,
+      this.dataRange.toDataSpace,
     )
     this.background = Background(this.container, this.points, this.colorRange)
 
@@ -81,6 +76,25 @@ export class TransferFunctionEditor {
         new CustomEvent('colorRange', { detail: (e as CustomEvent).detail }),
       )
     })
+
+    // show axis labels when hovering on Control Point or changing viewbox (zooming)
+    const setOpacityHovering = createSetVisibilityGate()
+    this.pointController.eventTarget.addEventListener(
+      'hovered-updated',
+      (e) => {
+        const { hovered } = (e as CustomEvent).detail
+        setOpacityHovering(hovered)
+      },
+    )
+    const setZooming = createSetVisibilityGate()
+    let debounceTimeout: ReturnType<typeof setTimeout>
+    this.container.eventTarget.addEventListener('viewbox-updated', () => {
+      setZooming(true)
+      clearTimeout(debounceTimeout)
+      debounceTimeout = setTimeout(() => {
+        setZooming(false)
+      }, ZOOM_AXIS_LABELS_TIMEOUT)
+    })
   }
 
   remove() {
@@ -92,7 +106,7 @@ export class TransferFunctionEditor {
     return this.points.points.map(({ x, y }) => [x, y])
   }
 
-  // No Points update event on setPoints to avoid emitting 'update' event to user code.
+  // No Points update event emitted on setPoints event to user code.  Avoids circular
   // User code responsible for updating downstream piecewise function without update in setPoints case.
   setPoints(points: [number, number][]) {
     this.points.setPoints(points)
@@ -128,6 +142,6 @@ export class TransferFunctionEditor {
   }
 
   setRange(range: [number, number]) {
-    this.dataSpaceConverter.setRange(range)
+    this.dataRange.setRange(range)
   }
 }

@@ -1,4 +1,4 @@
-import { windowPoints } from './Points'
+import { extendPoints } from './Points'
 
 export type ChartStyle = {
   lineWidth: number
@@ -82,7 +82,7 @@ export const updateColorCanvas = (
     true,
   )
 
-  const ctx = workCanvas.getContext('2d')
+  const ctx = workCanvas.getContext('2d', { willReadFrequently: true })
   if (ctx) {
     const pixelsArea = ctx.getImageData(0, 0, width, CANVAS_HEIGHT)
     for (let lineIdx = 0; lineIdx < CANVAS_HEIGHT; lineIdx++) {
@@ -102,7 +102,7 @@ export const updateColorCanvas = (
 }
 
 export const windowPointsForSort = (points: [number, number][]) => {
-  const windowedPoints = windowPoints(points)
+  const windowedPoints = extendPoints(points)
   // avoid unstable Array.sort issues
   windowedPoints[0][0] -= 1e-8
   windowedPoints[windowedPoints.length - 1][0] += 1e-8
@@ -133,4 +133,45 @@ export function rgbaToHexa(rgba: Array<number>) {
     .map((c) => Math.floor(c * 255))
     .map((comp) => `0${comp.toString(16)}`.slice(-2))
   return `#${hexa.join('')}`
+}
+
+// Returns vtk.js piecewise function nodes
+// rescaled into data range space.
+export const getNodes = (range: number[], points: Array<[number, number]>) => {
+  const findY1Intercepts = (points: Array<[number, number]>): number[] => {
+    const xPositions: number[] = []
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const point1 = points[i]
+      const point2 = points[i + 1]
+
+      // Check if the line between point1 and point2 intersects y=1
+      if (
+        (point1[1] <= 1 && point2[1] >= 1) ||
+        (point1[1] >= 1 && point2[1] <= 1)
+      ) {
+        // Calculate the x position of the intersection point using linear interpolation
+        const x =
+          point1[0] +
+          ((1 - point1[1]) / (point2[1] - point1[1])) * (point2[0] - point1[0])
+        xPositions.push(x)
+      }
+    }
+
+    return xPositions
+  }
+  const xPositions = findY1Intercepts(points)
+  const withIntercepts = [...points, ...xPositions.map((x) => [x, 1])]
+
+  const windowedPoints = windowPointsForSort(
+    withIntercepts as Array<[number, number]>,
+  )
+
+  const delta = range[1] - range[0]
+  return windowedPoints.map(([x, y]) => ({
+    x: range[0] + delta * x,
+    y: Math.min(y, 1), // vtk.js volume voxels get 0 opacity if y > 1
+    midpoint: 0.5,
+    sharpness: 0,
+  }))
 }

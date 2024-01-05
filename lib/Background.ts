@@ -5,7 +5,7 @@ import {
   drawChart,
   updateColorCanvas,
 } from './PiecewiseUtils'
-import { Points, pointsToWindowedPoints } from './Points'
+import { Points, pointsToExtendedPoints } from './Points'
 
 const HISTOGRAM_COLOR = 'rgba(50, 50, 50, 0.3)'
 
@@ -23,7 +23,7 @@ export const Background = (
   let histogram: number[]
   const colorCanvas = document.createElement('canvas')
 
-  const render = () => {
+  const draw = () => {
     if (!ctx) return
 
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -36,7 +36,7 @@ export const Background = (
       const borderWidth = Math.ceil(right - left)
       if (borderWidth < 0) return
 
-      const windowed = pointsToWindowedPoints(points.points)
+      const windowed = pointsToExtendedPoints(points.points)
       const linePoints = [[0, 0], ...windowed, [1, 0]].map(([x, y]) =>
         container.normalizedToSvg(x, y),
       )
@@ -47,6 +47,9 @@ export const Background = (
         ctx.lineTo(x, y)
       })
       ctx.clip()
+      const squarePath = new Path2D()
+      squarePath.rect(left, top, borderWidth, bottom - top)
+      ctx.clip(squarePath)
 
       // width in pixels between head and tail, bounded by SVG size
       const [colorStart, colorEnd] = colorRange.getColorRange()
@@ -135,6 +138,15 @@ export const Background = (
         fillStyle: HISTOGRAM_COLOR,
       })
     }
+  }
+
+  // debounce render to draw background once, even if multiple points are updated in one event callback
+  let debounceTimeout: ReturnType<typeof setTimeout>
+  const render = () => {
+    clearTimeout(debounceTimeout)
+    debounceTimeout = setTimeout(() => {
+      draw()
+    }, 0)
   }
 
   container.addSizeObserver(render)

@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { TransferFunctionEditor } from './TransferFunctionEditor'
+import { makeTestableContainer } from './Container.test'
 
 const makeEditor = () => {
-  const root = document.createElement('div')
-  const editor = new TransferFunctionEditor(root)
+  const { container, parent: root } = makeTestableContainer()
+  const editor = new TransferFunctionEditor(root, container)
   return { root, editor }
 }
 
@@ -20,7 +21,7 @@ describe('TfEditor', () => {
 
   it('Initial points are represented', () => {
     const pointElements = root.querySelectorAll('.controlPoint')
-    expect(pointElements?.length).toBe(5) // 2 opacity points, 3 color range points
+    expect(pointElements?.length).toBe(4) // 2 opacity points, 2 color range points
   })
 
   it('Remove detaches all children nodes', () => {

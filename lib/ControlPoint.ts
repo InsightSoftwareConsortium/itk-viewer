@@ -29,6 +29,8 @@ const makeCircle = () => {
   circle.setAttribute('stroke', 'black')
   circle.setAttribute('stroke-width', String(STROKE))
   circle.setAttribute('class', CONTROL_POINT_CLASS)
+
+  circle.style.transition = 'opacity 0.05s ease-in-out'
   group.appendChild(circle)
 
   const clickTarget = document.createElementNS(
@@ -48,9 +50,11 @@ export class ControlPoint {
   element: SVGGraphicsElement
   circle: SVGCircleElement
   tooltip: ReturnType<typeof addTooltip>
+  fadedOpacity = '0'
   protected container: ContainerType
   protected isDragging: boolean = false
   protected isHovered: boolean = false
+  protected pointerEntered: boolean = false
   readonly point: Point
 
   public deletable = true
@@ -77,7 +81,7 @@ export class ControlPoint {
     this.container = container
     this.toDataSpace = toDataSpace
 
-    this.tooltip = addTooltip(this.container.svg)
+    this.tooltip = addTooltip(this.container.overlay)
 
     container.addSizeObserver(() => {
       this.positionElement()
@@ -100,8 +104,35 @@ export class ControlPoint {
   }
 
   remove() {
+    // send hover and dragging update events for downstream listeners
+    this.pointerEntered = false
+    this.update()
     this.tooltip.remove()
     this.container.removeChild(this.element)
+  }
+
+  getIsDragging() {
+    return this.isDragging
+  }
+
+  protected setIsDragging(isDragging: boolean) {
+    if (this.isDragging === isDragging) return
+    this.isDragging = isDragging
+    this.eventTarget.dispatchEvent(new Event('dragging-updated'))
+  }
+
+  getIsHovered() {
+    return this.isHovered
+  }
+
+  protected setIsHovered(isHovered: boolean) {
+    if (this.isHovered === isHovered) return
+
+    if (isHovered) this.tooltip.show()
+    else this.tooltip.hide()
+
+    this.isHovered = isHovered
+    this.eventTarget.dispatchEvent(new Event('hovered-updated'))
   }
 
   getSvgPosition() {
@@ -109,6 +140,7 @@ export class ControlPoint {
     return this.container.normalizedToSvg(x, y)
   }
 
+  // Pass xySvg to avoid recomputing
   updateTooltip(xySvg: [number, number] | undefined = undefined) {
     const { x } = this.point
     const dataValue = this.toDataSpace(x)
@@ -121,6 +153,17 @@ export class ControlPoint {
     this.element.setAttribute('x', String(xSvg - FULL_RADIUS))
     this.element.setAttribute('y', String(ySvg - FULL_RADIUS))
     this.updateTooltip([xSvg, ySvg])
+
+    if (
+      this.point.x > 1.001 ||
+      this.point.x < -0.001 ||
+      this.point.y > 1.001 ||
+      this.point.y < -0.001
+    ) {
+      this.circle.style.opacity = this.fadedOpacity
+    } else {
+      this.circle.style.opacity = '1'
+    }
   }
 
   movePoint(e: PointerEvent) {
@@ -130,21 +173,22 @@ export class ControlPoint {
 
   update() {
     this.circle.setAttribute('stroke-width', String(STROKE))
-    if (this.isHovered) {
+    if (this.pointerEntered) {
       this.circle.setAttribute('stroke-width', String(STROKE + 1))
       this.updateTooltip()
-      this.tooltip.show()
+
+      this.setIsHovered(true)
     }
     if (this.isDragging) {
       this.circle.setAttribute('stroke-width', String(STROKE * 2))
     }
-    if (!this.isDragging && !this.isHovered) {
-      this.tooltip.hide()
+    if (!this.isDragging && !this.pointerEntered) {
+      this.setIsHovered(false)
     }
   }
 
   startInteraction(forceDragging = false) {
-    this.isDragging = forceDragging
+    this.setIsDragging(forceDragging)
     if (!this.isDragging && this.deletable) {
       this.circle.setAttribute('stroke', 'red') // deleteable
     }
@@ -152,7 +196,7 @@ export class ControlPoint {
       if (!this.isDragging) {
         this.circle.setAttribute('stroke', 'black')
       }
-      this.isDragging = true
+      this.setIsDragging(true)
       this.movePoint(e)
     }
     document.addEventListener('pointermove', onPointerMove)
@@ -165,7 +209,7 @@ export class ControlPoint {
         const delEvent = new CustomEvent(this.DELETE_EVENT, { detail: this })
         this.eventTarget.dispatchEvent(delEvent)
       }
-      this.isDragging = false
+      this.setIsDragging(false)
       this.update()
     }
 
@@ -185,11 +229,11 @@ export class ControlPoint {
       this.startInteraction()
     })
     this.element.addEventListener('pointerenter', () => {
-      this.isHovered = true
+      this.pointerEntered = true
       this.update()
     })
     this.element.addEventListener('pointerleave', () => {
-      this.isHovered = false
+      this.pointerEntered = false
       this.update()
     })
   }

@@ -7,10 +7,12 @@ import { Points } from './Points'
 export class PointsController {
   container: ContainerType
   points: Points
+  readonly eventTarget = new EventTarget()
+  private toDataSpace: (x: number) => number
+  private hovered = false
   private onPointsUpdated: () => void
   private controlPoints: ControlPoint[] = []
   private isNewPointFromPointer = false
-  private toDataSpace: (x: number) => number
 
   constructor(
     container: ContainerType,
@@ -63,19 +65,33 @@ export class PointsController {
     const isPointInControlPoints = (point: Point) =>
       this.controlPoints.find((cp) => cp.point === point)
 
-    const addNewControlPoint = (point: Point) =>
-      this.controlPoints.push(
-        new ControlPoint(
-          this.container,
-          point,
-          this.toDataSpace,
-          (e) => this.onControlPointDelete(e),
-          this.isNewPointFromPointer,
-        ),
+    const addNewControlPoint = (point: Point) => {
+      const cp = new ControlPoint(
+        this.container,
+        point,
+        this.toDataSpace,
+        (e) => this.onControlPointDelete(e),
+        this.isNewPointFromPointer,
       )
+      cp.eventTarget.addEventListener('hovered-updated', () =>
+        this.updateHovered(cp.getIsHovered()),
+      )
+      this.controlPoints.push(cp)
+    }
 
     this.points.points
       .filter((pointModel) => !isPointInControlPoints(pointModel))
       .forEach(addNewControlPoint)
+  }
+
+  updateHovered(hovered: boolean) {
+    if (hovered !== this.hovered) {
+      this.hovered = hovered
+      this.eventTarget.dispatchEvent(
+        new CustomEvent('hovered-updated', {
+          detail: { hovered: this.hovered },
+        }),
+      )
+    }
   }
 }

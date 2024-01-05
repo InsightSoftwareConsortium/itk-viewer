@@ -25,6 +25,18 @@ export const makeTestableContainer = () => {
     toJSON: () => {},
   }))
 
+  container.overlay.getBBox = (): DOMRect => ({
+    x: 0,
+    y: 0,
+    width: CONTAINER_WIDTH,
+    height: CONTAINER_HEIGHT,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    top: 0,
+    toJSON: () => {},
+  })
+
   return { container, parent }
 }
 

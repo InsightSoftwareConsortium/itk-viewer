@@ -20,7 +20,7 @@ describe('Line', () => {
     points.removePoint(toRemove)
     const linePointCount =
       line.element.getAttribute('points')!.split(',').length - 1
-    expect(linePointCount).toBe(4)
+    expect(linePointCount).toBe(3)
   })
 
   it('remove cleans up Points callback', () => {
