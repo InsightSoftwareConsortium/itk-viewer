@@ -178,13 +178,12 @@ class Renderer:
     async def on_init(self, peer_connection):
         @peer_connection.on("track")
         def on_track(track):
-            print(f"Track {track.kind} received")
             peer_connection.addTrack(
                 VideoTransformTrack(self.draw_frame)
             )
             @track.on("ended")
             async def on_ended():
-                print(f"Track {track.kind} ended")
+                pass
 
     async def connect(
         self,
