@@ -6,18 +6,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>itk-viewer</title>
     <link rel="stylesheet" href="index.css" />
-    <script type="module" src="../src/itk-remote-viewport-webrtc.ts"></script>
+    <script type="module" src="../src/itk-remote-viewport.ts"></script>
     <script type="module" src="../src/itk-viewer-element.ts"></script>
-    <script type="module" src="remote-webrtc.ts"></script>
+    <script type="module" src="remote-viewport.ts"></script>
   </head>
 
   <body>
     <itk-viewer class="fill">
-      <itk-remote-viewport-webrtc
+      <itk-remote-viewport
         class="fill"
         id="right-viewport"
         server-config='{ "serverUrl": "%VITE_HYPHA_URL%", "serviceId": "%VITE_HYPHA_RENDER_SERVICE_ID%" }'
-      ></itk-remote-viewport-webrtc>
+      ></itk-remote-viewport>
     </itk-viewer>
   </body>
 </html>
