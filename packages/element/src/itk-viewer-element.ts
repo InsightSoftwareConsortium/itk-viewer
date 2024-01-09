@@ -3,6 +3,7 @@ import { customElement } from 'lit/decorators.js';
 
 import { viewerMachine } from '@itk-viewer/viewer/viewer.js';
 import { createActor } from 'xstate';
+import { handleLogic } from './spawn-controller.js';
 
 @customElement('itk-viewer')
 export class ItkViewer extends LitElement {
@@ -16,20 +17,10 @@ export class ItkViewer extends LitElement {
     return this.viewer;
   }
 
-  handleViewportConnected(e: Event) {
-    e.stopPropagation();
-
-    const logic = (e as CustomEvent).detail.logic;
-    this.viewer.send({ type: 'createViewport', logic });
-    const snap = this.viewer.getSnapshot();
-    const actor = snap.children[snap.context.lastId];
-    (e as CustomEvent).detail.setActor(actor);
-  }
-
   render() {
     return html`
       <h1>Viewer</h1>
-      <slot @viewportConnected=${this.handleViewportConnected}></slot>
+      <slot @viewport=${handleLogic(this.viewer)}></slot>
     `;
   }
 }

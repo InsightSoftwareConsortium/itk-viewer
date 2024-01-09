@@ -1,27 +1,6 @@
-import {
-  ActorRefFrom,
-  AnyActorLogic,
-  assertEvent,
-  assign,
-  createMachine,
-  raise,
-} from 'xstate';
-
+import { AnyActorRef, assign, raise, setup } from 'xstate';
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { viewportMachine } from './viewport.js';
-
-type ViewportActor = ActorRefFrom<typeof viewportMachine>;
-
-type AddViewportEvent = {
-  type: 'addViewport';
-  name: string;
-  viewport: ViewportActor;
-};
-
-type CreateViewport = {
-  type: 'createViewport';
-  logic: AnyActorLogic;
-};
+import { CreateChild } from './children.js';
 
 type SetImageEvent = {
   type: 'setImage';
@@ -34,59 +13,40 @@ type SendImageToViewports = {
   image: MultiscaleSpatialImage;
 };
 
-type context = {
-  lastId: string;
-  viewports: Record<string, ActorRefFrom<AnyActorLogic>>;
+type Context = {
+  spawned: Record<string, AnyActorRef>;
   images: Record<string, MultiscaleSpatialImage>;
 };
 
-export const viewerMachine = createMachine({
+export const viewerMachine = setup({
   types: {} as {
-    context: context;
-    events:
-      | AddViewportEvent
-      | SetImageEvent
-      | CreateViewport
-      | SendImageToViewports;
+    context: Context;
+    events: SetImageEvent | CreateChild | SendImageToViewports;
   },
+}).createMachine({
   id: 'viewer',
   initial: 'active',
   context: {
-    lastId: '0',
-    viewports: {},
+    spawned: {},
     images: {},
   },
   states: {
     active: {
       on: {
-        addViewport: {
-          actions: assign({
-            viewports: ({
-              event: { name, viewport },
-              context,
-            }: {
-              event: AddViewportEvent;
-              context: context;
-            }) => ({
-              ...context.viewports,
-              [name]: viewport,
-            }),
-          }),
-        },
-        createViewport: {
+        createChild: {
           actions: [
             assign({
-              lastId: ({ context }) => String(Number(context.lastId) + 1),
-            }),
-            assign({
-              viewports: ({ spawn, event, context }) => {
-                assertEvent(event, 'createViewport');
-                const { logic } = event;
-                const id = context.lastId;
-                const view = spawn(logic, { id });
+              spawned: ({
+                spawn,
+                context: { spawned },
+                event: { logic, onActor },
+              }) => {
+                const child = spawn(logic);
+                const id = Object.keys(spawned).length.toString();
+                onActor(child);
                 return {
-                  ...context.viewports,
-                  [id]: view,
+                  ...spawned,
+                  [id]: child,
                 };
               },
             }),
@@ -109,7 +69,7 @@ export const viewerMachine = createMachine({
         sendImageToViewports: {
           actions: [
             ({ context, event: { image } }) => {
-              Object.values(context.viewports).forEach((viewport) => {
+              Object.values(context.spawned).forEach((viewport) => {
                 viewport.send({
                   type: 'setImage',
                   image,

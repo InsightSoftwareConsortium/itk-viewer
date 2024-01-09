@@ -6,11 +6,19 @@ import {
   View2dVtkjsActor,
   createRenderer,
 } from '@itk-viewer/vtkjs/view-2d-vtkjs.js';
+import { SpawnController } from './spawn-controller.js';
 
 @customElement('itk-view-2d-vtkjs')
 export class ItkView2dVtkjs extends LitElement {
   actor: View2dVtkjsActor | undefined;
   container: HTMLElement | undefined;
+
+  spawner = new SpawnController(
+    this,
+    'renderer',
+    createRenderer(),
+    (actor: View2dVtkjsActor) => this.setActor(actor),
+  );
 
   getActor() {
     return this.actor;
@@ -19,24 +27,6 @@ export class ItkView2dVtkjs extends LitElement {
   setActor(actor: View2dVtkjsActor) {
     this.actor = actor;
     this.sendContainer();
-  }
-
-  protected dispatchLogic() {
-    const event = new CustomEvent('rendererConnected', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        logic: createRenderer(),
-        setActor: (actor: View2dVtkjsActor) => this.setActor(actor),
-      },
-    });
-
-    this.dispatchEvent(event);
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.dispatchLogic();
   }
 
   protected sendContainer() {

@@ -2,6 +2,7 @@ import { View3dActor, view3d } from '@itk-viewer/viewer/view-3d.js';
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { SelectorController } from 'xstate-lit';
+import { SpawnController, handleLogic } from './spawn-controller.js';
 
 type Actor = View3dActor;
 
@@ -11,21 +12,12 @@ export class ItkView3d extends LitElement {
   scale: SelectorController<Actor, number> | undefined;
   scaleCount: SelectorController<Actor, number> | undefined;
 
+  spawner = new SpawnController(this, 'view', view3d, (actor: Actor) =>
+    this.setActor(actor),
+  );
+
   constructor() {
     super();
-  }
-
-  protected dispatchLogic() {
-    const event = new CustomEvent('viewConnected', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        logic: view3d,
-        setActor: (actor: View3dActor) => this.setActor(actor),
-      },
-    });
-
-    this.dispatchEvent(event);
   }
 
   setActor(actor: Actor) {
@@ -45,23 +37,6 @@ export class ItkView3d extends LitElement {
 
   getActor() {
     return this.actor;
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.dispatchLogic();
-  }
-
-  handleRendererConnected(e: Event) {
-    e.stopPropagation();
-    if (!this.actor)
-      throw new Error('Child renderer connected but no actor available');
-
-    const logic = (e as CustomEvent).detail.logic;
-    this.actor.send({ type: 'createRenderer', logic });
-    const snap = this.actor.getSnapshot();
-    const actor = snap.children[snap.context.lastId];
-    (e as CustomEvent).detail.setActor(actor);
   }
 
   onScale(event: Event) {
@@ -91,10 +66,7 @@ export class ItkView3d extends LitElement {
           )}
         </select>
       </div>
-      <slot
-        class="container"
-        @rendererConnected=${this.handleRendererConnected}
-      ></slot>
+      <slot class="fill" @renderer=${handleLogic(this.actor)}></slot>
     `;
   }
 
@@ -104,10 +76,11 @@ export class ItkView3d extends LitElement {
       flex-direction: column;
     }
 
-    .container {
+    .fill {
       flex: 1;
       min-height: 0;
       display: flex;
+      flex-direction: column;
     }
   `;
 }

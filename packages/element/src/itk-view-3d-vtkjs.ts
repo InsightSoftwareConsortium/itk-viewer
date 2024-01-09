@@ -5,6 +5,7 @@ import { Actor } from 'xstate';
 
 import { view3dLogic } from '@itk-viewer/vtkjs/view-3d-vtkjs.machine.js';
 import { createImplementation } from '@itk-viewer/vtkjs/view-3d-vtkjs.js';
+import { SpawnController } from './spawn-controller.js';
 
 const createLogic = () => {
   return view3dLogic.provide(createImplementation());
@@ -17,6 +18,13 @@ export class ItkView3dVtkjs extends LitElement {
   actor: ComponentActor | undefined;
   container: HTMLElement | undefined;
 
+  spawner = new SpawnController(
+    this,
+    'renderer',
+    createLogic(),
+    (actor: ComponentActor) => this.setActor(actor),
+  );
+
   getActor() {
     return this.actor;
   }
@@ -24,24 +32,6 @@ export class ItkView3dVtkjs extends LitElement {
   protected setActor(actor: ComponentActor) {
     this.actor = actor;
     this.sendContainer();
-  }
-
-  protected dispatchLogic() {
-    const event = new CustomEvent('rendererConnected', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        logic: createLogic(),
-        setActor: (actor: ComponentActor) => this.setActor(actor),
-      },
-    });
-
-    this.dispatchEvent(event);
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.dispatchLogic();
   }
 
   protected sendContainer() {
@@ -63,6 +53,7 @@ export class ItkView3dVtkjs extends LitElement {
   static styles = css`
     :host {
       flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
     }
