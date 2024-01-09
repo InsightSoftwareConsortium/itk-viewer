@@ -1,56 +1,39 @@
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { viewportMachine, ViewportActor } from '@itk-viewer/viewer/viewport.js';
+import { SpawnController, handleLogic } from './spawn-controller.js';
 
 @customElement('itk-viewport')
 export class ItkViewport extends LitElement {
   actor: ViewportActor | undefined;
 
+  spawner = new SpawnController(
+    this,
+    'viewport',
+    viewportMachine,
+    (actor) => (this.actor = actor),
+  );
+
   constructor() {
     super();
-  }
-
-  protected dispatchLogic() {
-    const event = new CustomEvent('viewportConnected', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        logic: viewportMachine,
-        setActor: (actor: ViewportActor) => this.setActor(actor),
-      },
-    });
-
-    this.dispatchEvent(event);
-  }
-
-  setActor(actor: ViewportActor) {
-    this.actor = actor;
   }
 
   getActor() {
     return this.actor;
   }
 
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.dispatchLogic();
+  setActor(actor: ViewportActor) {
+    this.actor = actor;
   }
 
-  handleViewConnected(e: Event) {
-    if (!this.actor) return;
-    e.stopPropagation();
-
-    const logic = (e as CustomEvent).detail.logic;
-    this.actor.send({ type: 'createView', logic });
-    const snap = this.actor.getSnapshot();
-    const actor = snap.children[snap.context.lastId];
-    (e as CustomEvent).detail.setActor(actor);
+  connectedCallback(): void {
+    super.connectedCallback();
   }
 
   render() {
     return html`
       <h1>Viewport</h1>
-      <slot @viewConnected=${this.handleViewConnected}></slot>
+      <slot @view=${handleLogic(this.actor)}></slot>
     `;
   }
 }

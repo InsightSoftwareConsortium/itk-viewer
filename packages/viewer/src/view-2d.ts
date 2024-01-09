@@ -1,6 +1,6 @@
 import {
   Actor,
-  AnyActorLogic,
+  AnyActorRef,
   assign,
   enqueueActions,
   fromPromise,
@@ -10,13 +10,13 @@ import {
   MultiscaleSpatialImage,
   BuiltImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { CreateChild } from './children.js';
 
 const viewContext = {
   slice: 0.5,
   scale: 0,
-  rendererIds: [] as Array<string>,
   image: undefined as MultiscaleSpatialImage | undefined,
-  lastId: '0',
+  spawned: {} as Record<string, AnyActorRef>,
 };
 
 export const view2d = setup({
@@ -26,7 +26,7 @@ export const view2d = setup({
       | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'setSlice'; slice: number }
       | { type: 'setScale'; scale: number }
-      | { type: 'createRenderer'; logic: AnyActorLogic };
+      | CreateChild;
   },
   actors: {
     imageBuilder: fromPromise(
@@ -58,21 +58,23 @@ export const view2d = setup({
   states: {
     view2d: {
       on: {
-        createRenderer: {
+        createChild: {
           actions: [
-            enqueueActions(({ enqueue, event, context }) => {
-              const id = String(Number(context.lastId) + 1);
-              enqueue.assign({
-                lastId: id,
-              });
-              // @ts-expect-error cannot spawn actor of type that is not in setup()
-              enqueue.spawnChild(event.logic, { id });
-              enqueue.assign({
-                rendererIds: ({ context: { rendererIds } }) => [
-                  ...rendererIds,
-                  id,
-                ],
-              });
+            assign({
+              spawned: ({
+                spawn,
+                context: { spawned },
+                event: { logic, onActor },
+              }) => {
+                // @ts-expect-error cannot spawn actor of type that is not in setup()
+                const child = spawn(logic);
+                const id = Object.keys(spawned).length.toString();
+                onActor(child);
+                return {
+                  ...spawned,
+                  [id]: child,
+                };
+              },
             }),
           ],
         },
@@ -84,8 +86,11 @@ export const view2d = setup({
               slice: 0.5,
             }),
             enqueueActions(({ context, enqueue }) => {
-              context.rendererIds.forEach((id) => {
-                enqueue.sendTo(id, { type: 'setImage', image: context.image });
+              Object.values(context.spawned).forEach((actor) => {
+                enqueue.sendTo(actor, {
+                  type: 'setImage',
+                  image: context.image,
+                });
               });
             }),
           ],
@@ -118,8 +123,8 @@ export const view2d = setup({
             onDone: {
               actions: [
                 enqueueActions(({ context, enqueue, event: { output } }) => {
-                  context.rendererIds.forEach((id) => {
-                    enqueue.sendTo(id, {
+                  Object.values(context.spawned).forEach((actor) => {
+                    enqueue.sendTo(actor, {
                       type: 'imageBuilt',
                       image: output,
                     });

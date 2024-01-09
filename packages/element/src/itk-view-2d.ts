@@ -2,6 +2,7 @@ import { View2dActor, view2d } from '@itk-viewer/viewer/view-2d.js';
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { SelectorController } from 'xstate-lit';
+import { SpawnController, handleLogic } from './spawn-controller.js';
 
 @customElement('itk-view-2d')
 export class ItkView2d extends LitElement {
@@ -10,21 +11,12 @@ export class ItkView2d extends LitElement {
   scaleCount: SelectorController<View2dActor, number> | undefined;
   slice: SelectorController<View2dActor, number> | undefined;
 
+  spawner = new SpawnController(this, 'view', view2d, (actor: View2dActor) =>
+    this.setActor(actor),
+  );
+
   constructor() {
     super();
-  }
-
-  protected dispatchLogic() {
-    const event = new CustomEvent('viewConnected', {
-      bubbles: true,
-      composed: true,
-      detail: {
-        logic: view2d,
-        setActor: (actor: View2dActor) => this.setActor(actor),
-      },
-    });
-
-    this.dispatchEvent(event);
   }
 
   setActor(actor: View2dActor) {
@@ -49,23 +41,6 @@ export class ItkView2d extends LitElement {
 
   getActor() {
     return this.actor;
-  }
-
-  connectedCallback(): void {
-    super.connectedCallback();
-    this.dispatchLogic();
-  }
-
-  handleRendererConnected(e: Event) {
-    e.stopPropagation();
-    if (!this.actor)
-      throw new Error('Child renderer connected but no actor available');
-
-    const logic = (e as CustomEvent).detail.logic;
-    this.actor.send({ type: 'createRenderer', logic });
-    const snap = this.actor.getSnapshot();
-    const actor = snap.children[snap.context.lastId];
-    (e as CustomEvent).detail.setActor(actor);
   }
 
   onSlice(event: Event) {
@@ -115,10 +90,7 @@ export class ItkView2d extends LitElement {
           )}
         </select>
       </div>
-      <slot
-        class="container"
-        @rendererConnected=${this.handleRendererConnected}
-      ></slot>
+      <slot class="container" @renderer=${handleLogic(this.actor)}></slot>
     `;
   }
 
