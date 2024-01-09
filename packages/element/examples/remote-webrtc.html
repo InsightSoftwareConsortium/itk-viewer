@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>itk-viewer</title>
+    <link rel="stylesheet" href="../src/index.css" />
+    <script type="module" src="../src/itk-remote-viewport-webrtc.ts"></script>
+    <script type="module" src="../src/itk-viewer-element.ts"></script>
+    <script type="module" src="./remote-webrtc.ts"></script>
+  </head>
+
+  <body>
+    <itk-viewer class="fill">
+      <itk-remote-viewport-webrtc
+        class="fill"
+        id="right-viewport"
+        server-config='{ "serverUrl": "%VITE_HYPHA_URL%", "serviceId": "%VITE_HYPHA_RENDER_SERVICE_ID%" }'
+      ></itk-remote-viewport-webrtc>
+    </itk-viewer>
+  </body>
+</html>

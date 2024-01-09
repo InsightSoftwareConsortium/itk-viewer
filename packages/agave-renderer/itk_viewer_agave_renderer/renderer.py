@@ -13,9 +13,38 @@ from itkwasm import Image, ImageType, PixelTypes, IntTypes
 import numpy as np
 from PIL import Image as PILImage
 
+import fractions
+from av import VideoFrame
+from aiortc import MediaStreamTrack
+
 # Should match constant in connected clients.
 # The WebRTC service id is different from this
 RENDERER_SERVICE_ID = "agave-renderer"
+
+class VideoTransformTrack(MediaStreamTrack):
+    """
+    A video stream track that transforms frames from an another track.
+    """
+
+    kind = "video"
+
+    def __init__(self, get_frame):
+        super().__init__()  # don't forget this!
+        self.count = 0
+        self.get_frame = get_frame
+
+    async def recv(self):
+        # frame = await self.track.recv()
+        img = await self.get_frame()
+        img = img or PILImage.new("RGBA", (1, 1))
+
+        frame = VideoFrame.from_image(img)
+
+        frame.pts = self.count 
+        self.count+=1
+        frame.time_base = fractions.Fraction(1, 1000)
+        return frame
+
 
 
 class AgaveRendererMemoryRedraw(agave.AgaveRenderer):
@@ -32,8 +61,7 @@ class AgaveRendererMemoryRedraw(agave.AgaveRenderer):
         # ready for next frame
         self.cb = agave.commandbuffer.CommandBuffer()
         img = PILImage.open(binarydata)
-        rgba = img.convert("RGBA").tobytes()
-        return rgba
+        return img
 
 
 # how to handle unknown events
@@ -50,6 +78,8 @@ class Renderer:
         self.width = width
         self.height = height
         self.unknown_event_action = unknown_event_action
+        self.render_time = .1
+        self.agave = None
 
     async def setup(self):
         # Note: the agave websocket server needs to be running
@@ -80,10 +110,23 @@ class Renderer:
         self.height = height
         self.agave.set_resolution(width, height)
 
-    async def render(self):
+    async def draw_frame(self):
+        if self.agave is None:
+            return
         r = self.agave
         start_time = time.time()
-        rgba = r.memory_redraw()
+        img = r.memory_redraw()
+        self.render_time = time.time() - start_time
+        return img
+    
+    def get_render_time(self):
+        return self.render_time
+
+    async def render(self):
+        if self.agave is None:
+            return
+        frame = await self.draw_frame()
+        rgba = frame.convert("RGBA").tobytes()
         image_type = ImageType(
             dimension=2,
             componentType=IntTypes.UInt8,
@@ -95,8 +138,7 @@ class Renderer:
         image.data = np.frombuffer(rgba, dtype=np.uint8)
         # rgba_encoded = encode(image) # lossless
         rgba_encoded = encode(image, not_reversible=True, quantization_step=0.02)
-        elapsed = time.time() - start_time
-        return {"frame": rgba_encoded, "renderTime": elapsed}
+        return {"frame": rgba_encoded, 'renderTime': self.render_time}
 
     async def update_renderer(self, events):
         r = self.agave
@@ -132,6 +174,17 @@ class Renderer:
             case UnknownEventAction.IGNORE:
                 pass
 
+
+    async def on_init(self, peer_connection):
+        @peer_connection.on("track")
+        def on_track(track):
+            peer_connection.addTrack(
+                VideoTransformTrack(self.draw_frame)
+            )
+            @track.on("ended")
+            async def on_ended():
+                pass
+
     async def connect(
         self,
         hypha_server_url,
@@ -161,6 +214,7 @@ class Renderer:
                 "setup": self.setup,
                 "loadImage": self.load_image,
                 "render": self.render,
+                "getRenderTime": self.get_render_time,
                 "updateRenderer": self.update_renderer,
             }
         )
@@ -170,6 +224,7 @@ class Renderer:
             service_id=service_id,
             config={
                 "visibility": "public",
+                "on_init": self.on_init,
             },
         )
 
