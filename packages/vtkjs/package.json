@@ -29,6 +29,6 @@
     "@itk-viewer/io": "workspace:^",
     "@itk-viewer/viewer": "workspace:^",
     "@kitware/vtk.js": "^29.3.0",
-    "xstate": "5.4.1"
+    "xstate": "5.5.1"
   }
 }
