@@ -30,6 +30,6 @@
     "@itk-wasm/htj2k": "2.1.0",
     "gl-matrix": "^3.4.3",
     "imjoy-rpc": "^0.5.46",
-    "xstate": "5.4.1"
+    "xstate": "5.5.1"
   }
 }
