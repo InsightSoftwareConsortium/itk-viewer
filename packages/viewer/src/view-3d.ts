@@ -12,11 +12,13 @@ import {
   BuiltImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { CreateChild } from './children.js';
+import { Camera } from './camera.js';
 
 const viewContext = {
   scale: 0,
   image: undefined as MultiscaleSpatialImage | undefined,
   spawned: {} as Record<string, AnyActorRef>,
+  camera: undefined as Camera | undefined,
 };
 
 export const view3d = setup({
@@ -26,6 +28,7 @@ export const view3d = setup({
       | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'setScale'; scale: number }
       | { type: 'createRenderer'; logic: AnyActorLogic }
+      | { type: 'setCamera'; camera: Camera }
       | CreateChild;
   },
   actors: {
@@ -43,25 +46,33 @@ export const view3d = setup({
       },
     ),
   },
+  actions: {
+    forwardToSpawned: ({ context, event }) => {
+      Object.values(context.spawned).forEach((actor) => {
+        actor.send(event);
+      });
+    },
+  },
 }).createMachine({
   context: () => {
     return JSON.parse(JSON.stringify(viewContext));
   },
   id: 'view3d',
-  initial: 'view2d',
+  initial: 'active',
   states: {
-    view2d: {
+    active: {
       on: {
         createChild: {
           actions: [
             assign({
               spawned: ({
                 spawn,
-                context: { spawned },
+                context: { spawned, camera },
                 event: { logic, onActor },
               }) => {
                 // @ts-expect-error cannot spawn actor of type that is not in setup()
                 const child = spawn(logic);
+                if (camera) child.send({ type: 'setCamera', camera });
                 const id = Object.keys(spawned).length.toString();
                 onActor(child);
                 return {
@@ -92,6 +103,14 @@ export const view3d = setup({
         setScale: {
           actions: [assign({ scale: ({ event }) => event.scale })],
           target: '.buildingImage',
+        },
+        setCamera: {
+          actions: [
+            assign({
+              camera: ({ event: { camera } }) => camera,
+            }),
+            'forwardToSpawned',
+          ],
         },
       },
       initial: 'idle',

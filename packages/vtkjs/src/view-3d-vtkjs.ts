@@ -1,4 +1,5 @@
 import { AnyEventObject } from 'xstate';
+import { ReadonlyMat4, mat4 } from 'gl-matrix';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume.js';
@@ -9,7 +10,6 @@ import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
 import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper.js';
 import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
-// import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage.js';
 
 import { Context, SetContainerEvent } from './view-3d-vtkjs.machine.js';
 
@@ -33,12 +33,6 @@ const setupContainer = (
   mapper.setSampleDistance(0.7);
   const actor = vtkVolume.newInstance();
   actor.setMapper(mapper);
-
-  // const iStyle = vtkInteractorStyleImage.newInstance();
-  // renderWindow.getInteractor().setInteractorStyle(iStyle);
-
-  // const camera = renderer.getActiveCamera();
-  // camera.setParallelProjection(true);
 
   return { actor, mapper, renderer, renderWindow };
 };
@@ -65,6 +59,11 @@ export const createImplementation = () => {
     renderWindow?.delete();
     renderWindow = undefined;
     rendererContainer.setContainer(undefined as unknown as HTMLElement);
+  };
+
+  const render = () => {
+    renderer!.resetCameraClippingRange();
+    renderWindow!.render();
   };
 
   const config = {
@@ -137,8 +136,16 @@ export const createImplementation = () => {
           actor.getProperty().setSpecular(0.3);
           actor.getProperty().setSpecularPower(8.0);
         }
-        renderer!.resetCamera();
-        renderWindow!.render();
+
+        render();
+      },
+
+      applyCameraPose: (_: unknown, params: { pose: ReadonlyMat4 }) => {
+        const cameraVtk = renderer?.getActiveCamera();
+        if (!cameraVtk) return;
+        cameraVtk.setViewMatrix(params.pose as mat4);
+
+        render();
       },
     },
   };
