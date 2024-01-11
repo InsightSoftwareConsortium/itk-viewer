@@ -7,10 +7,11 @@
     <title>itk-view-2d</title>
     <link rel="stylesheet" href="index.css" />
     <script type="module" src="../src/itk-viewer-element.ts"></script>
-    <script type="module" src="../src/itk-viewport.ts"></script>
+    <!-- avoid error: the name "itk-viewport" has already been used with this registry -->
+    <!-- <script type="module" src="../src/itk-viewport.ts"></script> -->
+    <script type="module" src="../src/itk-image-info-viewport.ts"></script>
     <script type="module" src="../src/itk-view-2d.ts"></script>
     <script type="module" src="../src/itk-view-2d-vtkjs.ts"></script>
-    <script type="module" src="../src/itk-image-info-viewport.ts"></script>
     <script type="module" src="../src/itk-view-3d.ts"></script>
     <script type="module" src="../src/itk-view-3d-vtkjs.ts"></script>
     <script type="module" src="multi-views.ts"></script>
@@ -25,7 +26,7 @@
           </itk-view-3d>
         </itk-viewport>
         <div class="fill">
-          <itk-image-info-viewport></itk-image-info-viewport>
+          <!-- <itk-image-info-viewport></itk-image-info-viewport> -->
           <itk-viewport class="fill">
             <itk-view-2d class="fill">
               <itk-view-2d-vtkjs></itk-view-2d-vtkjs>

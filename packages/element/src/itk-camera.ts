@@ -4,12 +4,7 @@ import { ReadonlyMat4, mat4 } from 'gl-matrix';
 import createOrbitCamera from 'orbit-camera';
 import type { OrbitCamera } from 'orbit-camera';
 
-import { ViewportActor } from '@itk-viewer/viewer/viewport.js';
-import {
-  Camera,
-  LookAtParams,
-  createCamera,
-} from '@itk-viewer/viewer/camera.js';
+import { Camera, LookAtParams } from '@itk-viewer/viewer/camera.js';
 import { SelectorController } from 'xstate-lit';
 
 const PAN_SPEED = 1;
@@ -129,32 +124,23 @@ const bindCamera = (
 @customElement('itk-camera')
 export class ItkCamera extends LitElement {
   @property({ attribute: false })
-  viewport: ViewportActor | undefined;
-
-  camera: Camera;
+  actor: Camera | undefined;
 
   oldLookAt: LookAtParams | undefined;
-  lookAt: SelectorController<Camera, LookAtParams>;
+  lookAt: SelectorController<Camera, LookAtParams> | undefined;
 
   cameraController: OrbitCamera;
   unBind: (() => unknown) | undefined;
 
   constructor() {
     super();
-    this.camera = createCamera();
-
-    this.lookAt = new SelectorController(
-      this,
-      this.camera,
-      (state) => state?.context.lookAt,
-    );
-
     this.cameraController = createOrbitCamera([0, 0, -1], [0, 0, 0], [0, 1, 0]);
   }
 
   firstUpdated(): void {
     this.unBind = bindCamera(this.cameraController, this, (pose) => {
-      this.camera.send({
+      if (!this.actor) return;
+      this.actor.send({
         type: 'setPose',
         pose,
       });
@@ -167,14 +153,20 @@ export class ItkCamera extends LitElement {
   }
 
   willUpdate(changedProperties: PropertyValues<this>) {
-    if (changedProperties.has('viewport')) {
-      this.viewport?.send({ type: 'setCamera', camera: this.camera });
+    if (changedProperties.has('actor') && this.actor) {
+      this.lookAt = new SelectorController(
+        this,
+        this.actor,
+        (state) => state?.context.lookAt,
+      );
     }
 
-    if (this.lookAt.value !== this.oldLookAt) {
-      this.oldLookAt = this.lookAt.value;
-      const { eye, center, up } = this.lookAt.value;
-      this.cameraController.lookAt(eye, center, up);
+    if (this.lookAt?.value !== this.oldLookAt) {
+      this.oldLookAt = this.lookAt?.value;
+      if (this.lookAt?.value) {
+        const { eye, center, up } = this.lookAt.value;
+        this.cameraController.lookAt(eye, center, up);
+      }
     }
   }
 

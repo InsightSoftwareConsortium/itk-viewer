@@ -4,14 +4,12 @@ import { ref } from 'lit/directives/ref.js';
 import { Actor } from 'xstate';
 
 import { view3dLogic } from '@itk-viewer/vtkjs/view-3d-vtkjs.machine.js';
-import { createImplementation } from '@itk-viewer/vtkjs/view-3d-vtkjs.js';
 import { SpawnController } from './spawn-controller.js';
+import { SelectorController } from 'xstate-lit';
+import { Camera } from '@itk-viewer/viewer/camera.js';
+import './itk-camera.js';
 
-const createLogic = () => {
-  return view3dLogic.provide(createImplementation());
-};
-
-type ComponentActor = Actor<ReturnType<typeof createLogic>>;
+type ComponentActor = Actor<typeof view3dLogic>;
 
 @customElement('itk-view-3d-vtkjs')
 export class ItkView3dVtkjs extends LitElement {
@@ -21,9 +19,13 @@ export class ItkView3dVtkjs extends LitElement {
   spawner = new SpawnController(
     this,
     'renderer',
-    createLogic(),
+    view3dLogic,
     (actor: ComponentActor) => this.setActor(actor),
   );
+
+  cameraActor:
+    | SelectorController<ComponentActor, Camera | undefined>
+    | undefined;
 
   getActor() {
     return this.actor;
@@ -32,6 +34,11 @@ export class ItkView3dVtkjs extends LitElement {
   protected setActor(actor: ComponentActor) {
     this.actor = actor;
     this.sendContainer();
+    this.cameraActor = new SelectorController(
+      this,
+      this.actor,
+      (state) => state.context.camera,
+    );
   }
 
   protected sendContainer() {
@@ -47,7 +54,11 @@ export class ItkView3dVtkjs extends LitElement {
   }
 
   render() {
-    return html`<div class="container" ${ref(this.onContainer)}></div>`;
+    return html`
+      <itk-camera .actor=${this.cameraActor?.value} class="container">
+        <div class="container" ${ref(this.onContainer)}></div>
+      </itk-camera>
+    `;
   }
 
   static styles = css`
@@ -62,6 +73,8 @@ export class ItkView3dVtkjs extends LitElement {
       flex: 1;
       min-height: 0;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
   `;
 }

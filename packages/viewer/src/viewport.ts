@@ -2,13 +2,12 @@ import { Actor, AnyActorRef, assign, sendParent, setup } from 'xstate';
 import { ReadonlyMat4, vec3 } from 'gl-matrix';
 
 import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { Camera } from './camera.js';
+import { cameraMachine, Camera } from './camera.js';
 import { CreateChild } from './children.js';
 
 type Context = {
   image?: MultiscaleSpatialImage;
-  camera?: Camera;
-  cameraSubscription?: ReturnType<Camera['subscribe']>;
+  camera: Camera;
   resolution: [number, number];
   spawned: Record<string, AnyActorRef>;
 };
@@ -44,12 +43,18 @@ export const viewportMachine = setup({
     forwardToParent: sendParent(({ event }) => {
       return event;
     }),
+    forwardToSpawned: ({ context, event }) => {
+      Object.values(context.spawned).forEach((actor) => {
+        actor.send(event);
+      });
+    },
     sendImage: ({ context }) => {
       Object.values(context.spawned).forEach((actor) => {
         actor.send({ type: 'setImage', image: context.image });
       });
     },
-    resetCameraPose: async ({ context: { image, camera } }) => {
+    resetCameraPose: async ({ context: { image }, self }) => {
+      const { camera } = self.getSnapshot().children;
       if (!image || !camera) return;
 
       const { pose: currentPose, verticalFieldOfView } =
@@ -99,14 +104,12 @@ export const viewportMachine = setup({
   },
 }).createMachine({
   id: 'viewport',
-  initial: 'active',
-  context: {
-    image: undefined,
-    camera: undefined,
-    cameraSubscription: undefined,
+  context: ({ spawn }) => ({
     resolution: [0, 0],
     spawned: {},
-  },
+    camera: spawn(cameraMachine, { id: 'camera' }),
+  }),
+  type: 'parallel',
   states: {
     active: {
       on: {
@@ -117,8 +120,11 @@ export const viewportMachine = setup({
                 spawn,
                 context: { spawned },
                 event: { logic, onActor },
+                self,
               }) => {
                 const child = spawn(logic);
+                const { camera } = self.getSnapshot().children;
+                child.send({ type: 'setCamera', camera });
                 const id = Object.keys(spawned).length.toString();
                 onActor(child);
                 return {
@@ -144,21 +150,8 @@ export const viewportMachine = setup({
               camera: ({ event: { camera } }: { event: SetCameraEvent }) =>
                 camera,
             }),
+            'forwardToSpawned',
             'resetCameraPose',
-            ({ context, self }) => {
-              if (context.cameraSubscription)
-                context.cameraSubscription.unsubscribe();
-
-              // Let observers of Viewport know that camera has updated
-              context.cameraSubscription = context.camera?.subscribe(
-                (cameraState) => {
-                  self.send({
-                    type: 'cameraPoseUpdated',
-                    pose: cameraState.context.pose,
-                  });
-                },
-              );
-            },
           ],
         },
         cameraPoseUpdated: {
