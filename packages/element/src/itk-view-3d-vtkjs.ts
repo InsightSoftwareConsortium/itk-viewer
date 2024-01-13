@@ -3,13 +3,13 @@ import { customElement } from 'lit/decorators.js';
 import { ref } from 'lit/directives/ref.js';
 import { Actor } from 'xstate';
 
-import { view3dLogic } from '@itk-viewer/vtkjs/view-3d-vtkjs.machine.js';
+import { createLogic } from '@itk-viewer/vtkjs/view-3d-vtkjs.js';
 import { SpawnController } from './spawn-controller.js';
 import { SelectorController } from 'xstate-lit';
 import { Camera } from '@itk-viewer/viewer/camera.js';
 import './itk-camera.js';
 
-type ComponentActor = Actor<typeof view3dLogic>;
+type ComponentActor = Actor<ReturnType<typeof createLogic>>;
 
 @customElement('itk-view-3d-vtkjs')
 export class ItkView3dVtkjs extends LitElement {
@@ -19,7 +19,7 @@ export class ItkView3dVtkjs extends LitElement {
   spawner = new SpawnController(
     this,
     'renderer',
-    view3dLogic,
+    createLogic(),
     (actor: ComponentActor) => this.setActor(actor),
   );
 

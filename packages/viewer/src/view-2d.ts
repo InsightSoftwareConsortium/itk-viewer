@@ -11,12 +11,14 @@ import {
   BuiltImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { CreateChild } from './children.js';
+import { Camera } from './camera.js';
 
 const viewContext = {
   slice: 0.5,
   scale: 0,
   image: undefined as MultiscaleSpatialImage | undefined,
   spawned: {} as Record<string, AnyActorRef>,
+  camera: undefined as Camera | undefined,
 };
 
 export const view2d = setup({
@@ -26,6 +28,7 @@ export const view2d = setup({
       | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'setSlice'; slice: number }
       | { type: 'setScale'; scale: number }
+      | { type: 'setCamera'; camera: Camera }
       | CreateChild;
   },
   actors: {
@@ -63,11 +66,12 @@ export const view2d = setup({
             assign({
               spawned: ({
                 spawn,
-                context: { spawned },
+                context: { spawned, camera },
                 event: { logic, onActor },
               }) => {
                 // @ts-expect-error cannot spawn actor of type that is not in setup()
                 const child = spawn(logic);
+                if (camera) child.send({ type: 'setCamera', camera });
                 const id = Object.keys(spawned).length.toString();
                 onActor(child);
                 return {
@@ -103,6 +107,14 @@ export const view2d = setup({
         setScale: {
           actions: [assign({ scale: ({ event }) => event.scale })],
           target: '.buildingImage',
+        },
+        setCamera: {
+          actions: [
+            assign({
+              camera: ({ event: { camera } }) => camera,
+            }),
+            'forwardToSpawned',
+          ],
         },
       },
       initial: 'idle',

@@ -14,26 +14,21 @@ document.addEventListener('DOMContentLoaded', async function () {
   const viewerElement = document.querySelector('itk-viewer');
   if (!viewerElement) throw new Error('Could not find element');
   const viewer = viewerElement.getActor();
-
   viewer.send({ type: 'setImage', image, name: 'image' });
 
   const bigView = document.querySelectorAll('itk-view-2d')[0];
   bigView.getActor()?.send({ type: 'setScale', scale: 0 });
 
-  const viewportElement = document.querySelectorAll('itk-view-2d')[1];
-  if (!viewportElement) throw new Error('Could not find viewport element');
-  const viewActor = viewportElement.getActor();
+  const lastView = document.querySelectorAll('itk-viewport')[2];
+  if (!lastView) throw new Error('Could not find viewport element');
+  const viewActor = lastView.getActor();
   if (!viewActor) throw new Error('No view actor');
-  viewActor.send({ type: 'setSlice', slice: 0.8 });
 
-  const viewportLast = document.querySelectorAll('itk-view-2d')[1];
   const image2dUrl = new URL(
     '/ome-ngff-prototypes/single_image/v0.4/tyx.ome.zarr',
     document.location.origin,
   );
   const image2d = await ZarrMultiscaleSpatialImage.fromUrl(image2dUrl);
-
-  const viewport = viewportLast.getActor();
-  if (!viewport) throw new Error('No viewport actor');
-  viewport.send({ type: 'setImage', image: image2d });
+  viewActor.send({ type: 'setImage', image: image2d });
+  // viewActor.send({ type: 'setSlice', slice: 0.8 });
 });

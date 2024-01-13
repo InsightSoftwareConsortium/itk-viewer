@@ -6,8 +6,6 @@ import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera } from '@itk-viewer/viewer/camera.js';
 import { ReadonlyMat4 } from 'gl-matrix';
 
-import { createImplementation } from './view-3d-vtkjs.js';
-
 export type Context = {
   rendererContainer: vtkGenericRenderWindow;
   camera: Camera | undefined;
@@ -28,7 +26,18 @@ export const view3dLogic = setup({
       | { type: 'setCameraPose'; pose: ReadonlyMat4 }
       | { type: 'setCamera'; camera: Camera };
   },
-  ...createImplementation(),
+  actions: {
+    setContainer: () => {
+      throw new Error('Function not implemented.');
+    },
+    imageBuilt: () => {
+      throw new Error('Function not implemented.');
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    applyCameraPose: (_, __: { pose: ReadonlyMat4 }) => {
+      throw new Error('Function not implemented.');
+    },
+  },
 }).createMachine({
   context: () => {
     return {

@@ -11,7 +11,11 @@ import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
 import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper.js';
 import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 
-import { Context, SetContainerEvent } from './view-3d-vtkjs.machine.js';
+import {
+  Context,
+  SetContainerEvent,
+  view3dLogic,
+} from './view-3d-vtkjs.machine.js';
 
 const setupContainer = (
   rendererContainer: vtkGenericRenderWindow,
@@ -39,7 +43,7 @@ const setupContainer = (
   return { actor, mapper, renderer, renderWindow };
 };
 
-export const createImplementation = () => {
+const createImplementation = () => {
   let actor: vtkVolume.vtkVolume | undefined = undefined;
   let mapper: vtkVolumeMapper.vtkVolumeMapper | undefined = undefined;
   let renderer: vtkRenderer.vtkRenderer | undefined = undefined;
@@ -153,4 +157,8 @@ export const createImplementation = () => {
   };
 
   return config;
+};
+
+export const createLogic = () => {
+  return view3dLogic.provide(createImplementation());
 };
