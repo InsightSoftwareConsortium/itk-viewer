@@ -1,17 +1,16 @@
 import { LitElement, PropertyValues, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { ReadonlyMat4, mat4 } from 'gl-matrix';
-import createOrbitCamera from 'orbit-camera';
-import type { OrbitCamera } from 'orbit-camera';
+import { createArcballCamera, ArcballCamera } from '@itk-viewer/arcball';
 
 import { Camera, LookAtParams } from '@itk-viewer/viewer/camera.js';
 import { SelectorController } from 'xstate-lit';
 
 const PAN_SPEED = 1;
-const ZOOM_SPEED = 0.0002;
+const ZOOM_SPEED = 0.001;
 
 const bindCamera = (
-  camera: OrbitCamera,
+  camera: ArcballCamera,
   viewport: HTMLElement,
   onUpdate: (view: ReadonlyMat4) => unknown,
 ) => {
@@ -129,12 +128,16 @@ export class ItkCamera extends LitElement {
   oldLookAt: LookAtParams | undefined;
   lookAt: SelectorController<Camera, LookAtParams> | undefined;
 
-  cameraController: OrbitCamera;
+  cameraController: ArcballCamera;
   unBind: (() => unknown) | undefined;
 
   constructor() {
     super();
-    this.cameraController = createOrbitCamera([0, 0, -1], [0, 0, 0], [0, 1, 0]);
+    this.cameraController = createArcballCamera(
+      [0, 0, -1],
+      [0, 0, 0],
+      [0, 1, 0],
+    );
   }
 
   firstUpdated(): void {

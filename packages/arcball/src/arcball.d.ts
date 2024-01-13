@@ -1,7 +1,7 @@
-declare module 'orbit-camera' {
+declare module '@itk-viewer/arcball' {
   import { mat4, ReadonlyVec2, ReadonlyVec3 } from 'gl-matrix';
 
-  export type OrbitCamera = {
+  export type ArcballCamera = {
     view: <M extends mat4>(outMat?: M) => M;
     rotate: (da: ReadonlyVec2, db: ReadonlyVec2) => void;
     pan: (dpan: ReadonlyVec2 | ReadonlyVec3) => void;
@@ -10,9 +10,9 @@ declare module 'orbit-camera' {
     distance: number;
   };
 
-  export default function createOrbitCamera(
+  export function createArcballCamera(
     eye: number[],
     center: number[],
     up: number[],
-  ): OrbitCamera;
+  ): ArcballCamera;
 }

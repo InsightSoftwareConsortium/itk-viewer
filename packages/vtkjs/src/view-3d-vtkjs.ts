@@ -29,6 +29,8 @@ const setupContainer = (
   const renderer = rendererContainer.getRenderer();
   const renderWindow = rendererContainer.getRenderWindow();
 
+  renderWindow.getInteractor().setInteractorStyle(undefined);
+
   const mapper = vtkVolumeMapper.newInstance();
   mapper.setSampleDistance(0.7);
   const actor = vtkVolume.newInstance();
