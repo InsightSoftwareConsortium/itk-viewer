@@ -54,6 +54,7 @@
     "@itk-viewer/remote-viewport": "workspace:^",
     "@itk-viewer/viewer": "workspace:^",
     "@itk-viewer/vtkjs": "workspace:^",
+    "@itk-viewer/arcball": "workspace:^",
     "@lit/context": "^1.1.0",
     "gl-matrix": "^3.4.3",
     "itk-wasm": "1.0.0-b.160",

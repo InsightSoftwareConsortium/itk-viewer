@@ -1,0 +1,45 @@
+{
+  "name": "@itk-viewer/arcball",
+  "version": "0.0.0",
+  "description": "Rotate, pan, and zoom a camera using an arcball.",
+  "main": "src/arcball.js",
+  "types": "src/arcball.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/InsightSoftwareConsortium/itk-viewer.git"
+  },
+  "keywords": [
+    "3d",
+    "visualization",
+    "ray-tracing",
+    "webgl",
+    "webgpu",
+    "medical",
+    "scientific",
+    "itk",
+    "wasm",
+    "webassembly",
+    "imjoy",
+    "xstate",
+    "image",
+    "geometry",
+    "point",
+    "cloud",
+    "mesh",
+    "graphics"
+  ],
+  "author": "Paul Elliott",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer/issues"
+  },
+  "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
+  "dependencies": {
+    "gl-matrix": "^3.4.3"
+  },
+  "eslintConfig": {
+    "env": {
+      "browser": true
+    }
+  }
+}
