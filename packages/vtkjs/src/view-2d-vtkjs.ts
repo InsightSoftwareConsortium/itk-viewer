@@ -1,16 +1,15 @@
-import { AnyEventObject, createActor } from 'xstate';
+import { AnyEventObject } from 'xstate';
+import { ReadonlyMat4, mat4 } from 'gl-matrix';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper.js';
-import Constants from '@kitware/vtk.js/Rendering/Core/ImageMapper/Constants.js';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice.js';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
 import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper.js';
-import vtkInteractorStyleImage from '@kitware/vtk.js/Interaction/Style/InteractorStyleImage.js';
+// import Constants from '@kitware/vtk.js/Rendering/Core/ImageMapper/Constants.js';
 
-import { view2d } from '@itk-viewer/viewer/view-2d.js';
 import {
   Context,
   SetContainerEvent,
@@ -38,13 +37,10 @@ const setupContainer = (
 
   actor!.setMapper(mapper!);
 
-  const iStyle = vtkInteractorStyleImage.newInstance();
-  // @ts-expect-error vtkInteractorStyleImage has no setInteractionMode
-  iStyle.setInteractionMode('IMAGE_SLICING');
-  renderWindow.getInteractor().setInteractorStyle(iStyle);
+  renderWindow.getInteractor().setInteractorStyle(undefined);
 
-  const camera = renderer!.getActiveCamera();
-  camera.setParallelProjection(true);
+  // const camera = renderer!.getActiveCamera();
+  // camera.setParallelProjection(true);
 
   return { actor, mapper, renderer, renderWindow };
 };
@@ -67,6 +63,11 @@ const createImplementation = () => {
     renderWindow?.delete();
     renderWindow = undefined;
     rendererContainer.setContainer(undefined as unknown as HTMLElement);
+  };
+
+  const render = () => {
+    renderer!.resetCameraClippingRange();
+    renderWindow!.render();
   };
 
   const config = {
@@ -94,31 +95,28 @@ const createImplementation = () => {
         const vtkImage = vtkITKHelper.convertItkToVtkImage(image);
         mapper!.setInputData(vtkImage);
         // mapper!.setSliceAtFocalPoint(true);
-        mapper!.setSlicingMode(Constants.SlicingMode.Z);
+        // mapper!.setSlicingMode(Constants.SlicingMode.Z);
 
         // add actor to renderer after mapper has data to avoid vtkjs message
         if (!addedActorToRenderer) {
           addedActorToRenderer = true;
           renderer!.addActor(actor!);
         }
-        renderer!.resetCamera();
-        renderWindow!.render();
+        render();
       },
-    },
 
-    actors: {
-      view2d,
+      applyCameraPose: (_: unknown, params: { pose: ReadonlyMat4 }) => {
+        const cameraVtk = renderer?.getActiveCamera();
+        if (!cameraVtk) return;
+        cameraVtk.setViewMatrix(params.pose as mat4);
+        render();
+      },
     },
   };
 
   return config;
 };
 
-// These type annotations are needed: https://github.com/microsoft/TypeScript/issues/47663#issuecomment-1519138189
-export type Logic = typeof view2dLogic;
-
-export const createRenderer: () => Logic = () => {
+export const createLogic = () => {
   return view2dLogic.provide(createImplementation());
 };
-
-export type View2dVtkjsActor = ReturnType<typeof createActor<Logic>>;

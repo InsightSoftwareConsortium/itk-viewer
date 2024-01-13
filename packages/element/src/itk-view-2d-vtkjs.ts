@@ -1,32 +1,44 @@
 import { LitElement, css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { ref } from 'lit/directives/ref.js';
+import { SelectorController } from 'xstate-lit';
+import { Actor } from 'xstate';
 
-import {
-  View2dVtkjsActor,
-  createRenderer,
-} from '@itk-viewer/vtkjs/view-2d-vtkjs.js';
+import { createLogic } from '@itk-viewer/vtkjs/view-2d-vtkjs.js';
 import { SpawnController } from './spawn-controller.js';
+import { Camera } from '@itk-viewer/viewer/camera.js';
+import './itk-camera.js';
+
+type ComponentActor = Actor<ReturnType<typeof createLogic>>;
 
 @customElement('itk-view-2d-vtkjs')
 export class ItkView2dVtkjs extends LitElement {
-  actor: View2dVtkjsActor | undefined;
+  actor: ComponentActor | undefined;
   container: HTMLElement | undefined;
 
   spawner = new SpawnController(
     this,
     'renderer',
-    createRenderer(),
-    (actor: View2dVtkjsActor) => this.setActor(actor),
+    createLogic(),
+    (actor: ComponentActor) => this.setActor(actor),
   );
+
+  cameraActor:
+    | SelectorController<ComponentActor, Camera | undefined>
+    | undefined;
 
   getActor() {
     return this.actor;
   }
 
-  setActor(actor: View2dVtkjsActor) {
+  setActor(actor: ComponentActor) {
     this.actor = actor;
     this.sendContainer();
+    this.cameraActor = new SelectorController(
+      this,
+      this.actor,
+      (state) => state.context.camera,
+    );
   }
 
   protected sendContainer() {
@@ -42,7 +54,11 @@ export class ItkView2dVtkjs extends LitElement {
   }
 
   render() {
-    return html`<div class="container" ${ref(this.onContainer)}></div>`;
+    return html`
+      <itk-camera .actor=${this.cameraActor?.value} class="container">
+        <div class="container" ${ref(this.onContainer)}></div>
+      </itk-camera>
+    `;
   }
 
   static styles = css`
@@ -56,6 +72,8 @@ export class ItkView2dVtkjs extends LitElement {
       flex: 1;
       min-height: 0;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
   `;
 }
