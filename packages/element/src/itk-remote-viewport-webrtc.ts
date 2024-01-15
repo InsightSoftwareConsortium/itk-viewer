@@ -18,6 +18,9 @@ import './itk-camera.js';
 import { Bounds } from '@itk-viewer/io/types.js';
 import { chunk } from '@itk-viewer/io/dimensionUtils.js';
 import { viewportMachine } from '@itk-viewer/viewer/viewport.js';
+import { Camera } from '@itk-viewer/viewer/camera.js';
+
+type ViewportActor = ActorRefFrom<typeof viewportMachine>;
 
 @customElement('itk-remote-viewport-webrtc')
 export class ItkRemoteViewport extends ItkViewport {
@@ -27,10 +30,9 @@ export class ItkRemoteViewport extends ItkViewport {
   @property({ type: Number })
   density = 30;
 
-  camera: Ref<HTMLElement> = createRef();
-
   viewport: ActorRefFrom<typeof viewportMachine>;
   remote: RemoteActor;
+  cameraActor: SelectorController<ViewportActor, Camera>;
 
   remoteOnline: SelectorController<RemoteActor, boolean>;
   lastRemoteOnlineValue = false;
@@ -81,6 +83,11 @@ export class ItkRemoteViewport extends ItkViewport {
     );
     this.viewport = viewport;
     this.remote = remote;
+    this.cameraActor = new SelectorController(
+      this,
+      this.viewport,
+      (state) => state.context.camera,
+    );
     this.remoteOnline = new SelectorController(this, this.remote, (state) =>
       state.matches('root.online'),
     );
@@ -251,7 +258,7 @@ export class ItkRemoteViewport extends ItkViewport {
         `,
       )}
 
-      <itk-camera ${ref(this.camera)} .viewport=${this.viewport} class="camera">
+      <itk-camera .actor=${this.cameraActor.value} class="camera">
         <video
           ${ref(this.canvas)}
           autoplay="true"
