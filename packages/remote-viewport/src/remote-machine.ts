@@ -9,7 +9,6 @@ import {
 } from 'xstate';
 import type { Image } from '@itk-wasm/htj2k';
 
-// import { Viewport } from '@itk-viewer/viewer/viewport.js';
 import { fpsWatcher } from '@itk-viewer/viewer/fps-watcher.js';
 import { viewportMachine } from '@itk-viewer/viewer/viewport.js';
 import {
@@ -24,6 +23,7 @@ import {
   createBounds,
   ensuredDims,
 } from '@itk-viewer/io/dimensionUtils.js';
+import { state } from 'lit/decorators.js';
 
 const MAX_IMAGE_BYTES_DEFAULT = 4000 * 1000 * 1000; // 4000 MB
 
@@ -191,27 +191,36 @@ export const remoteMachine = createMachine(
       events: Event;
     },
     id: 'remote',
-    context: ({ spawn }) => ({
-      rendererState: {
-        density: 30,
-        cameraPose: mat4.create(),
-        renderSize: [1, 1] as [number, number],
-        normalizedClipBounds: [0, 1, 0, 1, 0, 1] as Bounds,
-      },
-      queuedRendererCommands: [],
-      stagedRendererCommands: [],
+    context: ({ spawn, self }) => {
+      const viewport = spawn(viewportMachine, { id: 'viewport' });
+      viewport.getSnapshot().context.camera.subscribe((state) => {
+        self.send({
+          type: 'cameraPoseUpdated',
+          pose: state.context.pose,
+        });
+      });
+      return {
+        rendererState: {
+          density: 30,
+          cameraPose: mat4.create(),
+          renderSize: [1, 1] as [number, number],
+          normalizedClipBounds: [0, 1, 0, 1, 0, 1] as Bounds,
+        },
+        queuedRendererCommands: [],
+        stagedRendererCommands: [],
 
-      imageScale: 0,
-      // computed async image values
-      toRendererCoordinateSystem: mat4.create(),
-      imageWorldBounds: createBounds(),
-      clipBounds: createBounds(),
-      loadedImageClipBounds: createBounds(),
-      imageWorldToIndex: mat4.create(),
+        imageScale: 0,
+        // computed async image values
+        toRendererCoordinateSystem: mat4.create(),
+        imageWorldBounds: createBounds(),
+        clipBounds: createBounds(),
+        loadedImageClipBounds: createBounds(),
+        imageWorldToIndex: mat4.create(),
 
-      maxImageBytes: MAX_IMAGE_BYTES_DEFAULT,
-      viewport: spawn(viewportMachine, { id: 'viewport' }),
-    }),
+        maxImageBytes: MAX_IMAGE_BYTES_DEFAULT,
+        viewport,
+      };
+    },
     type: 'parallel',
     states: {
       imageProcessor: {
