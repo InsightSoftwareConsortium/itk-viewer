@@ -8,8 +8,6 @@ setPipelinesBaseUrl(pipelineBaseUrl);
 
 document.addEventListener('DOMContentLoaded', async function () {
   const imagePath = '/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr';
-  // const imagePath = '/ome-ngff-prototypes/single_image/v0.4/tczyx.ome.zarr';
-  // const imagePath = '/astronaut.zarr';
   const url = new URL(imagePath, document.location.origin);
   const image = await ZarrMultiscaleSpatialImage.fromUrl(url);
 

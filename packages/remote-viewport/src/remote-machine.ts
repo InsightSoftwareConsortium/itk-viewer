@@ -23,7 +23,6 @@ import {
   createBounds,
   ensuredDims,
 } from '@itk-viewer/io/dimensionUtils.js';
-import { state } from 'lit/decorators.js';
 
 const MAX_IMAGE_BYTES_DEFAULT = 4000 * 1000 * 1000; // 4000 MB
 

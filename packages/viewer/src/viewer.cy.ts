@@ -28,7 +28,12 @@ describe('Viewer', () => {
       },
     });
     const viewer = createViewer();
-    viewer.send({ type: 'createViewport', logic });
+    viewer.send({
+      type: 'createChild',
+      childType: 'viewport',
+      logic,
+      onActor: () => {},
+    });
     expect(childStarted).to.be.true;
 
     const image = await ZarrMultiscaleSpatialImage.fromUrl(

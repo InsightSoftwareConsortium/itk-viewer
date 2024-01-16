@@ -1,0 +1,63 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="image-viewer" />
+    <meta name="apple-mobile-web-app-title" content="image-viewer" />
+    <meta name="theme-color" content="#8B8B8B" />
+    <meta name="msapplication-navbutton-color" content="#8B8B8B" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="msapplication-starturl" content="/itk-vtk-viewer/app/" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/imjoy-rpc@0.5.42/dist/hypha-rpc-websocket.min.js"></script>
+  </head>
+
+  <body>
+    <div class="content" style="display: flex"></div>
+
+    <script type="module">
+      async function setupHypha(config) {
+        globalThis.config = config;
+        const url = config.server_url;
+        const extraHeaders = {};
+        if (config.token) {
+          extraHeaders.Authorization = 'Bearer ' + config.token;
+        }
+        // Note: extraHeaders only works for polling transport (the default)
+        // If we switch to websocket only, the headers won't be respected
+        if (globalThis.server) {
+          globalThis.server.disconnect();
+        }
+        const server = await hyphaWebsocketClient.connectToServer(config);
+        return server;
+      }
+
+      const container = document.querySelector('.content');
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const workspace = urlParams.get('workspace');
+      const server_url = urlParams.get('server-url');
+      const config = {
+        client_id: 'itkwidgets-control',
+        name: 'itkwidgets_control',
+        server_url,
+        workspace: workspace,
+        token: urlParams.get('token'),
+      };
+      setupHypha(config).then(async (server) => {
+        const viewer = await server.getService('itk-viewer');
+        viewer.setImage(
+          'https://dandiarchive.s3.amazonaws.com/zarr/7723d02f-1f71-4553-a7b0-47bda1ae8b42',
+        );
+      });
+    </script>
+  </body>
+</html>

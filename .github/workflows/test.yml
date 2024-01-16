@@ -27,8 +27,7 @@ jobs:
       - name: Test with Chrome
         uses: cypress-io/github-action@v5
         with:
-          start: pnpm run test:ci
-          record: true
+          start: pnpm run test
           component: true
           browser: chrome
         env:
@@ -38,20 +37,9 @@ jobs:
       - name: Test with Firefox
         uses: cypress-io/github-action@v5
         with:
-          start: pnpm run test:ci
-          record: true
+          start: pnpm run cy:component
           component: true
           browser: firefox
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Not quite read for automated publication
-  #- name: Publish
-  #env:
-  #GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-  #run: |
-  #git config --global user.name "GitHub Actions"
-  #git config --global user.email "itk+community@discourse.itk.org"
-  #npx semantic-release

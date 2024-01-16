@@ -4,7 +4,7 @@ import { ref } from 'lit/directives/ref.js';
 import { Actor } from 'xstate';
 
 import { createLogic } from '@itk-viewer/vtkjs/view-3d-vtkjs.js';
-import { SpawnController } from './spawn-controller.js';
+import { dispatchSpawn } from './spawn-controller.js';
 import { SelectorController } from 'xstate-lit';
 import { Camera } from '@itk-viewer/viewer/camera.js';
 import './itk-camera.js';
@@ -15,13 +15,7 @@ type ComponentActor = Actor<ReturnType<typeof createLogic>>;
 export class ItkView3dVtkjs extends LitElement {
   actor: ComponentActor | undefined;
   container: HTMLElement | undefined;
-
-  spawner = new SpawnController(
-    this,
-    'renderer',
-    createLogic(),
-    (actor: ComponentActor) => this.setActor(actor),
-  );
+  dispatched = false;
 
   cameraActor:
     | SelectorController<ComponentActor, Camera | undefined>
@@ -54,6 +48,13 @@ export class ItkView3dVtkjs extends LitElement {
   }
 
   render() {
+    if (!this.dispatched) {
+      dispatchSpawn(this, 'renderer', createLogic(), (actor) =>
+        this.setActor(actor),
+      );
+      this.dispatched = true;
+    }
+
     return html`
       <itk-camera .actor=${this.cameraActor?.value} class="container">
         <div class="container" ${ref(this.onContainer)}></div>

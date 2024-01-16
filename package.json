@@ -13,11 +13,9 @@
     "setup-micromamba": "setup-micromamba --micromamba-binary-path ./micromamba/micromamba --micromamba-root-path ./micromamba --init-shell none --create-environment true --environment-file environment.yml --log-level info --run-command \"clean -fya\"",
     "start-hypha": "pnpm setup-micromamba && ./micromamba/micromamba run -r micromamba -n itk-viewer hypha --host=127.0.0.1 --port=37580",
     "test": "pnpm test:downloadData && concurrently -n \"hypha,cypress\" --success first -k \"pnpm start-hypha\" \"pnpm cy:component\"",
-    "test:ci": "pnpm test:downloadData && pnpm cy:component:ci",
     "test:downloadData": "node test/downloadData.mjs",
     "cy:watch": "cypress open --component -b chrome",
     "cy:component": "cypress run --component",
-    "cy:component:ci": "cypress run --component --record",
     "cy:component:chrome": "cypress run --component --browser chrome",
     "clean": "git clean -fdx",
     "ci:publish": "pnpm publish -r --access public"

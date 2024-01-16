@@ -1,4 +1,11 @@
-import { AnyActorRef, assign, raise, setup } from 'xstate';
+import {
+  ActorRefFrom,
+  AnyActorRef,
+  assign,
+  createActor,
+  raise,
+  setup,
+} from 'xstate';
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { CreateChild } from './children.js';
 
@@ -82,3 +89,9 @@ export const viewerMachine = setup({
     },
   },
 });
+
+export const createViewer = () => {
+  return createActor(viewerMachine).start();
+};
+
+export type Viewer = ActorRefFrom<typeof viewerMachine>;

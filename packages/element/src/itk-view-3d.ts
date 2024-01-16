@@ -2,7 +2,7 @@ import { View3dActor, view3d } from '@itk-viewer/viewer/view-3d.js';
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { SelectorController } from 'xstate-lit';
-import { SpawnController, handleLogic } from './spawn-controller.js';
+import { dispatchSpawn, handleLogic } from './spawn-controller.js';
 
 type Actor = View3dActor;
 
@@ -11,14 +11,7 @@ export class ItkView3d extends LitElement {
   actor: Actor | undefined;
   scale: SelectorController<Actor, number> | undefined;
   scaleCount: SelectorController<Actor, number> | undefined;
-
-  spawner = new SpawnController(this, 'view', view3d, (actor: Actor) =>
-    this.setActor(actor),
-  );
-
-  constructor() {
-    super();
-  }
+  dispatched = false;
 
   setActor(actor: Actor) {
     this.actor = actor;
@@ -46,6 +39,11 @@ export class ItkView3d extends LitElement {
   }
 
   render() {
+    if (!this.dispatched) {
+      dispatchSpawn(this, 'view', view3d, (actor) => this.setActor(actor));
+      this.dispatched = true;
+    }
+
     const scale = this.scale?.value ?? 0;
     const scaleCount = this.scaleCount?.value ?? 1;
     const scaleOptions = Array.from(
