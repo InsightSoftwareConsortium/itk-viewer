@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="image-viewer" />
+    <meta name="apple-mobile-web-app-title" content="image-viewer" />
+    <meta name="theme-color" content="#8B8B8B" />
+    <meta name="msapplication-navbutton-color" content="#8B8B8B" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="msapplication-starturl" content="/itk-vtk-viewer/app/" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/imjoy-rpc@0.5.42/dist/hypha-rpc-websocket.min.js"></script>
+  </head>
+
+  <body style="height: 100vh; margin: 0; display: flex">
+    <div class="content" style="flex: 1; display: flex"></div>
+
+    <script type="module">
+      import '@itk-viewer/element/itk-viewer-element.js';
+      import '@itk-viewer/element/itk-viewer-3d.js';
+      import { setup } from './src/viewer.ts';
+      import { setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
+
+      const pipelineWorkerUrl =
+        '/itk/web-workers/itk-wasm-pipeline.min.worker.js';
+      setPipelineWorkerUrl(pipelineWorkerUrl);
+      const pipelineBaseUrl = '/itk/pipelines';
+      setPipelinesBaseUrl(pipelineBaseUrl);
+
+      async function setupHypha(config) {
+        globalThis.config = config;
+        const url = config.server_url;
+        const extraHeaders = {};
+        if (config.token) {
+          extraHeaders.Authorization = 'Bearer ' + config.token;
+        }
+        // Note: extraHeaders only works for polling transport (the default)
+        // If we switch to websocket only, the headers won't be respected
+        if (globalThis.server) {
+          globalThis.server.disconnect();
+        }
+        const server = await hyphaWebsocketClient.connectToServer(config);
+        return server;
+      }
+
+      async function setupViewerForImJoy(server, container) {
+        // itkVtkViewer.imJoyCodecs.forEach((codec) => {
+        //   server.registerCodec(codec);
+        // });
+        const viewerElement = document.createElement('itk-viewer-3d');
+        container.appendChild(viewerElement);
+        setTimeout(async () => {
+          const actor = viewerElement.getActor();
+          const viewer = await setup(server, actor);
+          //   const imageUrl =
+          //     'http://localhost:8082/test-data/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr';
+          //   viewer.setImage(imageUrl);
+        }, 0);
+      }
+
+      const container = document.querySelector('.content');
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const workspace = urlParams.get('workspace');
+      const server_url = urlParams.get('server-url');
+      const config = {
+        client_id: 'itkwidgets-client',
+        name: 'itkwidgets_client',
+        server_url,
+        // workspace: workspace,
+        // token: urlParams.get('token'),
+      };
+      setupHypha(config).then((server) => {
+        setupViewerForImJoy(server, container);
+      });
+    </script>
+  </body>
+</html>

@@ -2,7 +2,7 @@ import { View2dActor, view2d } from '@itk-viewer/viewer/view-2d.js';
 import { LitElement, css, html, nothing } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { SelectorController } from 'xstate-lit';
-import { SpawnController, handleLogic } from './spawn-controller.js';
+import { dispatchSpawn, handleLogic } from './spawn-controller.js';
 
 @customElement('itk-view-2d')
 export class ItkView2d extends LitElement {
@@ -10,10 +10,7 @@ export class ItkView2d extends LitElement {
   scale: SelectorController<View2dActor, number> | undefined;
   scaleCount: SelectorController<View2dActor, number> | undefined;
   slice: SelectorController<View2dActor, number> | undefined;
-
-  spawner = new SpawnController(this, 'view', view2d, (actor: View2dActor) =>
-    this.setActor(actor),
-  );
+  dispatched = false;
 
   constructor() {
     super();
@@ -58,6 +55,11 @@ export class ItkView2d extends LitElement {
   }
 
   render() {
+    if (!this.dispatched) {
+      dispatchSpawn(this, 'view', view2d, (actor) => this.setActor(actor));
+      this.dispatched = true;
+    }
+
     const slice = this.slice?.value ?? 0;
     const scale = this.scale?.value ?? 0;
     const scaleCount = this.scaleCount?.value ?? 1;

@@ -1,4 +1,3 @@
-import { mat4 } from 'gl-matrix';
 import { createActor, createMachine } from 'xstate';
 import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
@@ -35,29 +34,14 @@ describe('Viewport', () => {
     cy.wrap(viewport.getSnapshot().context.image).should('equal', image);
   });
 
-  it('updates observers when camera updates', () => {
+  it('adopts a camera actor', () => {
     const viewport = createViewport();
-
     const camera = createCamera();
-
     viewport.send({ type: 'setCamera', camera });
 
     cy.wrap(
       viewport.getSnapshot().context.camera?.getSnapshot().context.pose,
     ).should('deep.equal', camera.getSnapshot().context.pose);
-
-    let cameraPose = undefined;
-    viewport.subscribe((state) => {
-      cameraPose = state.context.camera?.getSnapshot().context.pose;
-    });
-
-    const targetCameraPose = mat4.fromTranslation(mat4.create(), [1, 2, 3]);
-    camera.send({
-      type: 'setPose',
-      pose: targetCameraPose,
-    });
-
-    cy.wrap(cameraPose).should('deep.equal', targetCameraPose);
   });
 
   it('spawns view actors', async () => {
@@ -76,7 +60,12 @@ describe('Viewport', () => {
       },
     });
     const viewport = createViewport();
-    viewport.send({ type: 'createView', logic: view });
+    viewport.send({
+      type: 'createChild',
+      childType: 'viewport',
+      logic: view,
+      onActor: () => {},
+    });
     expect(childStarted).to.be.true;
 
     const image = await ZarrMultiscaleSpatialImage.fromUrl(

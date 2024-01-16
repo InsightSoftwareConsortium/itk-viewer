@@ -1,22 +1,30 @@
 import { Viewer } from '@itk-viewer/viewer/viewer.js';
-import { Viewport } from '@itk-viewer/viewer/viewport.js';
-import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
+
+type HyphaService = {
+  id: string;
+};
+
+type ViewerService = {
+  setImage: (storeHref: string) => void;
+};
 
 type HyphaServer = {
-  registerService: (api: object) => any,
-  getService: (name: string) => any,
-  id: string,
+  registerService: (api: object) => Promise<HyphaService>;
+  getService: (id: string) => Promise<ViewerService>;
+  id: string;
 };
 
 export async function setup(server: HyphaServer, viewer: Viewer) {
   const service = await server.registerService({
-    name: "itk_viewer",
-    id: "itk-viewer",
-    description: "Retrieve the viewer API",
-    viewer: () => viewer,
-    addViewport: (viewport: Viewport, name: string) => viewer.send({ type: 'addViewport', viewport: viewport, name: name }),
-    setImage: (image: MultiscaleSpatialImage, name?: string) => viewer.send({ type: 'setImage', image, name: name ?? 'image' }),
+    name: 'itk-viewer',
+    id: 'itk-viewer',
+    description: 'Retrieve the viewer API',
+    setImage: async (imagePath: string, name?: string) => {
+      const url = new URL(imagePath, document.location.origin);
+      const image = await ZarrMultiscaleSpatialImage.fromUrl(url);
+      viewer.send({ type: 'setImage', image, name: name ?? 'image' });
+    },
   });
-
-  return await server.getService(service.id)
+  return server.getService(service.id);
 }

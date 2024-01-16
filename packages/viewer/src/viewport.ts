@@ -154,9 +154,6 @@ export const viewportMachine = setup({
             'resetCameraPose',
           ],
         },
-        cameraPoseUpdated: {
-          actions: ['forwardToParent'],
-        },
         setResolution: {
           actions: [
             assign({

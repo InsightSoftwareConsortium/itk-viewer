@@ -1,6 +1,6 @@
 import { createActor } from 'xstate';
 import { setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
-import { createRenderer } from './view-2d-vtkjs.js';
+import { createLogic } from './view-2d-vtkjs.js';
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 
 before(() => {
@@ -12,11 +12,11 @@ before(() => {
 
 describe('View 2D vtk.js', () => {
   it('constructs', () => {
-    expect(createRenderer()).to.be.ok;
+    expect(createLogic()).to.be.ok;
   });
 
   it('takes imageBuild event', async () => {
-    const render = createActor(createRenderer()).start();
+    const render = createActor(createLogic()).start();
 
     const multiscale = await ZarrMultiscaleSpatialImage.fromUrl(
       new URL('/astronaut.zarr', document.location.origin),

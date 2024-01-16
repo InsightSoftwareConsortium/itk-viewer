@@ -25,7 +25,12 @@ describe('view 2d', () => {
       },
     });
     const view = createActor(view2d).start();
-    view.send({ type: 'createRenderer', logic: renderer });
+    view.send({
+      type: 'createChild',
+      childType: 'renderer',
+      logic: renderer,
+      onActor: () => {},
+    });
     expect(childStarted).to.be.true;
 
     const image = await ZarrMultiscaleSpatialImage.fromUrl(
