@@ -1,0 +1,31 @@
+{
+  "name": "@itk-viewer/imjoy-api",
+  "version": "0.0.1",
+  "description": "Imjoy plugin wrappers",
+  "type": "module",
+  "exports": {
+    "./*": "./dist/*"
+  },
+  "scripts": {
+    "dev": "tsc --watch --outDir dist --project tsconfig.build.json",
+    "build": "tsc --outDir dist --project tsconfig.build.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/InsightSoftwareConsortium/itk-viewer.git"
+  },
+  "author": "Matt McCormick",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer/issues"
+  },
+  "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
+  "devDependencies": {
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@itk-viewer/io": "workspace:^",
+    "@itk-viewer/viewer": "workspace:^",
+    "imjoy-rpc": "^0.5.44"
+  }
+}
