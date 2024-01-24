@@ -6,3 +6,6 @@ dependencies:
   - pip
   - pip:
     - hypha
+    - python-dotenv
+    - -e ./packages/agave-renderer
+    - -e ./packages/remote-image
