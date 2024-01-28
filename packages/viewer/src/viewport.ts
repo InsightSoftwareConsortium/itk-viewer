@@ -48,11 +48,6 @@ export const viewportMachine = setup({
         actor.send(event);
       });
     },
-    sendImage: ({ context }) => {
-      Object.values(context.spawned).forEach((actor) => {
-        actor.send({ type: 'setImage', image: context.image });
-      });
-    },
     resetCameraPose: async ({ context: { image }, self }) => {
       const { camera } = self.getSnapshot().children;
       if (!image || !camera) return;
@@ -109,7 +104,7 @@ export const viewportMachine = setup({
     spawned: {},
     camera: spawn(cameraMachine, { id: 'camera' }),
   }),
-  type: 'parallel',
+  initial: 'active',
   states: {
     active: {
       on: {
@@ -140,8 +135,8 @@ export const viewportMachine = setup({
             assign({
               image: ({ event: { image } }: { event: SetImageEvent }) => image,
             }),
-            'sendImage',
             'resetCameraPose',
+            'forwardToSpawned',
           ],
         },
         setCamera: {
@@ -150,8 +145,8 @@ export const viewportMachine = setup({
               camera: ({ event: { camera } }: { event: SetCameraEvent }) =>
                 camera,
             }),
-            'forwardToSpawned',
             'resetCameraPose',
+            'forwardToSpawned',
           ],
         },
         setResolution: {
