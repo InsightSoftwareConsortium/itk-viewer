@@ -33,3 +33,6 @@ types/
 
 .npmrc
 .pnpm-store
+
+# temp transpiled TS files that don't always get cleaned up
+vite.config.ts.timestamp-*.mjs
