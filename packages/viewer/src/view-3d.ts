@@ -12,7 +12,7 @@ import {
   BuiltImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { CreateChild } from './children.js';
-import { Camera } from './camera.js';
+import { Camera, reset3d } from './camera.js';
 
 const viewContext = {
   scale: 0,
@@ -52,6 +52,19 @@ export const view3d = setup({
         actor.send(event);
       });
     },
+    resetCameraPose: async ({ context: { image, camera } }) => {
+      if (!image || !camera) return;
+
+      const bounds = await image.getWorldBounds(image.coarsestScale);
+      const { pose: currentPose, verticalFieldOfView } =
+        camera.getSnapshot().context;
+      const lookAt = reset3d(currentPose, verticalFieldOfView, bounds);
+
+      camera.send({
+        type: 'lookAt',
+        lookAt,
+      });
+    },
   },
 }).createMachine({
   context: () => {
@@ -89,6 +102,7 @@ export const view3d = setup({
               image: ({ event }) => event.image,
               scale: ({ event }) => event.image.coarsestScale,
             }),
+            'resetCameraPose',
             enqueueActions(({ context, enqueue }) => {
               Object.values(context.spawned).forEach((actor) => {
                 enqueue.sendTo(actor, {
@@ -109,6 +123,7 @@ export const view3d = setup({
             assign({
               camera: ({ event: { camera } }) => camera,
             }),
+            'resetCameraPose',
             'forwardToSpawned',
           ],
         },

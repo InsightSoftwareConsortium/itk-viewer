@@ -1,4 +1,5 @@
-import { ReadonlyMat4, ReadonlyVec3, mat4 } from 'gl-matrix';
+import { Bounds } from '@itk-viewer/io/types.js';
+import { ReadonlyMat4, ReadonlyVec3, mat4, vec3 } from 'gl-matrix';
 import { ActorRefFrom, AnyActorRef, assign, createActor, setup } from 'xstate';
 
 export type LookAtParams = {
@@ -118,3 +119,41 @@ export const createCamera = () => {
 };
 
 export type Camera = ActorRefFrom<typeof cameraMachine>;
+
+export const reset3d = (
+  currentPose: ReadonlyMat4,
+  verticalFieldOfView: number,
+  bounds: Bounds,
+) => {
+  const center = vec3.fromValues(
+    (bounds[0] + bounds[1]) / 2.0,
+    (bounds[2] + bounds[3]) / 2.0,
+    (bounds[4] + bounds[5]) / 2.0,
+  );
+
+  let w1 = bounds[1] - bounds[0];
+  let w2 = bounds[3] - bounds[2];
+  let w3 = bounds[5] - bounds[4];
+  w1 *= w1;
+  w2 *= w2;
+  w3 *= w3;
+  let radius = w1 + w2 + w3;
+  // If we have just a single point, pick a radius of 1.0
+  radius = radius === 0 ? 1.0 : radius;
+  // compute the radius of the enclosing sphere
+  radius = Math.sqrt(radius) * 0.5;
+
+  const angle = verticalFieldOfView * (Math.PI / 180); // to radians
+  const distance = radius / Math.sin(angle * 0.5);
+
+  const forward = [currentPose[8], currentPose[9], currentPose[10]];
+  const up = vec3.fromValues(currentPose[4], currentPose[5], currentPose[6]);
+
+  const eye = vec3.fromValues(
+    center[0] + distance * forward[0],
+    center[1] + distance * forward[1],
+    center[2] + distance * forward[2],
+  );
+
+  return { eye, center, up };
+};
