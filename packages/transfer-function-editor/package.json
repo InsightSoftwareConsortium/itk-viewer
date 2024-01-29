@@ -20,7 +20,8 @@
     "dev": "vite",
     "build": "vite build && tsc --project tsconfig.build.json",
     "watch": "vite build --watch",
-    "test": "vitest",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
     "format": "prettier --write .",
     "lint": "prettier . --check && eslint . --ext .ts",
     "semantic-release": "semantic-release --branches main"
