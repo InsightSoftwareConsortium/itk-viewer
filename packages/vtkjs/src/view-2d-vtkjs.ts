@@ -1,5 +1,5 @@
 import { AnyEventObject } from 'xstate';
-import { ReadonlyMat4, mat4 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
@@ -9,6 +9,7 @@ import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
 import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper.js';
 
+import { Pose, toMat4 } from '@itk-viewer/viewer/camera.js';
 import {
   Context,
   SetContainerEvent,
@@ -50,6 +51,7 @@ const createImplementation = () => {
   let renderer: vtkRenderer.vtkRenderer | undefined = undefined;
   let renderWindow: vtkRenderWindow.vtkRenderWindow | undefined = undefined;
 
+  const viewMat = mat4.create();
   let addedActorToRenderer = false;
 
   const cleanupContainer = (rendererContainer: vtkGenericRenderWindow) => {
@@ -107,17 +109,17 @@ const createImplementation = () => {
           renderer!.resetCamera();
           const snap = context.camera!.getSnapshot();
           const cameraVtk = renderer!.getActiveCamera();
-          const viewMat = mat4.create();
-          mat4.transpose(viewMat, snap!.context.pose);
-          cameraVtk.setViewMatrix(viewMat);
+          toMat4(viewMat, snap.context.pose);
+          cameraVtk.setViewMatrix(viewMat as mat4);
         }
         render();
       },
 
-      applyCameraPose: (_: unknown, params: { pose: ReadonlyMat4 }) => {
+      applyCameraPose: (_: unknown, { pose }: { pose: Pose }) => {
         const cameraVtk = renderer?.getActiveCamera();
         if (!cameraVtk) return;
-        cameraVtk.setViewMatrix(params.pose as mat4);
+        toMat4(viewMat, pose);
+        cameraVtk.setViewMatrix(viewMat as mat4);
         render();
       },
     },

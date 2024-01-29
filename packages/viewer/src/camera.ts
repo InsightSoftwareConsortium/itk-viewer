@@ -1,28 +1,59 @@
 import { Bounds } from '@itk-viewer/io/types.js';
-import { ReadonlyMat4, ReadonlyVec3, mat4, vec3 } from 'gl-matrix';
+import { ReadonlyVec3, mat4, vec3, quat, ReadonlyQuat } from 'gl-matrix';
 import { ActorRefFrom, AnyActorRef, assign, createActor, setup } from 'xstate';
 
-export type LookAtParams = {
-  eye: ReadonlyVec3;
-  center: ReadonlyVec3;
-  up: ReadonlyVec3;
+export type Pose = {
+  center: vec3;
+  rotation: quat;
+  distance: number;
 };
 
+export type ReadonlyPose = {
+  readonly center: ReadonlyVec3;
+  readonly rotation: ReadonlyQuat;
+  readonly distance: number;
+};
+
+const createPose = () => ({
+  center: vec3.create(),
+  rotation: quat.create(),
+  distance: 1,
+});
+
+const copyPose = (out: Pose, source: ReadonlyPose) => {
+  return {
+    center: vec3.copy(out.center, source.center),
+    rotation: quat.copy(out.rotation, source.rotation),
+    distance: source.distance,
+  };
+};
+
+export const toMat4 = (() => {
+  const scratch0 = new Float32Array(16);
+  const scratch1 = new Float32Array(16);
+  const matTemp = mat4.create();
+  return (out: mat4, pose: ReadonlyPose) => {
+    scratch1[0] = scratch1[1] = 0.0;
+    scratch1[2] = -pose.distance;
+    mat4.fromRotationTranslation(
+      matTemp,
+      quat.conjugate(scratch0, pose.rotation),
+      scratch1,
+    );
+    mat4.translate(out, matTemp, vec3.negate(scratch0, pose.center));
+    return out;
+  };
+})();
+
 type Context = {
-  pose: ReadonlyMat4;
-  lookAt: LookAtParams;
+  pose: Pose;
   verticalFieldOfView: number;
   poseWatchers: Array<AnyActorRef>;
 };
 
 type SetPoseEvent = {
   type: 'setPose';
-  pose: ReadonlyMat4;
-};
-
-type LookAtEvent = {
-  type: 'lookAt';
-  lookAt: LookAtParams;
+  pose: ReadonlyPose;
 };
 
 export const cameraMachine = setup({
@@ -31,14 +62,10 @@ export const cameraMachine = setup({
     events:
       | { type: 'watchPose'; watcher: AnyActorRef }
       | { type: 'watchPoseStop'; watcher: AnyActorRef }
-      | SetPoseEvent
-      | LookAtEvent;
+      | SetPoseEvent;
   },
   actions: {
-    emitNewPose: (
-      { context: { poseWatchers } },
-      params: { pose: ReadonlyMat4 },
-    ) => {
+    emitNewPose: ({ context: { poseWatchers } }, params: { pose: Pose }) => {
       Object.values(poseWatchers).forEach((actor) => {
         actor.send({ type: 'setCameraPose', pose: params.pose });
       });
@@ -48,8 +75,7 @@ export const cameraMachine = setup({
   id: 'camera',
   initial: 'active',
   context: {
-    pose: mat4.create(),
-    lookAt: { eye: [0, 0, 0], center: [0, 0, 1], up: [0, 1, 0] },
+    pose: createPose(),
     verticalFieldOfView: 50,
     poseWatchers: [],
   },
@@ -59,21 +85,8 @@ export const cameraMachine = setup({
         setPose: {
           actions: [
             assign({
-              pose: ({ event: { pose } }: { event: SetPoseEvent }) => pose,
-            }),
-            {
-              type: 'emitNewPose',
-              params: ({ context: { pose } }) => ({ pose }),
-            },
-          ],
-        },
-        lookAt: {
-          actions: [
-            assign({
-              lookAt: ({ event: { lookAt } }) => lookAt,
-              pose: ({ event: { lookAt } }) => {
-                const { eye, center, up } = lookAt;
-                return mat4.lookAt(mat4.create(), eye, center, up);
+              pose: ({ event: { pose }, context }) => {
+                return copyPose(context.pose, pose);
               },
             }),
             {
@@ -121,7 +134,7 @@ export const createCamera = () => {
 export type Camera = ActorRefFrom<typeof cameraMachine>;
 
 export const reset3d = (
-  currentPose: ReadonlyMat4,
+  pose: Pose,
   verticalFieldOfView: number,
   bounds: Bounds,
 ) => {
@@ -146,14 +159,5 @@ export const reset3d = (
   const angle = verticalFieldOfView * (Math.PI / 180); // to radians
   const distance = radius / Math.sin(angle * 0.5);
 
-  const forward = [currentPose[8], currentPose[9], currentPose[10]];
-  const up = vec3.fromValues(currentPose[4], currentPose[5], currentPose[6]);
-
-  const eye = vec3.fromValues(
-    center[0] + distance * forward[0],
-    center[1] + distance * forward[1],
-    center[2] + distance * forward[2],
-  );
-
-  return { eye, center, up };
+  return { center, rotation: pose.rotation, distance };
 };

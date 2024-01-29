@@ -23,6 +23,7 @@ import {
   createBounds,
   ensuredDims,
 } from '@itk-viewer/io/dimensionUtils.js';
+import { toMat4 } from '@itk-viewer/viewer/camera.js';
 
 const MAX_IMAGE_BYTES_DEFAULT = 4000 * 1000 * 1000; // 4000 MB
 
@@ -192,10 +193,11 @@ export const remoteMachine = createMachine(
     id: 'remote',
     context: ({ spawn, self }) => {
       const viewport = spawn(viewportMachine, { id: 'viewport' });
+      const tempMat = mat4.create();
       viewport.getSnapshot().context.camera.subscribe((state) => {
         self.send({
           type: 'cameraPoseUpdated',
-          pose: state.context.pose,
+          pose: toMat4(tempMat, state.context.pose),
         });
       });
       return {

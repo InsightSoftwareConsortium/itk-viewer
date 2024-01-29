@@ -1,9 +1,9 @@
 import { LitElement, PropertyValues, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { ReadonlyMat4, mat4 } from 'gl-matrix';
+import { ReadonlyQuat, ReadonlyVec3, quat, vec3 } from 'gl-matrix';
 import { createArcballCamera, ArcballCamera } from '@itk-viewer/arcball';
 
-import { Camera, LookAtParams } from '@itk-viewer/viewer/camera.js';
+import { Camera, Pose } from '@itk-viewer/viewer/camera.js';
 import { SelectorController } from 'xstate-lit';
 
 const PAN_SPEED = 1;
@@ -12,15 +12,17 @@ const ZOOM_SPEED = 0.001;
 const bindCamera = (
   camera: ArcballCamera,
   viewport: HTMLElement,
-  onUpdate: (view: ReadonlyMat4) => unknown,
+  onUpdate: (
+    center: ReadonlyVec3,
+    rotation: ReadonlyQuat,
+    distance: number,
+  ) => unknown,
 ) => {
   let width = viewport.clientWidth;
   let height = viewport.clientHeight;
 
-  const view = mat4.create();
-
   const updateView = () => {
-    onUpdate(camera.view(view));
+    onUpdate(camera.center, camera.rotation, camera.distance);
   };
 
   const resizeObserver = new ResizeObserver((entries) => {
@@ -115,8 +117,6 @@ const bindCamera = (
     viewport.removeEventListener('contextmenu', preventDefault);
   };
 
-  updateView();
-
   return unBind;
 };
 
@@ -125,8 +125,8 @@ export class ItkCamera extends LitElement {
   @property({ attribute: false })
   actor: Camera | undefined;
 
-  oldLookAt: LookAtParams | undefined;
-  lookAt: SelectorController<Camera, LookAtParams> | undefined;
+  oldPose: Pose | undefined;
+  pose: SelectorController<Camera, Pose> | undefined;
 
   cameraController: ArcballCamera;
   unBind: (() => unknown) | undefined;
@@ -141,13 +141,21 @@ export class ItkCamera extends LitElement {
   }
 
   firstUpdated(): void {
-    this.unBind = bindCamera(this.cameraController, this, (pose) => {
-      if (!this.actor) return;
-      this.actor.send({
-        type: 'setPose',
-        pose,
-      });
-    });
+    this.unBind = bindCamera(
+      this.cameraController,
+      this,
+      (center, rotation, distance) => {
+        if (!this.actor) return;
+        this.actor.send({
+          type: 'setPose',
+          pose: {
+            center,
+            rotation,
+            distance,
+          },
+        });
+      },
+    );
   }
 
   disconnectedCallback(): void {
@@ -157,18 +165,19 @@ export class ItkCamera extends LitElement {
 
   willUpdate(changedProperties: PropertyValues<this>) {
     if (changedProperties.has('actor') && this.actor) {
-      this.lookAt = new SelectorController(
+      this.pose = new SelectorController(
         this,
         this.actor,
-        (state) => state?.context.lookAt,
+        (state) => state?.context.pose,
       );
     }
 
-    if (this.lookAt?.value !== this.oldLookAt) {
-      this.oldLookAt = this.lookAt?.value;
-      if (this.lookAt?.value) {
-        const { eye, center, up } = this.lookAt.value;
-        this.cameraController.lookAt(eye, center, up);
+    if (this.pose?.value !== this.oldPose) {
+      this.oldPose = this.pose?.value;
+      if (this.pose?.value) {
+        vec3.copy(this.cameraController.center, this.pose.value.center);
+        quat.copy(this.cameraController.rotation, this.pose.value.rotation);
+        this.cameraController.distance = this.pose.value.distance;
       }
     }
   }

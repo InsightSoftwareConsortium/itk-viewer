@@ -55,11 +55,11 @@ export const viewportMachine = setup({
       const bounds = await image.getWorldBounds(image.coarsestScale);
       const { pose: currentPose, verticalFieldOfView } =
         camera.getSnapshot().context;
-      const lookAt = reset3d(currentPose, verticalFieldOfView, bounds);
+      const pose = reset3d(currentPose, verticalFieldOfView, bounds);
 
       camera.send({
-        type: 'lookAt',
-        lookAt,
+        type: 'setPose',
+        pose,
       });
     },
   },
