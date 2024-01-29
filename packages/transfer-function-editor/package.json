@@ -1,0 +1,67 @@
+{
+  "name": "itk-viewer-transfer-function-editor",
+  "version": "0.0.0-development",
+  "description": "Interface to interactively edit opacity transfer functions, etc",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "main": "./dist/TransferFunctionEditor.umd.js",
+  "module": "./dist/TransferFunctionEditor.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/TransferFunctionEditor.es.js",
+      "require": "./dist/TransferFunctionEditor.umd.js"
+    },
+    "./itk-vtk-viewer/createTransferFunctionWidget": "./dist/createTransferFunctionWidget.js"
+  },
+  "types": "./dist/TransferFunctionEditor.d.ts",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build && tsc --project tsconfig.build.json",
+    "watch": "vite build --watch",
+    "test": "vitest",
+    "format": "prettier --write .",
+    "lint": "prettier . --check && eslint . --ext .ts",
+    "semantic-release": "semantic-release --branches main"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "@vitest/ui": "^1.0.4",
+    "eslint": "^8.55.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "happy-dom": "^12.10.3",
+    "prettier": "^3.1.1",
+    "resize-observer-polyfill": "^1.5.1",
+    "semantic-release": "^22.0.12",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8",
+    "vitest": "^1.0.4",
+    "vitest-canvas-mock": "^0.3.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor.git"
+  },
+  "keywords": [
+    "visualization",
+    "3D",
+    "rendering",
+    "opacity",
+    "histogram"
+  ],
+  "author": "Insight Software Consortium",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor/issues"
+  },
+  "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor#readme",
+  "prettier": {
+    "singleQuote": true,
+    "semi": false
+  }
+}
