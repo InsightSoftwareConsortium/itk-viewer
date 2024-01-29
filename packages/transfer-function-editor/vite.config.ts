@@ -23,7 +23,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      'itk-viewer-transfer-function-editor': fileURLToPath(
+      '@itk-viewer/transfer-function-editor': fileURLToPath(
         new URL('./lib/TransferFunctionEditor.ts', import.meta.url),
       ),
     },

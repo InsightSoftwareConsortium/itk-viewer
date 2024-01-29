@@ -1,6 +1,6 @@
 {
-  "name": "itk-viewer-transfer-function-editor",
-  "version": "0.0.0-development",
+  "name": "@itk-viewer/transfer-function-editor",
+  "version": "1.6.0",
   "description": "Interface to interactively edit opacity transfer functions, etc",
   "files": [
     "dist"
@@ -46,7 +46,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor.git"
+    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer.git"
   },
   "keywords": [
     "visualization",
@@ -58,9 +58,9 @@
   "author": "Insight Software Consortium",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor/issues"
+    "url": "https://github.com/InsightSoftwareConsortium/itk-viewer/issues"
   },
-  "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer-transfer-function-editor#readme",
+  "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer/tree/main/packages/transfer-function-editor#readme",
   "prettier": {
     "singleQuote": true,
     "semi": false
