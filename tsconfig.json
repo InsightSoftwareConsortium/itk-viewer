@@ -1,10 +1,10 @@
 {
   "extends": "./tsconfig.root",
   "compilerOptions": {
-    "types": ["cypress"]
+    "types": ["cypress"],
   },
   "references": [
     { "path": "./tsconfig.node.json" },
-    { "path": "./cypress/tsconfig.json" }
-  ]
+    { "path": "./cypress/tsconfig.json" },
+  ],
 }

@@ -61,7 +61,7 @@ export class Points {
   }
 
   setPoints(points: [number, number][]) {
-    [...this._points].forEach((point) => this.deletePoint(point))
+    ;[...this._points].forEach((point) => this.deletePoint(point))
     return this.addPoints(points)
   }
 

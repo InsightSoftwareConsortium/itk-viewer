@@ -8,7 +8,7 @@ describe('Line', () => {
   let line: Line, container: ContainerType, points: Points
 
   beforeEach(() => {
-    ({ container } = makeTestableContainer())
+    ;({ container } = makeTestableContainer())
     points = new Points()
     line = new Line(container, points)
   })
