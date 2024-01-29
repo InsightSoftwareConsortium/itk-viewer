@@ -8,7 +8,6 @@ import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice.js';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
 import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper.js';
-// import Constants from '@kitware/vtk.js/Rendering/Core/ImageMapper/Constants.js';
 
 import {
   Context,
@@ -39,8 +38,8 @@ const setupContainer = (
 
   renderWindow.getInteractor().setInteractorStyle(undefined);
 
-  // const camera = renderer!.getActiveCamera();
-  // camera.setParallelProjection(true);
+  const camera = renderer!.getActiveCamera();
+  camera.setParallelProjection(true);
 
   return { actor, mapper, renderer, renderWindow };
 };
@@ -90,17 +89,27 @@ const createImplementation = () => {
         renderWindow = scene.renderWindow;
       },
 
-      imageBuilt: ({ event }: { event: AnyEventObject }) => {
+      imageBuilt: ({
+        event,
+        context,
+      }: {
+        event: AnyEventObject;
+        context: Context;
+      }) => {
         const { image } = event;
         const vtkImage = vtkITKHelper.convertItkToVtkImage(image);
         mapper!.setInputData(vtkImage);
-        // mapper!.setSliceAtFocalPoint(true);
-        // mapper!.setSlicingMode(Constants.SlicingMode.Z);
 
         // add actor to renderer after mapper has data to avoid vtkjs message
         if (!addedActorToRenderer) {
           addedActorToRenderer = true;
           renderer!.addActor(actor!);
+          renderer!.resetCamera();
+          const snap = context.camera!.getSnapshot();
+          const cameraVtk = renderer!.getActiveCamera();
+          const viewMat = mat4.create();
+          mat4.transpose(viewMat, snap!.context.pose);
+          cameraVtk.setViewMatrix(viewMat);
         }
         render();
       },

@@ -84,6 +84,7 @@ export const viewportMachine = setup({
                 self,
               }) => {
                 const child = spawn(logic);
+                child.send({ type: 'setViewport', viewport: self });
                 const { camera } = self.getSnapshot().children;
                 child.send({ type: 'setCamera', camera });
                 const id = Object.keys(spawned).length.toString();
