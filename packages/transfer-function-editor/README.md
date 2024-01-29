@@ -1,27 +1,52 @@
 # @itk-viewer/transfer-function-editor
 
-## Run examples
+## Install
 
-```
-cd examples/itk-vtk-viewer
-npm ci
-npm run dev
+```sh
+npm install @itk-viewer/transfer-function-editor
 ```
 
+## Development
+
+## Install
+
 ```
-cd examples/vtk-js
-npm ci
-npm run dev
+npm i -g pnpm
+pnpm install
+```
+
+## Build
+
+```
+pnpm build
+```
+
+## Test
+
+```
+pnpm test
+```
+
+Watch tests:
+
+```
+pnpm test:watch
 ```
 
 ## Dev server
 
 ```
-npm run dev
+pnpm dev
 ```
 
-## Watch tests
+## Run examples
 
 ```
-npm run test
+cd examples/basic
+pnpm dev
+```
+
+```
+cd examples/vtk-js
+pnpm dev
 ```
