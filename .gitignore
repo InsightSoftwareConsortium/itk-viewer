@@ -25,6 +25,7 @@ dist-ssr
 
 
 test/data/
+test/data.tar.gz
 cypress/screenshots
 cypress/videos
 micromamba/
