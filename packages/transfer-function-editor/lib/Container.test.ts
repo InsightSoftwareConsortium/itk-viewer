@@ -44,7 +44,7 @@ describe('Container', () => {
   let parent: HTMLDivElement, container: ContainerType
 
   beforeEach(() => {
-    ;({ parent, container } = makeTestableContainer())
+    ({ parent, container } = makeTestableContainer())
   })
 
   it('SVG element added to root', () => {

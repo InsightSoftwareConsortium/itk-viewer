@@ -19,7 +19,7 @@ describe('PointsController', () => {
   }
 
   beforeEach(() => {
-    ;({ container } = makeTestableContainer())
+    ({ container } = makeTestableContainer())
     points = new Points()
     controller = new PointsController(container, points, (x) => x)
   })

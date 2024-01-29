@@ -12,7 +12,7 @@ describe('TfEditor', () => {
   let root: HTMLDivElement, editor: TransferFunctionEditor
 
   beforeEach(() => {
-    ;({ root, editor } = makeEditor())
+    ({ root, editor } = makeEditor())
   })
 
   it('Starts with 2 points', () => {

@@ -13,7 +13,7 @@ describe('Background', () => {
     colorRange: ColorRangeType
 
   beforeEach(() => {
-    ;({ parent, container } = makeTestableContainer())
+    ({ parent, container } = makeTestableContainer())
     points = new Points()
     colorRange = ColorRange()
     background = Background(container, points, colorRange)

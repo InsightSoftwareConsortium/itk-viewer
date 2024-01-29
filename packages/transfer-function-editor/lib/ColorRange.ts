@@ -37,6 +37,7 @@ class ColorLine extends Line {
       .join(' ')
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   applyOffset(movementX: number, _: number) {
     this.points.points.forEach((point) => {
       point.setPosition(point.x + movementX, point.y)
