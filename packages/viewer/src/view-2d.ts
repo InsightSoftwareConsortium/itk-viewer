@@ -11,13 +11,15 @@ import {
   BuiltImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { CreateChild } from './children.js';
-import { Camera } from './camera.js';
+import { Camera, reset2d } from './camera.js';
+import { ViewportActor } from './viewport.js';
 
 const viewContext = {
   slice: 0.5,
   scale: 0,
   image: undefined as MultiscaleSpatialImage | undefined,
   spawned: {} as Record<string, AnyActorRef>,
+  viewport: undefined as ViewportActor | undefined,
   camera: undefined as Camera | undefined,
 };
 
@@ -28,6 +30,7 @@ export const view2d = setup({
       | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'setSlice'; slice: number }
       | { type: 'setScale'; scale: number }
+      | { type: 'setViewport'; viewport: ViewportActor }
       | { type: 'setCamera'; camera: Camera }
       | CreateChild;
   },
@@ -51,6 +54,25 @@ export const view2d = setup({
         return builtImage as BuiltImage;
       },
     ),
+  },
+  actions: {
+    forwardToSpawned: ({ context, event }) => {
+      Object.values(context.spawned).forEach((actor) => {
+        actor.send(event);
+      });
+    },
+    resetCameraPose: async ({ context: { image, camera } }) => {
+      if (!image || !camera) return;
+
+      const bounds = await image.getWorldBounds(image.coarsestScale);
+      const { pose: currentPose, verticalFieldOfView } =
+        camera.getSnapshot().context;
+      const pose = reset2d(currentPose, verticalFieldOfView, bounds);
+      camera.send({
+        type: 'setPose',
+        pose,
+      });
+    },
   },
 }).createMachine({
   context: () => {
@@ -89,6 +111,7 @@ export const view2d = setup({
               scale: ({ event }) => event.image.coarsestScale,
               slice: 0.5,
             }),
+            'resetCameraPose',
             enqueueActions(({ context, enqueue }) => {
               Object.values(context.spawned).forEach((actor) => {
                 enqueue.sendTo(actor, {
@@ -108,11 +131,19 @@ export const view2d = setup({
           actions: [assign({ scale: ({ event }) => event.scale })],
           target: '.buildingImage',
         },
+        setViewport: {
+          actions: [
+            assign({
+              viewport: ({ event: { viewport } }) => viewport,
+            }),
+          ],
+        },
         setCamera: {
           actions: [
             assign({
               camera: ({ event: { camera } }) => camera,
             }),
+            'resetCameraPose',
             'forwardToSpawned',
           ],
         },

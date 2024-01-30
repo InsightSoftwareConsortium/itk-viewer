@@ -1,8 +1,8 @@
 import { Actor, AnyActorRef, assign, sendParent, setup } from 'xstate';
-import { ReadonlyMat4, vec3 } from 'gl-matrix';
+import { ReadonlyMat4 } from 'gl-matrix';
 
 import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { cameraMachine, Camera } from './camera.js';
+import { cameraMachine, Camera, reset3d } from './camera.js';
 import { CreateChild } from './children.js';
 
 type Context = {
@@ -48,57 +48,18 @@ export const viewportMachine = setup({
         actor.send(event);
       });
     },
-    sendImage: ({ context }) => {
-      Object.values(context.spawned).forEach((actor) => {
-        actor.send({ type: 'setImage', image: context.image });
-      });
-    },
     resetCameraPose: async ({ context: { image }, self }) => {
       const { camera } = self.getSnapshot().children;
       if (!image || !camera) return;
 
+      const bounds = await image.getWorldBounds(image.coarsestScale);
       const { pose: currentPose, verticalFieldOfView } =
         camera.getSnapshot().context;
-
-      const bounds = await image.getWorldBounds(image.coarsestScale);
-
-      const center = vec3.fromValues(
-        (bounds[0] + bounds[1]) / 2.0,
-        (bounds[2] + bounds[3]) / 2.0,
-        (bounds[4] + bounds[5]) / 2.0,
-      );
-
-      let w1 = bounds[1] - bounds[0];
-      let w2 = bounds[3] - bounds[2];
-      let w3 = bounds[5] - bounds[4];
-      w1 *= w1;
-      w2 *= w2;
-      w3 *= w3;
-      let radius = w1 + w2 + w3;
-      // If we have just a single point, pick a radius of 1.0
-      radius = radius === 0 ? 1.0 : radius;
-      // compute the radius of the enclosing sphere
-      radius = Math.sqrt(radius) * 0.5;
-
-      const angle = verticalFieldOfView * (Math.PI / 180); // to radians
-      const distance = radius / Math.sin(angle * 0.5);
-
-      const forward = [currentPose[8], currentPose[9], currentPose[10]];
-      const up = vec3.fromValues(
-        currentPose[4],
-        currentPose[5],
-        currentPose[6],
-      );
-
-      const eye = vec3.fromValues(
-        center[0] + distance * forward[0],
-        center[1] + distance * forward[1],
-        center[2] + distance * forward[2],
-      );
+      const pose = reset3d(currentPose, verticalFieldOfView, bounds);
 
       camera.send({
-        type: 'lookAt',
-        lookAt: { eye, center: center, up },
+        type: 'setPose',
+        pose,
       });
     },
   },
@@ -109,7 +70,7 @@ export const viewportMachine = setup({
     spawned: {},
     camera: spawn(cameraMachine, { id: 'camera' }),
   }),
-  type: 'parallel',
+  initial: 'active',
   states: {
     active: {
       on: {
@@ -123,6 +84,7 @@ export const viewportMachine = setup({
                 self,
               }) => {
                 const child = spawn(logic);
+                child.send({ type: 'setViewport', viewport: self });
                 const { camera } = self.getSnapshot().children;
                 child.send({ type: 'setCamera', camera });
                 const id = Object.keys(spawned).length.toString();
@@ -140,8 +102,8 @@ export const viewportMachine = setup({
             assign({
               image: ({ event: { image } }: { event: SetImageEvent }) => image,
             }),
-            'sendImage',
             'resetCameraPose',
+            'forwardToSpawned',
           ],
         },
         setCamera: {
@@ -150,8 +112,8 @@ export const viewportMachine = setup({
               camera: ({ event: { camera } }: { event: SetCameraEvent }) =>
                 camera,
             }),
-            'forwardToSpawned',
             'resetCameraPose',
+            'forwardToSpawned',
           ],
         },
         setResolution: {

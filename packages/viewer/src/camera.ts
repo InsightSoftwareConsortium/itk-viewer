@@ -1,27 +1,60 @@
-import { ReadonlyMat4, ReadonlyVec3, mat4 } from 'gl-matrix';
+import { Bounds } from '@itk-viewer/io/types.js';
+import { ReadonlyVec3, mat4, vec3, quat, ReadonlyQuat } from 'gl-matrix';
 import { ActorRefFrom, AnyActorRef, assign, createActor, setup } from 'xstate';
 
-export type LookAtParams = {
-  eye: ReadonlyVec3;
-  center: ReadonlyVec3;
-  up: ReadonlyVec3;
+export type Pose = {
+  center: vec3;
+  rotation: quat;
+  distance: number;
 };
 
+export type ReadonlyPose = {
+  readonly center: ReadonlyVec3;
+  readonly rotation: ReadonlyQuat;
+  readonly distance: number;
+};
+
+const createPose = () => ({
+  center: vec3.create(),
+  rotation: quat.create(),
+  distance: 1,
+});
+
+const copyPose = (out: Pose, source: ReadonlyPose) => {
+  return {
+    center: vec3.copy(out.center, source.center),
+    rotation: quat.copy(out.rotation, source.rotation),
+    distance: source.distance,
+  };
+};
+
+export const toMat4 = (() => {
+  const scratch0 = new Float32Array(16);
+  const scratch1 = new Float32Array(16);
+  const matTemp = mat4.create();
+  return (out: mat4, pose: ReadonlyPose) => {
+    scratch1[0] = scratch1[1] = 0.0;
+    scratch1[2] = -pose.distance;
+    mat4.fromRotationTranslation(
+      matTemp,
+      quat.conjugate(scratch0, pose.rotation),
+      scratch1,
+    );
+    mat4.translate(out, matTemp, vec3.negate(scratch0, pose.center));
+    return out;
+  };
+})();
+
 type Context = {
-  pose: ReadonlyMat4;
-  lookAt: LookAtParams;
+  pose: Pose;
   verticalFieldOfView: number;
+  parallelScaleRatio: number; // distance to parallelScale
   poseWatchers: Array<AnyActorRef>;
 };
 
 type SetPoseEvent = {
   type: 'setPose';
-  pose: ReadonlyMat4;
-};
-
-type LookAtEvent = {
-  type: 'lookAt';
-  lookAt: LookAtParams;
+  pose: ReadonlyPose & { parallelScale?: number };
 };
 
 export const cameraMachine = setup({
@@ -30,16 +63,19 @@ export const cameraMachine = setup({
     events:
       | { type: 'watchPose'; watcher: AnyActorRef }
       | { type: 'watchPoseStop'; watcher: AnyActorRef }
-      | SetPoseEvent
-      | LookAtEvent;
+      | SetPoseEvent;
   },
   actions: {
     emitNewPose: (
       { context: { poseWatchers } },
-      params: { pose: ReadonlyMat4 },
+      params: { pose: Pose; parallelScaleRatio: number },
     ) => {
       Object.values(poseWatchers).forEach((actor) => {
-        actor.send({ type: 'setCameraPose', pose: params.pose });
+        actor.send({
+          type: 'setCameraPose',
+          pose: params.pose,
+          parallelScaleRatio: params.parallelScaleRatio,
+        });
       });
     },
   },
@@ -47,8 +83,8 @@ export const cameraMachine = setup({
   id: 'camera',
   initial: 'active',
   context: {
-    pose: mat4.create(),
-    lookAt: { eye: [0, 0, 0], center: [0, 0, 1], up: [0, 1, 0] },
+    pose: createPose(),
+    parallelScaleRatio: 1,
     verticalFieldOfView: 50,
     poseWatchers: [],
   },
@@ -58,26 +94,22 @@ export const cameraMachine = setup({
         setPose: {
           actions: [
             assign({
-              pose: ({ event: { pose } }: { event: SetPoseEvent }) => pose,
-            }),
-            {
-              type: 'emitNewPose',
-              params: ({ context: { pose } }) => ({ pose }),
-            },
-          ],
-        },
-        lookAt: {
-          actions: [
-            assign({
-              lookAt: ({ event: { lookAt } }) => lookAt,
-              pose: ({ event: { lookAt } }) => {
-                const { eye, center, up } = lookAt;
-                return mat4.lookAt(mat4.create(), eye, center, up);
+              pose: ({ event: { pose }, context }) => {
+                return copyPose(context.pose, pose);
+              },
+              parallelScaleRatio: ({ event: { pose }, context }) => {
+                const { distance, parallelScale = undefined } = pose;
+                if (parallelScale === undefined)
+                  return context.parallelScaleRatio;
+                return parallelScale / distance;
               },
             }),
             {
               type: 'emitNewPose',
-              params: ({ context: { pose } }) => ({ pose }),
+              params: ({ context: { pose, parallelScaleRatio } }) => ({
+                pose,
+                parallelScaleRatio,
+              }),
             },
           ],
         },
@@ -91,8 +123,8 @@ export const cameraMachine = setup({
                 return [...poseWatchers, watcher];
               },
             }),
-            ({ context: { pose }, event: { watcher } }) => {
-              watcher.send({ type: 'setCameraPose', pose });
+            ({ context: { pose, parallelScaleRatio }, event: { watcher } }) => {
+              watcher.send({ type: 'setCameraPose', pose, parallelScaleRatio });
             },
           ],
         },
@@ -118,3 +150,61 @@ export const createCamera = () => {
 };
 
 export type Camera = ActorRefFrom<typeof cameraMachine>;
+
+export const reset3d = (
+  pose: Pose,
+  verticalFieldOfView: number,
+  bounds: Bounds,
+) => {
+  const center = vec3.fromValues(
+    (bounds[0] + bounds[1]) / 2.0,
+    (bounds[2] + bounds[3]) / 2.0,
+    (bounds[4] + bounds[5]) / 2.0,
+  );
+
+  let w1 = bounds[1] - bounds[0];
+  let w2 = bounds[3] - bounds[2];
+  let w3 = bounds[5] - bounds[4];
+  w1 *= w1;
+  w2 *= w2;
+  w3 *= w3;
+  let radius = w1 + w2 + w3;
+  // If we have just a single point, pick a radius of 1.0
+  radius = radius === 0 ? 1.0 : radius;
+  // compute the radius of the enclosing sphere
+  radius = Math.sqrt(radius) * 0.5;
+
+  const angle = verticalFieldOfView * (Math.PI / 180); // to radians
+  const distance = radius / Math.sin(angle * 0.5);
+
+  return { center, rotation: pose.rotation, distance };
+};
+
+export const reset2d = (
+  pose: Pose,
+  verticalFieldOfView: number,
+  bounds: Bounds,
+) => {
+  const center = vec3.fromValues(
+    (bounds[0] + bounds[1]) / 2.0,
+    (bounds[2] + bounds[3]) / 2.0,
+    (bounds[4] + bounds[5]) / 2.0,
+  );
+
+  let w1 = bounds[1] - bounds[0];
+  let w2 = bounds[3] - bounds[2];
+  let w3 = bounds[5] - bounds[4];
+  w1 *= w1;
+  w2 *= w2;
+  w3 *= w3;
+  let radius = w1 + w2 + w3;
+  // If we have just a single point, pick a radius of 1.0
+  radius = radius === 0 ? 1.0 : radius;
+  // compute the radius of the enclosing sphere
+  radius = Math.sqrt(radius) * 0.5;
+
+  const angle = verticalFieldOfView * (Math.PI / 180); // to radians
+  const distance = radius / Math.sin(angle * 0.5);
+
+  return { center, rotation: pose.rotation, distance, parallelScale: radius };
+};

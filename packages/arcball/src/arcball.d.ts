@@ -7,6 +7,8 @@ declare module '@itk-viewer/arcball' {
     pan: (dpan: ReadonlyVec2 | ReadonlyVec3) => void;
     zoom: (delta: number) => void;
     lookAt: (eye: ReadonlyVec3, center: ReadonlyVec3, up: ReadonlyVec3) => void;
+    center: vec3;
+    rotation: quat;
     distance: number;
   };
 
