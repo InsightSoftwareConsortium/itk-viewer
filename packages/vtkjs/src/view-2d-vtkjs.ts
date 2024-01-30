@@ -106,20 +106,28 @@ const createImplementation = () => {
         if (!addedActorToRenderer) {
           addedActorToRenderer = true;
           renderer!.addActor(actor!);
-          renderer!.resetCamera();
+
           const snap = context.camera!.getSnapshot();
-          const cameraVtk = renderer!.getActiveCamera();
           toMat4(viewMat, snap.context.pose);
+          const cameraVtk = renderer!.getActiveCamera();
           cameraVtk.setViewMatrix(viewMat as mat4);
         }
         render();
       },
 
-      applyCameraPose: (_: unknown, { pose }: { pose: Pose }) => {
+      applyCameraPose: (
+        _: unknown,
+        {
+          pose,
+          parallelScaleRatio,
+        }: { pose: Pose; parallelScaleRatio: number },
+      ) => {
         const cameraVtk = renderer?.getActiveCamera();
         if (!cameraVtk) return;
         toMat4(viewMat, pose);
         cameraVtk.setViewMatrix(viewMat as mat4);
+        cameraVtk.setParallelScale(parallelScaleRatio * pose.distance);
+
         render();
       },
     },

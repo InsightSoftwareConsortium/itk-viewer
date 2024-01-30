@@ -36,3 +36,4 @@ types/
 
 # temp transpiled TS files that don't always get cleaned up
 vite.config.ts.timestamp-*.mjs
+vite.config.ts.timestamp-*.mts

@@ -48,12 +48,13 @@ export const toMat4 = (() => {
 type Context = {
   pose: Pose;
   verticalFieldOfView: number;
+  parallelScaleRatio: number; // distance to parallelScale
   poseWatchers: Array<AnyActorRef>;
 };
 
 type SetPoseEvent = {
   type: 'setPose';
-  pose: ReadonlyPose;
+  pose: ReadonlyPose & { parallelScale?: number };
 };
 
 export const cameraMachine = setup({
@@ -65,9 +66,16 @@ export const cameraMachine = setup({
       | SetPoseEvent;
   },
   actions: {
-    emitNewPose: ({ context: { poseWatchers } }, params: { pose: Pose }) => {
+    emitNewPose: (
+      { context: { poseWatchers } },
+      params: { pose: Pose; parallelScaleRatio: number },
+    ) => {
       Object.values(poseWatchers).forEach((actor) => {
-        actor.send({ type: 'setCameraPose', pose: params.pose });
+        actor.send({
+          type: 'setCameraPose',
+          pose: params.pose,
+          parallelScaleRatio: params.parallelScaleRatio,
+        });
       });
     },
   },
@@ -76,6 +84,7 @@ export const cameraMachine = setup({
   initial: 'active',
   context: {
     pose: createPose(),
+    parallelScaleRatio: 1,
     verticalFieldOfView: 50,
     poseWatchers: [],
   },
@@ -88,10 +97,19 @@ export const cameraMachine = setup({
               pose: ({ event: { pose }, context }) => {
                 return copyPose(context.pose, pose);
               },
+              parallelScaleRatio: ({ event: { pose }, context }) => {
+                const { distance, parallelScale = undefined } = pose;
+                if (parallelScale === undefined)
+                  return context.parallelScaleRatio;
+                return parallelScale / distance;
+              },
             }),
             {
               type: 'emitNewPose',
-              params: ({ context: { pose } }) => ({ pose }),
+              params: ({ context: { pose, parallelScaleRatio } }) => ({
+                pose,
+                parallelScaleRatio,
+              }),
             },
           ],
         },
@@ -105,8 +123,8 @@ export const cameraMachine = setup({
                 return [...poseWatchers, watcher];
               },
             }),
-            ({ context: { pose }, event: { watcher } }) => {
-              watcher.send({ type: 'setCameraPose', pose });
+            ({ context: { pose, parallelScaleRatio }, event: { watcher } }) => {
+              watcher.send({ type: 'setCameraPose', pose, parallelScaleRatio });
             },
           ],
         },
@@ -160,4 +178,33 @@ export const reset3d = (
   const distance = radius / Math.sin(angle * 0.5);
 
   return { center, rotation: pose.rotation, distance };
+};
+
+export const reset2d = (
+  pose: Pose,
+  verticalFieldOfView: number,
+  bounds: Bounds,
+) => {
+  const center = vec3.fromValues(
+    (bounds[0] + bounds[1]) / 2.0,
+    (bounds[2] + bounds[3]) / 2.0,
+    (bounds[4] + bounds[5]) / 2.0,
+  );
+
+  let w1 = bounds[1] - bounds[0];
+  let w2 = bounds[3] - bounds[2];
+  let w3 = bounds[5] - bounds[4];
+  w1 *= w1;
+  w2 *= w2;
+  w3 *= w3;
+  let radius = w1 + w2 + w3;
+  // If we have just a single point, pick a radius of 1.0
+  radius = radius === 0 ? 1.0 : radius;
+  // compute the radius of the enclosing sphere
+  radius = Math.sqrt(radius) * 0.5;
+
+  const angle = verticalFieldOfView * (Math.PI / 180); // to radians
+  const distance = radius / Math.sin(angle * 0.5);
+
+  return { center, rotation: pose.rotation, distance, parallelScale: radius };
 };

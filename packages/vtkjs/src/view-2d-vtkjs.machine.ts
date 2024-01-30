@@ -22,7 +22,7 @@ export const view2dLogic = setup({
       | SetContainerEvent
       | { type: 'imageBuilt'; image: BuiltImage }
       | { type: 'setSlice'; slice: number }
-      | { type: 'setCameraPose'; pose: Pose }
+      | { type: 'setCameraPose'; pose: Pose; parallelScaleRatio: number }
       | { type: 'setCamera'; camera: Camera };
   },
   actions: {
@@ -33,7 +33,7 @@ export const view2dLogic = setup({
       throw new Error('Function not implemented.');
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    applyCameraPose: (_, __: { pose: Pose }) => {
+    applyCameraPose: (_, __: { pose: Pose; parallelScaleRatio: number }) => {
       throw new Error('Function not implemented.');
     },
   },
@@ -74,7 +74,10 @@ export const view2dLogic = setup({
           actions: [
             {
               type: 'applyCameraPose',
-              params: ({ event }) => ({ pose: event.pose }),
+              params: ({ event }) => ({
+                pose: event.pose,
+                parallelScaleRatio: event.parallelScaleRatio,
+              }),
             },
           ],
         },

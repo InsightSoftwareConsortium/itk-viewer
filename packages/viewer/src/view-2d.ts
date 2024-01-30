@@ -11,7 +11,7 @@ import {
   BuiltImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { CreateChild } from './children.js';
-import { Camera } from './camera.js';
+import { Camera, reset2d } from './camera.js';
 import { ViewportActor } from './viewport.js';
 
 const viewContext = {
@@ -61,6 +61,18 @@ export const view2d = setup({
         actor.send(event);
       });
     },
+    resetCameraPose: async ({ context: { image, camera } }) => {
+      if (!image || !camera) return;
+
+      const bounds = await image.getWorldBounds(image.coarsestScale);
+      const { pose: currentPose, verticalFieldOfView } =
+        camera.getSnapshot().context;
+      const pose = reset2d(currentPose, verticalFieldOfView, bounds);
+      camera.send({
+        type: 'setPose',
+        pose,
+      });
+    },
   },
 }).createMachine({
   context: () => {
@@ -99,6 +111,7 @@ export const view2d = setup({
               scale: ({ event }) => event.image.coarsestScale,
               slice: 0.5,
             }),
+            'resetCameraPose',
             enqueueActions(({ context, enqueue }) => {
               Object.values(context.spawned).forEach((actor) => {
                 enqueue.sendTo(actor, {
@@ -130,6 +143,7 @@ export const view2d = setup({
             assign({
               camera: ({ event: { camera } }) => camera,
             }),
+            'resetCameraPose',
             'forwardToSpawned',
           ],
         },
