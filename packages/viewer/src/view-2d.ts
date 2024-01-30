@@ -96,9 +96,10 @@ export const view2d = setup({
                 spawn,
                 context: { spawned, camera },
                 event: { logic, onActor },
+                self,
               }) => {
                 // @ts-expect-error cannot spawn actor of type that is not in setup()
-                const child = spawn(logic);
+                const child = spawn(logic, { input: { parent: self } });
                 if (camera) child.send({ type: 'setCamera', camera });
                 const id = Object.keys(spawned).length.toString();
                 onActor(child);

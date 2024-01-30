@@ -116,10 +116,14 @@ const createImplementation = () => {
           addedActorToRenderer = true;
           renderer!.addActor(actor!);
 
-          const snap = context.camera!.getSnapshot();
-          toMat4(viewMat, snap.context.pose);
-          const cameraVtk = renderer!.getActiveCamera();
-          cameraVtk.setViewMatrix(viewMat as mat4);
+          const snap = context.camera?.getSnapshot();
+          if (snap) {
+            toMat4(viewMat, snap.context.pose);
+            const cameraVtk = renderer!.getActiveCamera();
+            cameraVtk.setViewMatrix(viewMat as mat4);
+          } else {
+            renderer!.resetCamera();
+          }
         }
         render();
       },
