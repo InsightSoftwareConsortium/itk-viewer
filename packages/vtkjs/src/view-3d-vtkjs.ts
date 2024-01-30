@@ -1,5 +1,5 @@
 import { AnyEventObject } from 'xstate';
-import { ReadonlyMat4, mat4 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume.js';
@@ -16,6 +16,7 @@ import {
   SetContainerEvent,
   view3dLogic,
 } from './view-3d-vtkjs.machine.js';
+import { ReadonlyPose, toMat4 } from '@itk-viewer/viewer/camera.js';
 
 const setupContainer = (
   rendererContainer: vtkGenericRenderWindow,
@@ -51,6 +52,7 @@ const createImplementation = () => {
   let piecewiseFunction: vtkPiecewiseFunction.vtkPiecewiseFunction | undefined =
     undefined;
 
+  const viewMat = mat4.create();
   let addedActorToRenderer = false;
 
   const cleanupContainer = (rendererContainer: vtkGenericRenderWindow) => {
@@ -146,11 +148,11 @@ const createImplementation = () => {
         render();
       },
 
-      applyCameraPose: (_: unknown, params: { pose: ReadonlyMat4 }) => {
+      applyCameraPose: (_: unknown, { pose }: { pose: ReadonlyPose }) => {
         const cameraVtk = renderer?.getActiveCamera();
         if (!cameraVtk) return;
-        cameraVtk.setViewMatrix(params.pose as mat4);
-
+        toMat4(viewMat, pose);
+        cameraVtk.setViewMatrix(viewMat as mat4);
         render();
       },
     },

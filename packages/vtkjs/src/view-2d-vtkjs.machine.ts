@@ -1,10 +1,9 @@
 import { assign, setup } from 'xstate';
-import { ReadonlyMat4 } from 'gl-matrix';
 import GenericRenderWindow, {
   vtkGenericRenderWindow,
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { Camera } from '@itk-viewer/viewer/camera.js';
+import { Camera, Pose } from '@itk-viewer/viewer/camera.js';
 
 export type Context = {
   rendererContainer: vtkGenericRenderWindow;
@@ -23,7 +22,7 @@ export const view2dLogic = setup({
       | SetContainerEvent
       | { type: 'imageBuilt'; image: BuiltImage }
       | { type: 'setSlice'; slice: number }
-      | { type: 'setCameraPose'; pose: ReadonlyMat4 }
+      | { type: 'setCameraPose'; pose: Pose; parallelScaleRatio: number }
       | { type: 'setCamera'; camera: Camera };
   },
   actions: {
@@ -34,7 +33,7 @@ export const view2dLogic = setup({
       throw new Error('Function not implemented.');
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    applyCameraPose: (_, __: { pose: ReadonlyMat4 }) => {
+    applyCameraPose: (_, __: { pose: Pose; parallelScaleRatio: number }) => {
       throw new Error('Function not implemented.');
     },
   },
@@ -75,7 +74,10 @@ export const view2dLogic = setup({
           actions: [
             {
               type: 'applyCameraPose',
-              params: ({ event }) => ({ pose: event.pose }),
+              params: ({ event }) => ({
+                pose: event.pose,
+                parallelScaleRatio: event.parallelScaleRatio,
+              }),
             },
           ],
         },

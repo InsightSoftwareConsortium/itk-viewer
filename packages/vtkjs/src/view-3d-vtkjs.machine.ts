@@ -3,8 +3,7 @@ import GenericRenderWindow, {
   vtkGenericRenderWindow,
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { Camera } from '@itk-viewer/viewer/camera.js';
-import { ReadonlyMat4 } from 'gl-matrix';
+import { Camera, ReadonlyPose } from '@itk-viewer/viewer/camera.js';
 
 export type Context = {
   rendererContainer: vtkGenericRenderWindow;
@@ -23,7 +22,7 @@ export const view3dLogic = setup({
       | SetContainerEvent
       | { type: 'imageBuilt'; image: BuiltImage }
       | { type: 'setSlice'; slice: number }
-      | { type: 'setCameraPose'; pose: ReadonlyMat4 }
+      | { type: 'setCameraPose'; pose: ReadonlyPose }
       | { type: 'setCamera'; camera: Camera };
   },
   actions: {
@@ -34,7 +33,7 @@ export const view3dLogic = setup({
       throw new Error('Function not implemented.');
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    applyCameraPose: (_, __: { pose: ReadonlyMat4 }) => {
+    applyCameraPose: (_, __: { pose: ReadonlyPose }) => {
       throw new Error('Function not implemented.');
     },
   },

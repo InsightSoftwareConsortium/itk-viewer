@@ -1,5 +1,5 @@
 import { AnyEventObject } from 'xstate';
-import { ReadonlyMat4, mat4 } from 'gl-matrix';
+import { mat4 } from 'gl-matrix';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
@@ -8,8 +8,8 @@ import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice.js';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
 import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper.js';
-// import Constants from '@kitware/vtk.js/Rendering/Core/ImageMapper/Constants.js';
 
+import { Pose, toMat4 } from '@itk-viewer/viewer/camera.js';
 import {
   Context,
   SetContainerEvent,
@@ -39,8 +39,8 @@ const setupContainer = (
 
   renderWindow.getInteractor().setInteractorStyle(undefined);
 
-  // const camera = renderer!.getActiveCamera();
-  // camera.setParallelProjection(true);
+  const camera = renderer!.getActiveCamera();
+  camera.setParallelProjection(true);
 
   return { actor, mapper, renderer, renderWindow };
 };
@@ -51,6 +51,7 @@ const createImplementation = () => {
   let renderer: vtkRenderer.vtkRenderer | undefined = undefined;
   let renderWindow: vtkRenderWindow.vtkRenderWindow | undefined = undefined;
 
+  const viewMat = mat4.create();
   let addedActorToRenderer = false;
 
   const cleanupContainer = (rendererContainer: vtkGenericRenderWindow) => {
@@ -90,25 +91,43 @@ const createImplementation = () => {
         renderWindow = scene.renderWindow;
       },
 
-      imageBuilt: ({ event }: { event: AnyEventObject }) => {
+      imageBuilt: ({
+        event,
+        context,
+      }: {
+        event: AnyEventObject;
+        context: Context;
+      }) => {
         const { image } = event;
         const vtkImage = vtkITKHelper.convertItkToVtkImage(image);
         mapper!.setInputData(vtkImage);
-        // mapper!.setSliceAtFocalPoint(true);
-        // mapper!.setSlicingMode(Constants.SlicingMode.Z);
 
         // add actor to renderer after mapper has data to avoid vtkjs message
         if (!addedActorToRenderer) {
           addedActorToRenderer = true;
           renderer!.addActor(actor!);
+
+          const snap = context.camera!.getSnapshot();
+          toMat4(viewMat, snap.context.pose);
+          const cameraVtk = renderer!.getActiveCamera();
+          cameraVtk.setViewMatrix(viewMat as mat4);
         }
         render();
       },
 
-      applyCameraPose: (_: unknown, params: { pose: ReadonlyMat4 }) => {
+      applyCameraPose: (
+        _: unknown,
+        {
+          pose,
+          parallelScaleRatio,
+        }: { pose: Pose; parallelScaleRatio: number },
+      ) => {
         const cameraVtk = renderer?.getActiveCamera();
         if (!cameraVtk) return;
-        cameraVtk.setViewMatrix(params.pose as mat4);
+        toMat4(viewMat, pose);
+        cameraVtk.setViewMatrix(viewMat as mat4);
+        cameraVtk.setParallelScale(parallelScaleRatio * pose.distance);
+
         render();
       },
     },
