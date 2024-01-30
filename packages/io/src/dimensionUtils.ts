@@ -1,4 +1,4 @@
-import { Bounds, Dimension, SpatialDimensions } from './types.js';
+import { Dimension, SpatialDimensions } from './types.js';
 
 export const CXYZT = Object.freeze(['c', 'x', 'y', 'z', 't'] as const); // viewer indexing
 
@@ -43,14 +43,3 @@ export const nonNullable = <T>(value: T): value is NonNullable<T> => {
 };
 
 export const XYZ = Object.freeze(['x', 'y', 'z']) as SpatialDimensions;
-
-const INIT_BOUNDS = Object.freeze([
-  Number.MAX_VALUE,
-  -Number.MAX_VALUE, // X
-  Number.MAX_VALUE,
-  -Number.MAX_VALUE, // Y
-  Number.MAX_VALUE,
-  -Number.MAX_VALUE, // Z
-] as Bounds);
-
-export const createBounds = () => [...INIT_BOUNDS] as Bounds;

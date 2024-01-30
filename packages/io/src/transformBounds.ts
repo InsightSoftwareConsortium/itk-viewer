@@ -1,5 +1,6 @@
 import { ReadonlyMat4, vec3 } from 'gl-matrix';
-import type { Bounds, ReadonlyBounds, Vector3 } from './types.js';
+import { ReadonlyBounds, Bounds } from '@itk-viewer/utils/bounding-box.js';
+import type { Vector3 } from './types.js';
 
 // from vtk.js/Sources/Common/DataModel/BoundingBox
 // Computes the two corners with minimal and maximal coordinates

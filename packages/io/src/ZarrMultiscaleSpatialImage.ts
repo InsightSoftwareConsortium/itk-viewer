@@ -2,7 +2,7 @@ import { ImageType, PixelTypes } from 'itk-wasm';
 import PQueue from 'p-queue';
 
 import { bloscZarrDecompress } from '@itk-viewer/blosc-zarr/bloscZarrDecompress.js';
-import { getComponentType } from '@itk-viewer/wasm-utils/dtypeUtils.js';
+import { getComponentType } from '@itk-viewer/utils/dtypeUtils.js';
 
 import MultiscaleSpatialImage from './MultiscaleSpatialImage.js';
 import { ZarrStoreParser } from './ZarrStoreParser.js';

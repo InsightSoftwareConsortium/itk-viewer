@@ -45,7 +45,7 @@
   },
   "dependencies": {
     "@itk-viewer/blosc-zarr": "workspace:^",
-    "@itk-viewer/wasm-utils": "workspace:^",
+    "@itk-viewer/utils": "workspace:^",
     "axios": "^1.6.3",
     "gl-matrix": "^3.4.3",
     "itk-wasm": "1.0.0-b.160",

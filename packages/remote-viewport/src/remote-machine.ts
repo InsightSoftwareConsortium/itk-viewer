@@ -17,12 +17,10 @@ import {
   getBytes,
   worldBoundsToIndexBounds,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { Bounds, ReadOnlyDimensionBounds } from '@itk-viewer/io/types.js';
-import {
-  XYZ,
-  createBounds,
-  ensuredDims,
-} from '@itk-viewer/io/dimensionUtils.js';
+import { ReadOnlyDimensionBounds } from '@itk-viewer/io/types.js';
+
+import { createBounds, Bounds } from '@itk-viewer/utils/bounding-box.js';
+import { XYZ, ensuredDims } from '@itk-viewer/io/dimensionUtils.js';
 import { toMat4 } from '@itk-viewer/viewer/camera.js';
 
 const MAX_IMAGE_BYTES_DEFAULT = 4000 * 1000 * 1000; // 4000 MB

@@ -2,16 +2,15 @@ import { createActor, fromPromise } from 'xstate';
 import { hyphaWebsocketClient } from 'imjoy-rpc';
 import { ReadonlyMat4, mat4, vec3 } from 'gl-matrix';
 import { decode, Image } from '@itk-wasm/htj2k';
-import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
+export type { Image } from '@itk-wasm/htj2k';
+import { Bounds } from '@itk-viewer/utils/bounding-box.js';
 import { XYZ } from '@itk-viewer/io/dimensionUtils.js';
 import {
   MultiscaleSpatialImage,
   worldBoundsToIndexBounds,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { Bounds } from '@itk-viewer/io/types.js';
 import { transformBounds } from '@itk-viewer/io/transformBounds.js';
-
-export type { Image } from '@itk-wasm/htj2k';
+import { RendererEntries, remoteMachine, Context } from './remote-machine.js';
 
 // Should match constant in agave-renderer::renderer.py
 const RENDERER_SERVICE_ID = 'agave-renderer';

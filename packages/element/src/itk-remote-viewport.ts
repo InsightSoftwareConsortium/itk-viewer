@@ -5,20 +5,19 @@ import { Ref, createRef, ref } from 'lit/directives/ref.js';
 import { SelectorController } from 'xstate-lit';
 import { ActorRefFrom } from 'xstate';
 
+import { Bounds } from '@itk-viewer/utils/bounding-box.js';
+import { chunk } from '@itk-viewer/io/dimensionUtils.js';
+import { viewportMachine } from '@itk-viewer/viewer/viewport.js';
+import { Camera } from '@itk-viewer/viewer/camera.js';
 import {
   RemoteActor,
   createHyphaMachineConfig,
   createRemoteViewport,
+  Image,
 } from '@itk-viewer/remote-viewport/remote-viewport.js';
-
-import type { Image } from '@itk-viewer/remote-viewport/remote-viewport.js';
 
 import { ItkViewport } from './itk-viewport.js';
 import './itk-camera.js';
-import { Bounds } from '@itk-viewer/io/types.js';
-import { chunk } from '@itk-viewer/io/dimensionUtils.js';
-import { viewportMachine } from '@itk-viewer/viewer/viewport.js';
-import { Camera } from '@itk-viewer/viewer/camera.js';
 
 type ViewportActor = ActorRefFrom<typeof viewportMachine>;
 

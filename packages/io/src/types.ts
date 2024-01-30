@@ -4,15 +4,6 @@ import { TypedArray } from 'itk-wasm';
 export type ValueOf<T> = T[keyof T];
 export type Awaitable<T> = Promise<T> | T;
 
-export type Bounds = [number, number, number, number, number, number];
-export type ReadonlyBounds = readonly [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-];
 export type Extent = [number, number, number, number, number, number];
 export type Range = [number, number];
 export type ReadonlyRange = readonly [number, number];

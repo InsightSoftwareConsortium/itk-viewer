@@ -5,7 +5,7 @@ import {
   getPipelinesBaseUrl,
   getPipelineWorkerUrl,
 } from 'itk-wasm';
-import { getSize } from '@itk-viewer/wasm-utils/dtypeUtils.js';
+import { getSize } from '@itk-viewer/utils/dtypeUtils.js';
 
 const cores = navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
 const numberOfWorkers = cores + Math.floor(Math.sqrt(cores));

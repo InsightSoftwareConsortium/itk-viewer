@@ -65,9 +65,9 @@ importers:
 
   packages/blosc-zarr:
     dependencies:
-      '@itk-viewer/wasm-utils':
+      '@itk-viewer/utils':
         specifier: workspace:^
-        version: link:../wasm-utils
+        version: link:../utils
       itk-wasm:
         specifier: 1.0.0-b.160
         version: 1.0.0-b.160
@@ -87,6 +87,9 @@ importers:
       '@itk-viewer/remote-viewport':
         specifier: workspace:^
         version: link:../remote-viewport
+      '@itk-viewer/utils':
+        specifier: workspace:^
+        version: link:../utils
       '@itk-viewer/viewer':
         specifier: workspace:^
         version: link:../viewer
@@ -164,9 +167,9 @@ importers:
       '@itk-viewer/blosc-zarr':
         specifier: workspace:^
         version: link:../blosc-zarr
-      '@itk-viewer/wasm-utils':
+      '@itk-viewer/utils':
         specifier: workspace:^
-        version: link:../wasm-utils
+        version: link:../utils
       axios:
         specifier: ^1.6.3
         version: 1.6.3
@@ -195,6 +198,9 @@ importers:
       '@itk-viewer/io':
         specifier: workspace:^
         version: link:../io
+      '@itk-viewer/utils':
+        specifier: workspace:^
+        version: link:../utils
       '@itk-viewer/viewer':
         specifier: workspace:^
         version: link:../viewer
@@ -255,14 +261,24 @@ importers:
         specifier: ^5.0.8
         version: 5.0.10
 
+  packages/utils:
+    dependencies:
+      itk-wasm:
+        specifier: 1.0.0-b.160
+        version: 1.0.0-b.160
+    devDependencies:
+      typescript:
+        specifier: ^5.3.3
+        version: 5.3.3
+
   packages/viewer:
     dependencies:
       '@itk-viewer/io':
         specifier: workspace:^
         version: link:../io
-      '@itk-viewer/wasm-utils':
+      '@itk-viewer/utils':
         specifier: workspace:^
-        version: link:../wasm-utils
+        version: link:../utils
       gl-matrix:
         specifier: ^3.4.3
         version: 3.4.3
@@ -304,16 +320,6 @@ importers:
       vite:
         specifier: ^5.0.10
         version: 5.0.10
-
-  packages/wasm-utils:
-    dependencies:
-      itk-wasm:
-        specifier: 1.0.0-b.160
-        version: 1.0.0-b.160
-    devDependencies:
-      typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
 
 packages:
 

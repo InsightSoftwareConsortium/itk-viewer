@@ -4,7 +4,7 @@ import {
   createBounds,
   getCorners,
   getLength,
-} from '@itk-viewer/wasm-utils/bounding-box.js';
+} from '@itk-viewer/utils/bounding-box.js';
 import { ReadonlyVec3, mat4, vec3, quat, ReadonlyQuat } from 'gl-matrix';
 import { ActorRefFrom, AnyActorRef, assign, createActor, setup } from 'xstate';
 
