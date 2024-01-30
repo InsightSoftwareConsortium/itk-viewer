@@ -1,4 +1,4 @@
-import { AnyEventObject } from 'xstate';
+import { Actor, AnyEventObject } from 'xstate';
 import { mat4 } from 'gl-matrix';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
@@ -19,6 +19,7 @@ import {
 const setupContainer = (
   rendererContainer: vtkGenericRenderWindow,
   container: HTMLElement,
+  self: Actor<typeof view2dLogic>,
 ) => {
   rendererContainer.setContainer(container as HTMLElement);
   rendererContainer.resize();
@@ -26,6 +27,8 @@ const setupContainer = (
   const resizer = new ResizeObserver((entries: Array<ResizeObserverEntry>) => {
     if (!entries.length) return;
     rendererContainer.resize();
+    const { width, height } = entries[0].contentRect;
+    self.send({ type: 'setResolution', resolution: [width, height] });
   });
   resizer.observe(container);
 
@@ -76,15 +79,21 @@ const createImplementation = () => {
       setContainer: ({
         event,
         context: { rendererContainer },
+        self,
       }: {
         event: AnyEventObject;
         context: Context;
+        self: unknown; // Actor<typeof view2dLogic>
       }) => {
         const { container } = event as SetContainerEvent;
         if (!container) {
           return cleanupContainer(rendererContainer);
         }
-        const scene = setupContainer(rendererContainer, container);
+        const scene = setupContainer(
+          rendererContainer,
+          container,
+          self as Actor<typeof view2dLogic>,
+        );
         actor = scene.actor;
         mapper = scene.mapper;
         renderer = scene.renderer;

@@ -1,4 +1,4 @@
-import { assign, setup } from 'xstate';
+import { assign, sendParent, setup } from 'xstate';
 import GenericRenderWindow, {
   vtkGenericRenderWindow,
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
@@ -20,6 +20,7 @@ export const view2dLogic = setup({
     context: Context;
     events:
       | SetContainerEvent
+      | { type: 'setResolution'; resolution: [number, number] }
       | { type: 'imageBuilt'; image: BuiltImage }
       | { type: 'setSlice'; slice: number }
       | { type: 'setCameraPose'; pose: Pose; parallelScaleRatio: number }
@@ -53,6 +54,13 @@ export const view2dLogic = setup({
       on: {
         setContainer: {
           actions: [{ type: 'setContainer' }],
+        },
+        setResolution: {
+          actions: [
+            sendParent(({ event }) => {
+              return event;
+            }),
+          ],
         },
         imageBuilt: {
           actions: [{ type: 'imageBuilt' }],

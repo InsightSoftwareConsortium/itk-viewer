@@ -31,6 +31,7 @@ export const view2d = setup({
       | { type: 'setSlice'; slice: number }
       | { type: 'setScale'; scale: number }
       | { type: 'setViewport'; viewport: ViewportActor }
+      | { type: 'setResolution'; resolution: [number, number] }
       | { type: 'setCamera'; camera: Camera }
       | CreateChild;
   },
@@ -61,13 +62,18 @@ export const view2d = setup({
         actor.send(event);
       });
     },
-    resetCameraPose: async ({ context: { image, camera } }) => {
+    resetCameraPose: async ({ context: { image, camera, viewport } }) => {
       if (!image || !camera) return;
+      const aspect = (() => {
+        if (!viewport) return 1;
+        const { resolution: dims } = viewport.getSnapshot().context;
+        return dims[1] && dims[0] ? dims[0] / dims[1] : 1;
+      })();
 
       const bounds = await image.getWorldBounds(image.coarsestScale);
       const { pose: currentPose, verticalFieldOfView } =
         camera.getSnapshot().context;
-      const pose = reset2d(currentPose, verticalFieldOfView, bounds);
+      const pose = reset2d(currentPose, verticalFieldOfView, bounds, aspect);
       camera.send({
         type: 'setPose',
         pose,
@@ -136,6 +142,14 @@ export const view2d = setup({
             assign({
               viewport: ({ event: { viewport } }) => viewport,
             }),
+          ],
+        },
+        setResolution: {
+          actions: [
+            ({ context: { viewport }, event: { resolution } }) => {
+              if (!viewport) return;
+              viewport.send({ type: 'setResolution', resolution });
+            },
           ],
         },
         setCamera: {

@@ -1,4 +1,10 @@
-import { Bounds } from '@itk-viewer/io/types.js';
+import {
+  Bounds,
+  addPoint,
+  createBounds,
+  getCorners,
+  getLength,
+} from '@itk-viewer/wasm-utils/bounding-box.js';
 import { ReadonlyVec3, mat4, vec3, quat, ReadonlyQuat } from 'gl-matrix';
 import { ActorRefFrom, AnyActorRef, assign, createActor, setup } from 'xstate';
 
@@ -184,6 +190,7 @@ export const reset2d = (
   pose: Pose,
   verticalFieldOfView: number,
   bounds: Bounds,
+  aspect: number,
 ) => {
   const center = vec3.fromValues(
     (bounds[0] + bounds[1]) / 2.0,
@@ -191,20 +198,24 @@ export const reset2d = (
     (bounds[4] + bounds[5]) / 2.0,
   );
 
-  let w1 = bounds[1] - bounds[0];
-  let w2 = bounds[3] - bounds[2];
-  let w3 = bounds[5] - bounds[4];
-  w1 *= w1;
-  w2 *= w2;
-  w3 *= w3;
-  let radius = w1 + w2 + w3;
-  // If we have just a single point, pick a radius of 1.0
-  radius = radius === 0 ? 1.0 : radius;
-  // compute the radius of the enclosing sphere
-  radius = Math.sqrt(radius) * 0.5;
+  // Get the bounds in view coordinates
+  const visiblePoints = getCorners(bounds);
+
+  const viewBounds = createBounds();
+  const viewMat = mat4.create();
+  toMat4(viewMat, pose);
+  for (let i = 0; i < visiblePoints.length; ++i) {
+    const point = visiblePoints[i];
+    vec3.transformMat4(point, point, viewMat);
+    addPoint(viewBounds, ...point);
+  }
+
+  const xLength = getLength(viewBounds, 0);
+  const yLength = getLength(viewBounds, 1);
+  const parallelScale = 0.5 * Math.max(yLength, xLength / aspect);
 
   const angle = verticalFieldOfView * (Math.PI / 180); // to radians
-  const distance = radius / Math.sin(angle * 0.5);
+  const distance = parallelScale / Math.tan(angle * 0.5);
 
-  return { center, rotation: pose.rotation, distance, parallelScale: radius };
+  return { center, rotation: pose.rotation, distance, parallelScale };
 };
