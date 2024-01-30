@@ -13,7 +13,7 @@ dist-ssr
 *.local
 
 # Editor directories and files
-.vscode/*
+.vscode
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -22,19 +22,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-
-
-test/data/
-test/data.tar.gz
-cypress/screenshots
-cypress/videos
-micromamba/
-
-types/
-
-.npmrc
-.pnpm-store
-
-# temp transpiled TS files that don't always get cleaned up
-vite.config.ts.timestamp-*.mjs
-vite.config.ts.timestamp-*.mts
