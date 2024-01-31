@@ -13,11 +13,13 @@ import {
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { CreateChild } from './children.js';
 import { Camera, reset3d } from './camera.js';
+import { ViewportActor } from './viewport.js';
 
 const viewContext = {
   scale: 0,
   image: undefined as MultiscaleSpatialImage | undefined,
   spawned: {} as Record<string, AnyActorRef>,
+  viewport: undefined as ViewportActor | undefined,
   camera: undefined as Camera | undefined,
 };
 
@@ -28,6 +30,8 @@ export const view3d = setup({
       | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'setScale'; scale: number }
       | { type: 'createRenderer'; logic: AnyActorLogic }
+      | { type: 'setViewport'; viewport: ViewportActor }
+      | { type: 'setResolution'; resolution: [number, number] }
       | { type: 'setCamera'; camera: Camera }
       | CreateChild;
   },
@@ -52,13 +56,17 @@ export const view3d = setup({
         actor.send(event);
       });
     },
-    resetCameraPose: async ({ context: { image, camera } }) => {
+    resetCameraPose: async ({ context: { image, camera, viewport } }) => {
       if (!image || !camera) return;
-
+      const aspect = (() => {
+        if (!viewport) return 1;
+        const { resolution: dims } = viewport.getSnapshot().context;
+        return dims[1] && dims[0] ? dims[0] / dims[1] : 1;
+      })();
       const bounds = await image.getWorldBounds(image.coarsestScale);
       const { pose: currentPose, verticalFieldOfView } =
         camera.getSnapshot().context;
-      const pose = reset3d(currentPose, verticalFieldOfView, bounds);
+      const pose = reset3d(currentPose, verticalFieldOfView, bounds, aspect);
 
       camera.send({
         type: 'setPose',
@@ -80,11 +88,11 @@ export const view3d = setup({
             assign({
               spawned: ({
                 spawn,
-                context: { spawned, camera },
+                context: { spawned, camera, viewport },
                 event: { logic, onActor },
               }) => {
                 // @ts-expect-error cannot spawn actor of type that is not in setup()
-                const child = spawn(logic);
+                const child = spawn(logic, { input: { viewport } });
                 if (camera) child.send({ type: 'setCamera', camera });
                 const id = Object.keys(spawned).length.toString();
                 onActor(child);
@@ -117,6 +125,21 @@ export const view3d = setup({
         setScale: {
           actions: [assign({ scale: ({ event }) => event.scale })],
           target: '.buildingImage',
+        },
+        setViewport: {
+          actions: [
+            assign({
+              viewport: ({ event: { viewport } }) => viewport,
+            }),
+          ],
+        },
+        setResolution: {
+          actions: [
+            ({ context: { viewport }, event: { resolution } }) => {
+              if (!viewport) return;
+              viewport.send({ type: 'setResolution', resolution });
+            },
+          ],
         },
         setCamera: {
           actions: [

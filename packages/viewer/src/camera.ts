@@ -176,6 +176,7 @@ export const reset3d = (
   pose: Pose,
   verticalFieldOfView: number,
   bounds: Bounds,
+  aspect: number,
 ) => {
   const center = vec3.fromValues(
     (bounds[0] + bounds[1]) / 2.0,
@@ -195,7 +196,11 @@ export const reset3d = (
   // compute the radius of the enclosing sphere
   radius = Math.sqrt(radius) * 0.5;
 
-  const radians = verticalFieldOfView * (Math.PI / 180);
+  const limitingDegrees = Math.min(
+    verticalFieldOfView * aspect, // horizontal field of view
+    verticalFieldOfView,
+  );
+  const radians = limitingDegrees * (Math.PI / 180);
   const distance = radius / Math.sin(radians * 0.5);
 
   return { center, rotation: pose.rotation, distance };
