@@ -18,10 +18,7 @@ export class ItkViewer extends LitElement {
   }
 
   render() {
-    return html`
-      <h1>Viewer</h1>
-      <slot @viewport=${handleLogic(this.actor)}></slot>
-    `;
+    return html`<slot @viewport=${handleLogic(this.actor)}></slot>`;
   }
 }
 
