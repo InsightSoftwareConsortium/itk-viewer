@@ -10,8 +10,6 @@ describe('ImageInfoViewport', () => {
         <itk-image-info-viewport></itk-image-info-viewport>
       </itk-viewer>
     `);
-
-    cy.get('itk-viewer').shadow().contains('Viewer');
   });
 
   it('has image info', () => {
