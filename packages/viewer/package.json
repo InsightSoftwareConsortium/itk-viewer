@@ -46,6 +46,7 @@
   },
   "dependencies": {
     "@itk-viewer/io": "workspace:^",
+    "@itk-viewer/utils": "workspace:^",
     "gl-matrix": "^3.4.3",
     "xstate": "5.5.2"
   }

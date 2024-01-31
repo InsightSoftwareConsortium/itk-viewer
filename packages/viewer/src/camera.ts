@@ -1,4 +1,10 @@
-import { Bounds } from '@itk-viewer/io/types.js';
+import {
+  Bounds,
+  addPoint,
+  createBounds,
+  getCorners,
+  getLength,
+} from '@itk-viewer/utils/bounding-box.js';
 import { ReadonlyVec3, mat4, vec3, quat, ReadonlyQuat } from 'gl-matrix';
 import { ActorRefFrom, AnyActorRef, assign, createActor, setup } from 'xstate';
 
@@ -29,8 +35,8 @@ const copyPose = (out: Pose, source: ReadonlyPose) => {
 };
 
 export const toMat4 = (() => {
-  const scratch0 = new Float32Array(16);
-  const scratch1 = new Float32Array(16);
+  const scratch0 = new Float32Array(4);
+  const scratch1 = new Float32Array(3);
   const matTemp = mat4.create();
   return (out: mat4, pose: ReadonlyPose) => {
     scratch1[0] = scratch1[1] = 0.0;
@@ -47,6 +53,7 @@ export const toMat4 = (() => {
 
 type Context = {
   pose: Pose;
+  enableRotation: boolean;
   verticalFieldOfView: number;
   parallelScaleRatio: number; // distance to parallelScale
   poseWatchers: Array<AnyActorRef>;
@@ -63,6 +70,7 @@ export const cameraMachine = setup({
     events:
       | { type: 'watchPose'; watcher: AnyActorRef }
       | { type: 'watchPoseStop'; watcher: AnyActorRef }
+      | { type: 'setEnableRotation'; enable: boolean }
       | SetPoseEvent;
   },
   actions: {
@@ -82,12 +90,13 @@ export const cameraMachine = setup({
 }).createMachine({
   id: 'camera',
   initial: 'active',
-  context: {
+  context: () => ({
     pose: createPose(),
+    enableRotation: true,
     parallelScaleRatio: 1,
     verticalFieldOfView: 50,
     poseWatchers: [],
-  },
+  }),
   states: {
     active: {
       on: {
@@ -95,10 +104,17 @@ export const cameraMachine = setup({
           actions: [
             assign({
               pose: ({ event: { pose }, context }) => {
-                return copyPose(context.pose, pose);
+                const clampedPose = {
+                  ...pose,
+                  rotation: context.enableRotation
+                    ? pose.rotation
+                    : context.pose.rotation,
+                };
+                return copyPose(context.pose, clampedPose);
               },
               parallelScaleRatio: ({ event: { pose }, context }) => {
                 const { distance, parallelScale = undefined } = pose;
+                // parallelScale updated during reset, not during normal camera movement
                 if (parallelScale === undefined)
                   return context.parallelScaleRatio;
                 return parallelScale / distance;
@@ -140,6 +156,11 @@ export const cameraMachine = setup({
             }),
           ],
         },
+        setEnableRotation: {
+          actions: assign({
+            enableRotation: ({ event }) => event.enable,
+          }),
+        },
       },
     },
   },
@@ -174,8 +195,8 @@ export const reset3d = (
   // compute the radius of the enclosing sphere
   radius = Math.sqrt(radius) * 0.5;
 
-  const angle = verticalFieldOfView * (Math.PI / 180); // to radians
-  const distance = radius / Math.sin(angle * 0.5);
+  const radians = verticalFieldOfView * (Math.PI / 180);
+  const distance = radius / Math.sin(radians * 0.5);
 
   return { center, rotation: pose.rotation, distance };
 };
@@ -184,6 +205,7 @@ export const reset2d = (
   pose: Pose,
   verticalFieldOfView: number,
   bounds: Bounds,
+  aspect: number,
 ) => {
   const center = vec3.fromValues(
     (bounds[0] + bounds[1]) / 2.0,
@@ -191,20 +213,25 @@ export const reset2d = (
     (bounds[4] + bounds[5]) / 2.0,
   );
 
-  let w1 = bounds[1] - bounds[0];
-  let w2 = bounds[3] - bounds[2];
-  let w3 = bounds[5] - bounds[4];
-  w1 *= w1;
-  w2 *= w2;
-  w3 *= w3;
-  let radius = w1 + w2 + w3;
-  // If we have just a single point, pick a radius of 1.0
-  radius = radius === 0 ? 1.0 : radius;
-  // compute the radius of the enclosing sphere
-  radius = Math.sqrt(radius) * 0.5;
+  // Get the bounds in view coordinates
+  const visiblePoints = getCorners(bounds);
 
-  const angle = verticalFieldOfView * (Math.PI / 180); // to radians
-  const distance = radius / Math.sin(angle * 0.5);
+  const viewBounds = createBounds();
+  const viewMat = mat4.create();
+  toMat4(viewMat, pose);
+  for (let i = 0; i < visiblePoints.length; ++i) {
+    const point = visiblePoints[i];
+    vec3.transformMat4(point, point, viewMat);
+    addPoint(viewBounds, ...point);
+  }
 
-  return { center, rotation: pose.rotation, distance, parallelScale: radius };
+  const xLength = getLength(viewBounds, 0);
+  const yLength = getLength(viewBounds, 1);
+  // compute half the width or height of the viewport
+  const parallelScale = 0.5 * Math.max(yLength, xLength / aspect);
+
+  const radians = verticalFieldOfView * (Math.PI / 180);
+  const distance = parallelScale / Math.tan(radians * 0.5);
+
+  return { center, rotation: pose.rotation, distance, parallelScale };
 };

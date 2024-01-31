@@ -10,8 +10,8 @@ import {
 import { ImageType, TypedArray } from 'itk-wasm';
 import WebworkerPromise from 'webworker-promise';
 
-import { getDtype } from '@itk-viewer/wasm-utils/dtypeUtils.js';
-
+import { getDtype } from '@itk-viewer/utils/dtypeUtils.js';
+import { Bounds, ReadonlyBounds } from '@itk-viewer/utils/bounding-box.js';
 import { componentTypeToTypedArray } from './componentTypeToTypedArray.js';
 import {
   chunk,
@@ -23,9 +23,7 @@ import {
 } from './dimensionUtils.js';
 import { transformBounds } from './transformBounds.js';
 import {
-  Bounds,
   Extent,
-  ReadonlyBounds,
   ReadOnlyDimensionBounds,
   ScaleInfo,
   SpatialDimensions,

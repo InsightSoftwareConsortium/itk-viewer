@@ -7,7 +7,7 @@ import {
   ElementGetter,
   getSize,
   testLittleEndian,
-} from '@itk-viewer/wasm-utils/dtypeUtils.js';
+} from '@itk-viewer/utils/dtypeUtils.js';
 
 const haveSharedArrayBuffer = typeof self.SharedArrayBuffer === 'function';
 

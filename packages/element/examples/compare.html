@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Compare</title>
+    <link rel="stylesheet" href="index.css" />
+    <script type="module" src="../src/itk-viewer-element.ts"></script>
+    <script type="module" src="../src/itk-viewport.ts"></script>
+    <script type="module" src="../src/itk-view-2d.ts"></script>
+    <script type="module" src="../src/itk-view-2d-vtkjs.ts"></script>
+
+    <script type="module" src="./compare.ts"></script>
+  </head>
+
+  <body>
+    <itk-viewer class="fill" style="flex-direction: row; gap: 0.25rem">
+      <itk-viewport class="fill">
+        <itk-view-2d class="fill">
+          <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
+        </itk-view-2d>
+      </itk-viewport>
+      <itk-viewport class="fill">
+        <itk-view-2d class="fill">
+          <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
+        </itk-view-2d>
+      </itk-viewport>
+    </itk-viewer>
+  </body>
+</html>

@@ -1,4 +1,4 @@
-import { assign, setup } from 'xstate';
+import { AnyActorRef, assign, sendTo, setup } from 'xstate';
 import GenericRenderWindow, {
   vtkGenericRenderWindow,
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
@@ -8,6 +8,7 @@ import { Camera, Pose } from '@itk-viewer/viewer/camera.js';
 export type Context = {
   rendererContainer: vtkGenericRenderWindow;
   camera: Camera | undefined;
+  parent: AnyActorRef;
 };
 
 export type SetContainerEvent = {
@@ -17,9 +18,11 @@ export type SetContainerEvent = {
 
 export const view2dLogic = setup({
   types: {} as {
+    input: { parent: AnyActorRef };
     context: Context;
     events:
       | SetContainerEvent
+      | { type: 'setResolution'; resolution: [number, number] }
       | { type: 'imageBuilt'; image: BuiltImage }
       | { type: 'setSlice'; slice: number }
       | { type: 'setCameraPose'; pose: Pose; parallelScaleRatio: number }
@@ -36,14 +39,21 @@ export const view2dLogic = setup({
     applyCameraPose: (_, __: { pose: Pose; parallelScaleRatio: number }) => {
       throw new Error('Function not implemented.');
     },
+    forwardToParent: sendTo(
+      ({ context }) => context.parent,
+      ({ event }) => {
+        return event;
+      },
+    ),
   },
 }).createMachine({
-  context: () => {
+  context: ({ input: { parent } }) => {
     return {
       rendererContainer: GenericRenderWindow.newInstance({
         listenWindowResize: false,
       }),
       camera: undefined,
+      parent,
     };
   },
   id: 'view2dVtkjs',
@@ -53,6 +63,9 @@ export const view2dLogic = setup({
       on: {
         setContainer: {
           actions: [{ type: 'setContainer' }],
+        },
+        setResolution: {
+          actions: ['forwardToParent'],
         },
         imageBuilt: {
           actions: [{ type: 'imageBuilt' }],

@@ -1,5 +1,5 @@
 {
-  "name": "@itk-viewer/wasm-utils",
+  "name": "@itk-viewer/utils",
   "version": "0.1.2",
   "description": "Utils for io and itk-wasm packages",
   "type": "module",

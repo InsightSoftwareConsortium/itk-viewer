@@ -42,7 +42,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
-    "@itk-viewer/wasm-utils": "workspace:^",
+    "@itk-viewer/utils": "workspace:^",
     "itk-wasm": "1.0.0-b.160"
   },
   "eslintConfig": {

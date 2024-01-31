@@ -18,7 +18,7 @@
     "cy:component": "cypress run --component",
     "cy:component:chrome": "cypress run --component --browser chrome",
     "clean": "git clean -fdx",
-    "ci:publish": "pnpm publish -r --access public"
+    "ci:publish": "pnpm --filter=!vtk-js-transfer-function-example publish -r --access public"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.1",
