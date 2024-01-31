@@ -35,8 +35,8 @@ const copyPose = (out: Pose, source: ReadonlyPose) => {
 };
 
 export const toMat4 = (() => {
-  const scratch0 = new Float32Array(16);
-  const scratch1 = new Float32Array(16);
+  const scratch0 = new Float32Array(4);
+  const scratch1 = new Float32Array(3);
   const matTemp = mat4.create();
   return (out: mat4, pose: ReadonlyPose) => {
     scratch1[0] = scratch1[1] = 0.0;
@@ -53,6 +53,7 @@ export const toMat4 = (() => {
 
 type Context = {
   pose: Pose;
+  enableRotation: boolean;
   verticalFieldOfView: number;
   parallelScaleRatio: number; // distance to parallelScale
   poseWatchers: Array<AnyActorRef>;
@@ -69,6 +70,7 @@ export const cameraMachine = setup({
     events:
       | { type: 'watchPose'; watcher: AnyActorRef }
       | { type: 'watchPoseStop'; watcher: AnyActorRef }
+      | { type: 'setEnableRotation'; enable: boolean }
       | SetPoseEvent;
   },
   actions: {
@@ -90,6 +92,7 @@ export const cameraMachine = setup({
   initial: 'active',
   context: {
     pose: createPose(),
+    enableRotation: true,
     parallelScaleRatio: 1,
     verticalFieldOfView: 50,
     poseWatchers: [],
@@ -101,10 +104,17 @@ export const cameraMachine = setup({
           actions: [
             assign({
               pose: ({ event: { pose }, context }) => {
-                return copyPose(context.pose, pose);
+                const clampedPose = {
+                  ...pose,
+                  rotation: context.enableRotation
+                    ? pose.rotation
+                    : context.pose.rotation,
+                };
+                return copyPose(context.pose, clampedPose);
               },
               parallelScaleRatio: ({ event: { pose }, context }) => {
                 const { distance, parallelScale = undefined } = pose;
+                // parallelScale updated during reset, not during normal camera movement
                 if (parallelScale === undefined)
                   return context.parallelScaleRatio;
                 return parallelScale / distance;
@@ -145,6 +155,11 @@ export const cameraMachine = setup({
               },
             }),
           ],
+        },
+        setEnableRotation: {
+          actions: assign({
+            enableRotation: ({ event }) => event.enable,
+          }),
         },
       },
     },

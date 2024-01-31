@@ -78,6 +78,10 @@ export const view2d = setup({
         type: 'setPose',
         pose,
       });
+      camera.send({
+        type: 'setEnableRotation',
+        enable: false,
+      });
     },
   },
 }).createMachine({
