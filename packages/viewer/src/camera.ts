@@ -90,13 +90,13 @@ export const cameraMachine = setup({
 }).createMachine({
   id: 'camera',
   initial: 'active',
-  context: {
+  context: () => ({
     pose: createPose(),
     enableRotation: true,
     parallelScaleRatio: 1,
     verticalFieldOfView: 50,
     poseWatchers: [],
-  },
+  }),
   states: {
     active: {
       on: {
@@ -195,8 +195,8 @@ export const reset3d = (
   // compute the radius of the enclosing sphere
   radius = Math.sqrt(radius) * 0.5;
 
-  const angle = verticalFieldOfView * (Math.PI / 180); // to radians
-  const distance = radius / Math.sin(angle * 0.5);
+  const radians = verticalFieldOfView * (Math.PI / 180);
+  const distance = radius / Math.sin(radians * 0.5);
 
   return { center, rotation: pose.rotation, distance };
 };
@@ -227,10 +227,11 @@ export const reset2d = (
 
   const xLength = getLength(viewBounds, 0);
   const yLength = getLength(viewBounds, 1);
+  // compute half the width or height of the viewport
   const parallelScale = 0.5 * Math.max(yLength, xLength / aspect);
 
-  const angle = verticalFieldOfView * (Math.PI / 180); // to radians
-  const distance = parallelScale / Math.tan(angle * 0.5);
+  const radians = verticalFieldOfView * (Math.PI / 180);
+  const distance = parallelScale / Math.tan(radians * 0.5);
 
   return { center, rotation: pose.rotation, distance, parallelScale };
 };
