@@ -4,7 +4,6 @@
 
 from pathlib import Path
 
-from imjoy_rpc.hypha import connect_to_server
 import zarr
 from ngff_zarr import (
     detect_cli_io_backend,
@@ -69,15 +68,11 @@ class RemoteZarr:
 
     async def connect(
         self,
-        hypha_server_url,
+        server,
         map_path=lambda p: p,
         visibility="public",
         identifier="remote-zarr",
     ):
-        server = await connect_to_server(
-            {"name": "remote-zarr", "server_url": hypha_server_url}
-        )
-
         self.map_path = map_path
 
         await server.register_service(
