@@ -107,9 +107,10 @@ const createImplementation = () => {
         event: AnyEventObject;
         context: Context;
       }) => {
-        const { image } = event;
+        const { image, sliceIndex } = event;
         const vtkImage = vtkITKHelper.convertItkToVtkImage(image);
         mapper!.setInputData(vtkImage);
+        mapper!.setSlice(sliceIndex);
 
         // add actor to renderer after mapper has data to avoid vtkjs message
         if (!addedActorToRenderer) {

@@ -6,29 +6,31 @@ setPipelineWorkerUrl(pipelineWorkerUrl);
 const pipelineBaseUrl = '/itk/pipelines';
 setPipelinesBaseUrl(pipelineBaseUrl);
 
-document.addEventListener('DOMContentLoaded', async function () {
-  const imagePath = '/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr';
+const makeZarrImage = (imagePath: string) => {
   const url = new URL(imagePath, document.location.origin);
-  const image = await ZarrMultiscaleSpatialImage.fromUrl(url);
+  return ZarrMultiscaleSpatialImage.fromUrl(url);
+};
+
+document.addEventListener('DOMContentLoaded', async function () {
+  const image = await makeZarrImage(
+    '/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr',
+  );
 
   const viewerElement = document.querySelector('itk-viewer');
   if (!viewerElement) throw new Error('Could not find element');
   const viewer = viewerElement.getActor();
   viewer.send({ type: 'setImage', image, name: 'image' });
 
-  const bigView = document.querySelectorAll('itk-view-2d')[0];
-  bigView.getActor()?.send({ type: 'setScale', scale: 0 });
+  const first2d = document.querySelectorAll('itk-view-2d')[0];
+  first2d.getActor()?.send({ type: 'setScale', scale: 0 });
 
-  const lastView = document.querySelectorAll('itk-viewport')[2];
-  if (!lastView) throw new Error('Could not find viewport element');
-  const viewActor = lastView.getActor();
-  if (!viewActor) throw new Error('No view actor');
-
-  const image2dUrl = new URL(
+  const image2d = await makeZarrImage(
     '/ome-ngff-prototypes/single_image/v0.4/tyx.ome.zarr',
-    document.location.origin,
   );
-  const image2d = await ZarrMultiscaleSpatialImage.fromUrl(image2dUrl);
+  const lastViewport = document.querySelectorAll('itk-viewport')[2];
+  if (!lastViewport) throw new Error('Could not find viewport element');
+  const viewActor = lastViewport.getActor();
+  if (!viewActor) throw new Error('No view actor');
   viewActor.send({ type: 'setImage', image: image2d });
   // viewActor.send({ type: 'setSlice', slice: 0.8 });
 });
