@@ -1,5 +1,5 @@
 import { Actor, AnyEventObject } from 'xstate';
-import { mat4 } from 'gl-matrix';
+import { mat4, vec3 } from 'gl-matrix';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
@@ -138,9 +138,39 @@ const createImplementation = () => {
       ) => {
         const cameraVtk = renderer?.getActiveCamera();
         if (!cameraVtk) return;
-        toMat4(viewMat, pose);
-        cameraVtk.setViewMatrix(viewMat as mat4);
         cameraVtk.setParallelScale(parallelScaleRatio * pose.distance);
+
+        const image = mapper?.getInputData();
+        if (image) {
+          // ensure the camera is outside the image
+          const bounds = image.getBounds();
+
+          const center = vec3.fromValues(
+            (bounds[0] + bounds[1]) / 2.0,
+            (bounds[2] + bounds[3]) / 2.0,
+            (bounds[4] + bounds[5]) / 2.0,
+          );
+          const distanceToCenter = vec3.distance(center, pose.center);
+
+          let w1 = bounds[1] - bounds[0];
+          let w2 = bounds[3] - bounds[2];
+          let w3 = bounds[5] - bounds[4];
+          w1 *= w1;
+          w2 *= w2;
+          w3 *= w3;
+          let radius = w1 + w2 + w3;
+          // If we have just a single point, pick a radius of 1.0
+          radius = radius === 0 ? 1.0 : radius;
+          // compute the radius of the enclosing sphere
+          radius = Math.sqrt(radius) * 0.5;
+
+          const ensureOutOfImageDistance = distanceToCenter + radius;
+
+          toMat4(viewMat, { ...pose, distance: ensureOutOfImageDistance });
+        } else {
+          toMat4(viewMat, pose);
+        }
+        cameraVtk.setViewMatrix(viewMat as mat4);
 
         render();
       },
