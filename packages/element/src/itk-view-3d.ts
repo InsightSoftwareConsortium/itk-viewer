@@ -1,16 +1,24 @@
 import { View3dActor, view3d } from '@itk-viewer/viewer/view-3d.js';
 import { LitElement, css, html, nothing } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { SelectorController } from 'xstate-lit';
 import { dispatchSpawn, handleLogic } from './spawn-controller.js';
+import { Camera } from '@itk-viewer/viewer/camera.js';
+import './itk-view-3d-vtkjs.js';
+import './itk-camera.js';
 
 type Actor = View3dActor;
+type Renderer = 'vtkjs' | 'slot';
 
 @customElement('itk-view-3d')
 export class ItkView3d extends LitElement {
+  @property({ type: String })
+  renderer: Renderer = 'slot';
+
   actor: Actor | undefined;
   scale: SelectorController<Actor, number> | undefined;
   scaleCount: SelectorController<Actor, number> | undefined;
+  cameraActor: SelectorController<Actor, Camera | undefined> | undefined;
   dispatched = false;
 
   setActor(actor: Actor) {
@@ -26,6 +34,11 @@ export class ItkView3d extends LitElement {
       if (!image) return 1;
       return image.coarsestScale + 1;
     });
+    this.cameraActor = new SelectorController(
+      this,
+      this.actor,
+      (state) => state.context.camera,
+    );
   }
 
   getActor() {
@@ -36,6 +49,16 @@ export class ItkView3d extends LitElement {
     const target = event.target as HTMLInputElement;
     const scale = Number(target.value);
     this.actor!.send({ type: 'setScale', scale });
+  }
+
+  getAttributeRenderer() {
+    if (this.renderer === 'vtkjs') {
+      return html`<itk-view-3d-vtkjs></itk-view-3d-vtkjs>`;
+    } else if (this.renderer === 'slot') {
+      return html`<slot></slot>`;
+    }
+    const _exhaustiveCheck: never = this.renderer;
+    throw new Error(`Invalid renderer ${_exhaustiveCheck}`);
   }
 
   render() {
@@ -64,7 +87,11 @@ export class ItkView3d extends LitElement {
           )}
         </select>
       </div>
-      <slot class="fill" @renderer=${handleLogic(this.actor)}></slot>
+      <div class="fill" @renderer=${handleLogic(this.actor)}>
+        <itk-camera .actor=${this.cameraActor?.value} class="fill">
+          ${this.getAttributeRenderer()}
+        </itk-camera>
+      </div>
     `;
   }
 

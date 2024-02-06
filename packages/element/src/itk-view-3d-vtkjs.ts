@@ -5,9 +5,6 @@ import { Actor } from 'xstate';
 
 import { createLogic } from '@itk-viewer/vtkjs/view-3d-vtkjs.js';
 import { dispatchSpawn } from './spawn-controller.js';
-import { SelectorController } from 'xstate-lit';
-import { Camera } from '@itk-viewer/viewer/camera.js';
-import './itk-camera.js';
 
 type ComponentActor = Actor<ReturnType<typeof createLogic>>;
 
@@ -17,10 +14,6 @@ export class ItkView3dVtkjs extends LitElement {
   container: HTMLElement | undefined;
   dispatched = false;
 
-  cameraActor:
-    | SelectorController<ComponentActor, Camera | undefined>
-    | undefined;
-
   getActor() {
     return this.actor;
   }
@@ -28,11 +21,6 @@ export class ItkView3dVtkjs extends LitElement {
   protected setActor(actor: ComponentActor) {
     this.actor = actor;
     this.sendContainer();
-    this.cameraActor = new SelectorController(
-      this,
-      this.actor,
-      (state) => state.context.camera,
-    );
   }
 
   protected sendContainer() {
@@ -55,11 +43,7 @@ export class ItkView3dVtkjs extends LitElement {
       this.dispatched = true;
     }
 
-    return html`
-      <itk-camera .actor=${this.cameraActor?.value} class="container">
-        <div class="container" ${ref(this.onContainer)}></div>
-      </itk-camera>
-    `;
+    return html` <div class="container" ${ref(this.onContainer)}></div> `;
   }
 
   static styles = css`

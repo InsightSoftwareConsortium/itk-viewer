@@ -201,7 +201,7 @@ export const reset3d = (
     verticalFieldOfView,
   );
   const radians = limitingDegrees * (Math.PI / 180);
-  const distance = radius / Math.sin(radians * 0.5);
+  const distance = radius / Math.tan(radians * 0.5);
 
   return { center, rotation: pose.rotation, distance };
 };
@@ -219,9 +219,8 @@ export const reset2d = (
   );
 
   // Get the bounds in view coordinates
-  const visiblePoints = getCorners(bounds);
-
   const viewBounds = createBounds();
+  const visiblePoints = getCorners(bounds);
   const viewMat = mat4.create();
   toMat4(viewMat, pose);
   for (let i = 0; i < visiblePoints.length; ++i) {
