@@ -11,8 +11,12 @@ document.addEventListener('DOMContentLoaded', async function () {
   const url = new URL(imagePath, document.location.origin);
   const image = await ZarrMultiscaleSpatialImage.fromUrl(url);
 
-  const viewerElement = document.querySelector('itk-viewer');
-  if (!viewerElement) throw new Error('Could not find element');
+  const viewerElement = document.querySelector('itk-viewer')!;
   const viewer = viewerElement.getActor();
   viewer.send({ type: 'setImage', image, name: 'image' });
+
+  const view2d = document.querySelector('itk-view-2d')!;
+  const view2dActor = view2d.getActor()!;
+  const controls = document.querySelector('view-2d-controls')!;
+  controls.setActor(view2dActor);
 });
