@@ -48,15 +48,17 @@ export const viewportMachine = setup({
         actor.send(event);
       });
     },
-    resetCameraPose: async ({ context: { image }, self }) => {
+    resetCameraPose: async ({ context: { image, resolution: dims }, self }) => {
       const { camera } = self.getSnapshot().children;
       if (!image || !camera) return;
 
+      const aspect = (() => {
+        return dims[1] && dims[0] ? dims[0] / dims[1] : 1;
+      })();
       const bounds = await image.getWorldBounds(image.coarsestScale);
       const { pose: currentPose, verticalFieldOfView } =
         camera.getSnapshot().context;
-      const pose = reset3d(currentPose, verticalFieldOfView, bounds);
-
+      const pose = reset3d(currentPose, verticalFieldOfView, bounds, aspect);
       camera.send({
         type: 'setPose',
         pose,

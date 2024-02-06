@@ -4,10 +4,12 @@ import GenericRenderWindow, {
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera, ReadonlyPose } from '@itk-viewer/viewer/camera.js';
+import { ViewportActor } from '@itk-viewer/viewer/viewport.js';
 
 export type Context = {
   rendererContainer: vtkGenericRenderWindow;
   camera: Camera | undefined;
+  viewport: ViewportActor;
 };
 
 export type SetContainerEvent = {
@@ -17,9 +19,11 @@ export type SetContainerEvent = {
 
 export const view3dLogic = setup({
   types: {} as {
+    input: { viewport: ViewportActor };
     context: Context;
     events:
       | SetContainerEvent
+      | { type: 'setResolution'; resolution: [number, number] }
       | { type: 'imageBuilt'; image: BuiltImage }
       | { type: 'setSlice'; slice: number }
       | { type: 'setCameraPose'; pose: ReadonlyPose }
@@ -36,14 +40,24 @@ export const view3dLogic = setup({
     applyCameraPose: (_, __: { pose: ReadonlyPose }) => {
       throw new Error('Function not implemented.');
     },
+    forwardResolution: (
+      _,
+      {
+        viewport,
+        resolution,
+      }: { viewport: ViewportActor; resolution: [number, number] },
+    ) => {
+      viewport.send({ type: 'setResolution', resolution });
+    },
   },
 }).createMachine({
-  context: () => {
+  context: ({ input: { viewport } }) => {
     return {
       rendererContainer: GenericRenderWindow.newInstance({
         listenWindowResize: false,
       }),
       camera: undefined,
+      viewport,
     };
   },
   id: 'view3dVtkjs',
@@ -53,6 +67,17 @@ export const view3dLogic = setup({
       on: {
         setContainer: {
           actions: [{ type: 'setContainer' }],
+        },
+        setResolution: {
+          actions: [
+            {
+              type: 'forwardResolution',
+              params: ({ event: { resolution }, context: { viewport } }) => ({
+                viewport,
+                resolution,
+              }),
+            },
+          ],
         },
         imageBuilt: {
           actions: [{ type: 'imageBuilt' }],

@@ -51,8 +51,24 @@ export const view2d = setup({
         const worldZ = worldBounds[4] + zWidth * slice;
         worldBounds[4] = worldZ;
         worldBounds[5] = worldZ;
-        const builtImage = await image.getImage(scale, worldBounds);
-        return builtImage as BuiltImage;
+        const builtImage = (await image.getImage(
+          scale,
+          worldBounds,
+        )) as BuiltImage;
+
+        if (builtImage.imageType.dimension === 2) {
+          return { builtImage, sliceIndex: 0 };
+        }
+        // buildImage could be larger than slice if cached so
+        // find index of slice in builtImage
+        const builtWidthWorld = builtImage.spacing[2] * builtImage.size[2];
+        const sliceInBuildImageWorld = worldZ - builtImage.origin[2];
+        const sliceIndexFloat = Math.round(
+          builtImage.size[2] * (sliceInBuildImageWorld / builtWidthWorld),
+        );
+        // Math.round goes up with .5, so we need to clamp to max index
+        const sliceIndex = Math.min(sliceIndexFloat, builtImage.size[2] - 1);
+        return { builtImage, sliceIndex };
       },
     ),
   },
@@ -188,7 +204,8 @@ export const view2d = setup({
                   Object.values(context.spawned).forEach((actor) => {
                     enqueue.sendTo(actor, {
                       type: 'imageBuilt',
-                      image: output,
+                      image: output.builtImage,
+                      sliceIndex: output.sliceIndex,
                     });
                   });
                 }),
