@@ -12,6 +12,9 @@ export default defineConfig({
     },
     sourcemap: true,
   },
+  server: {
+    port: 5174,
+  },
   test: {
     setupFiles: ['./vitest.setup.ts'],
     environment: 'happy-dom',

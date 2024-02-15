@@ -2,7 +2,7 @@
   "name": "vtk-js-transfer-function-example",
   "version": "1.0.0",
   "scripts": {
-    "dev": "vite"
+    "dev": "vite --port 5175"
   },
   "dependencies": {
     "@kitware/vtk.js": "^29.2.0"

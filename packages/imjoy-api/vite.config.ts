@@ -3,6 +3,9 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
   publicDir: '../../test/data/input',
+  server: {
+    port: 5176,
+  },
   optimizeDeps: {
     exclude: ['@itk-wasm/htj2k', 'itk-wasm'],
   },
