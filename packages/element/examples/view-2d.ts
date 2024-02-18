@@ -17,6 +17,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   const view2d = document.querySelector('itk-view-2d')!;
   const view2dActor = view2d.getActor()!;
-  const controls = document.querySelector('view-2d-controls')!;
+  const controls = document.querySelector('itk-view-2d-controls')!;
   controls.setActor(view2dActor);
 });

@@ -3,7 +3,7 @@ import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { customElement } from 'lit/decorators.js';
 import { SelectorController } from 'xstate-lit';
 
-@customElement('view-2d-controls')
+@customElement('itk-view-2d-controls')
 export class View2dControls extends LitElement {
   actor: View2dActor | undefined;
   scale: SelectorController<View2dActor, number> | undefined;
@@ -82,6 +82,6 @@ export class View2dControls extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'view-2d-controls': View2dControls;
+    'itk-view-2d-controls': View2dControls;
   }
 }
