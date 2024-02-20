@@ -12,6 +12,9 @@ export default defineConfig({
       external: /^lit/,
     },
   },
+  server: {
+    port: 5173,
+  },
   optimizeDeps: {
     exclude: ['@itk-wasm/htj2k', 'itk-wasm'],
   },

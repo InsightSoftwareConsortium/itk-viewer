@@ -23,10 +23,7 @@ export class ItkViewport extends LitElement {
       );
       this.dispatched = true;
     }
-    return html`
-      <h1>Viewport</h1>
-      <slot @view=${handleLogic(this.actor)}></slot>
-    `;
+    return html`<slot @view=${handleLogic(this.actor)}></slot>`;
   }
 }
 
