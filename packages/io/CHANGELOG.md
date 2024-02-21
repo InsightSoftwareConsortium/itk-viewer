@@ -1,5 +1,16 @@
 # @itk-viewer/io
 
+## 0.1.6
+
+### Patch Changes
+
+- 560e3e2: Add orthographic camera and zooming to 2D view.
+- 7d7ebd5: Update itk-wasm version to avoid webworker-promise dep.
+- Updated dependencies [560e3e2]
+- Updated dependencies [7d7ebd5]
+  - @itk-viewer/blosc-zarr@0.1.3
+  - @itk-viewer/utils@0.1.3
+
 ## 0.1.5
 
 ### Patch Changes

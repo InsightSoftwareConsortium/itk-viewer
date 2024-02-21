@@ -1,6 +1,6 @@
 {
   "name": "@itk-viewer/arcball",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Rotate, pan, and zoom a camera using an arcball.",
   "main": "src/arcball.js",
   "types": "src/arcball.d.ts",
