@@ -1,5 +1,12 @@
 # @itk-viewer/wasm-utils
 
+## 0.1.3
+
+### Patch Changes
+
+- 560e3e2: Add orthographic camera and zooming to 2D view.
+- 7d7ebd5: Update itk-wasm version to avoid webworker-promise dep.
+
 ## 0.1.2
 
 ### Patch Changes

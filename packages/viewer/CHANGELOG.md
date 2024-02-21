@@ -1,5 +1,15 @@
 # @itk-viewer/viewer
 
+## 0.2.6
+
+### Patch Changes
+
+- 560e3e2: Add orthographic camera and zooming to 2D view.
+- Updated dependencies [560e3e2]
+- Updated dependencies [7d7ebd5]
+  - @itk-viewer/utils@0.1.3
+  - @itk-viewer/io@0.1.6
+
 ## 0.2.5
 
 ### Patch Changes
