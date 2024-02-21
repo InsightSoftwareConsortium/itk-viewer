@@ -6,4 +6,4 @@ micromamba/*
 venv/*
 packages/blosc-zarr/*
 !packages/blosc-zarr/bloscZarrDecompress.js
-.changesets/*
+.changeset/*
