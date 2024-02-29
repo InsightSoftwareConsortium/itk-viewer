@@ -1,5 +1,6 @@
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
+import { View2dControlsMaterial } from '../src/itk-view-2d-controls-material.js';
 
 const pipelineWorkerUrl = '/itk/web-workers/itk-wasm-pipeline.min.worker.js';
 setPipelineWorkerUrl(pipelineWorkerUrl);
@@ -17,6 +18,8 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   const view2d = document.querySelector('itk-view-2d')!;
   const view2dActor = view2d.getActor()!;
-  const controls = document.querySelector('itk-view-2d-controls-shoelace')!;
+  const controls = document.querySelector(
+    '#view-controls',
+  )! as View2dControlsMaterial;
   controls.setActor(view2dActor);
 });
