@@ -1,55 +1,22 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { customElement } from 'lit/decorators.js';
-import { SelectorController } from 'xstate-lit';
+import { View2dControls } from './view-2d-controls-controller.js';
 
 @customElement('itk-view-2d-controls-material')
 export class View2dControlsMaterial extends LitElement {
   actor: View2dActor | undefined;
-  scale: SelectorController<View2dActor, number> | undefined;
-  scaleCount: SelectorController<View2dActor, number> | undefined;
-  slice: SelectorController<View2dActor, number> | undefined;
+  private controls = new View2dControls(this);
 
   setActor(actor: View2dActor) {
     this.actor = actor;
-
-    this.slice = new SelectorController(
-      this,
-      this.actor,
-      (state) => state.context.slice,
-    );
-    this.scale = new SelectorController(
-      this,
-      this.actor,
-      (state) => state.context.scale,
-    );
-    this.scaleCount = new SelectorController(this, this.actor, (state) => {
-      const image = state.context.image;
-      if (!image) return 1;
-      return image.coarsestScale + 1;
-    });
-    this.requestUpdate(); // trigger render with selected state
-  }
-
-  onSlice(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const slice = Number(target.value);
-    this.actor!.send({
-      type: 'setSlice',
-      slice,
-    });
-  }
-
-  onScale(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const scale = Number(target.value);
-    this.actor!.send({ type: 'setScale', scale });
+    this.controls.setActor(actor);
   }
 
   render() {
-    const slice = this.slice?.value;
-    const scale = this.scale?.value;
-    const scaleCount = this.scaleCount?.value ?? 1;
+    const slice = this.controls.slice?.value;
+    const scale = this.controls.scale?.value;
+    const scaleCount = this.controls.scaleCount?.value ?? 1;
     const scaleOptions = Array.from(
       { length: scaleCount },
       (_, i) => i,
@@ -61,7 +28,7 @@ export class View2dControlsMaterial extends LitElement {
           Slice
           <md-slider
             .value=${slice}
-            @change="${this.onSlice}"
+            @change="${this.controls.onSlice}"
             min="0"
             max="1"
             step=".01"
@@ -70,7 +37,7 @@ export class View2dControlsMaterial extends LitElement {
           ></md-slider>
         </label>
         <md-outlined-select
-          @change="${this.onScale}"
+          @change="${this.controls.onScale}"
           label="Image Scale"
           style="display: block;"
         >
