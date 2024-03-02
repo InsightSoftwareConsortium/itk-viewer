@@ -1,34 +1,16 @@
 import { LitElement, html } from 'lit';
 import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { customElement } from 'lit/decorators.js';
-import { SelectorController } from 'xstate-lit';
+import { View2dControls } from './view-2d-controls-controller.js';
 
 @customElement('itk-view-2d-controls-shoelace')
 export class View2dControlsShoelace extends LitElement {
   actor: View2dActor | undefined;
-  scale: SelectorController<View2dActor, number> | undefined;
-  scaleCount: SelectorController<View2dActor, number> | undefined;
-  slice: SelectorController<View2dActor, number> | undefined;
+  private controls = new View2dControls(this);
 
   setActor(actor: View2dActor) {
     this.actor = actor;
-
-    this.slice = new SelectorController(
-      this,
-      this.actor,
-      (state) => state.context.slice,
-    );
-    this.scale = new SelectorController(
-      this,
-      this.actor,
-      (state) => state.context.scale,
-    );
-    this.scaleCount = new SelectorController(this, this.actor, (state) => {
-      const image = state.context.image;
-      if (!image) return 1;
-      return image.coarsestScale + 1;
-    });
-    this.requestUpdate(); // needed to trigger render with selected state
+    this.controls.setActor(actor);
   }
 
   onSlice(event: Event) {
@@ -47,19 +29,19 @@ export class View2dControlsShoelace extends LitElement {
   }
 
   render() {
-    const slice = this.slice?.value ?? 0;
-    const scale = this.scale?.value ?? 0;
-    const scaleCount = this.scaleCount?.value ?? 1;
+    const slice = this.controls.slice?.value;
+    const scale = this.controls.scale?.value;
+    const scaleCount = this.controls.scaleCount?.value ?? 1;
     const scaleOptions = Array.from(
       { length: scaleCount },
       (_, i) => i,
     ).reverse();
 
     return html`
-      <sl-card class="card-basic">
+      <sl-card>
         <sl-range
           .value=${Number(slice)}
-          @sl-change="${this.onSlice}"
+          @sl-change="${this.controls.onSlice}"
           min="0"
           max="1"
           step=".01"
@@ -68,7 +50,7 @@ export class View2dControlsShoelace extends LitElement {
         <sl-select
           label="Image Scale"
           value=${scale}
-          @sl-change="${this.onScale}"
+          @sl-change="${this.controls.onScale}"
         >
           ${scaleOptions.map(
             (option) =>

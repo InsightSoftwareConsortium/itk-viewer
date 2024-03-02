@@ -5,6 +5,13 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>itk-view-2d</title>
+
+    <link rel="stylesheet" href="index.css" />
+    <script type="module" src="../src/itk-viewer-element.ts"></script>
+    <script type="module" src="../src/itk-viewport.ts"></script>
+    <script type="module" src="../src/itk-view-2d.ts"></script>
+    <script type="module" src="../src/itk-view-2d-vtkjs.ts"></script>
+
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.13.1/cdn/themes/light.css"
@@ -13,15 +20,19 @@
       type="module"
       src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.13.1/cdn/shoelace.js"
     ></script>
-
-    <link rel="stylesheet" href="index.css" />
-    <script type="module" src="../src/itk-viewer-element.ts"></script>
-    <script type="module" src="../src/itk-viewport.ts"></script>
-    <script type="module" src="../src/itk-view-2d.ts"></script>
-    <script type="module" src="../src/itk-view-2d-vtkjs.ts"></script>
     <script
       type="module"
       src="../src/itk-view-2d-controls-shoelace.ts"
+    ></script>
+
+    <script type="module">
+      import '@material/web/slider/slider.js';
+      import '@material/web/select/outlined-select.js';
+      import '@material/web/select/select-option.js';
+    </script>
+    <script
+      type="module"
+      src="../src/itk-view-2d-controls-material.ts"
     ></script>
     <script type="module" src="./view-2d.ts"></script>
   </head>
@@ -31,7 +42,12 @@
       <itk-viewport class="fill">
         <div style="position: relative" class="fill">
           <div style="position: absolute; top: 0.25rem; left: 0.25rem">
-            <itk-view-2d-controls-shoelace></itk-view-2d-controls-shoelace>
+            <itk-view-2d-controls-shoelace
+              id="view-controls"
+            ></itk-view-2d-controls-shoelace>
+            <!-- <itk-view-2d-controls-material
+              id="view-controls"
+            ></itk-view-2d-controls-material> -->
           </div>
           <itk-view-2d class="fill">
             <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
