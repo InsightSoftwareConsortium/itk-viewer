@@ -147,7 +147,7 @@ const makeCoords = ({
         }
         coords.set(dim, coordsPerElement);
       }
-      return coords.get(dim) as Float32Array;
+      return coords.get(dim);
     },
     has(dim: Dimension) {
       return axes.includes(dim);

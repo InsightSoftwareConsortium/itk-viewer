@@ -109,7 +109,7 @@ const extentToBounds = (ex: Extent, indexToWorld: mat4) => {
   return bounds;
 };
 
-const ensure3dDirection = (d: Float64Array): ReadonlyMat3 => {
+export const ensure3dDirection = (d: Float64Array): ReadonlyMat3 => {
   if (d.length >= 9) {
     return mat3.fromValues(
       d[0],
