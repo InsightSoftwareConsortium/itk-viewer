@@ -1,7 +1,6 @@
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
-import { View2dControlsMaterial } from '../src/itk-view-2d-controls-material.js';
-import { View2dControlsShoelace } from '../src/itk-view-2d-controls-shoelace.js';
+import { ItkViewer2d } from '../src/itk-viewer-2d.js';
 
 const pipelineWorkerUrl = '/itk/web-workers/itk-wasm-pipeline.min.worker.js';
 setPipelineWorkerUrl(pipelineWorkerUrl);
@@ -13,14 +12,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   const url = new URL(imagePath, document.location.origin);
   const image = await ZarrMultiscaleSpatialImage.fromUrl(url);
 
-  const viewerElement = document.querySelector('itk-viewer')!;
+  const viewerElement = document.querySelector('#viewer')! as ItkViewer2d;
   const viewer = viewerElement.getActor();
-  viewer.send({ type: 'setImage', image, name: 'image' });
-
-  const view2d = document.querySelector('itk-view-2d')!;
-  const view2dActor = view2d.getActor()!;
-  const controls = document.querySelector('#view-controls')! as
-    | View2dControlsMaterial
-    | View2dControlsShoelace;
-  controls.setActor(view2dActor);
+  viewer!.send({ type: 'setImage', image, name: 'image' });
 });
