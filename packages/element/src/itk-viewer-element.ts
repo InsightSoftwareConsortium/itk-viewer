@@ -9,10 +9,6 @@ import { handleLogic } from './spawn-controller.js';
 export class ItkViewer extends LitElement {
   actor = createActor(viewerMachine).start();
 
-  constructor() {
-    super();
-  }
-
   getActor() {
     return this.actor;
   }
