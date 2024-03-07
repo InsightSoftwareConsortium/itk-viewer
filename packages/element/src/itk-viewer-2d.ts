@@ -9,14 +9,13 @@ import { ItkView2d } from './itk-view-2d.js';
 import './itk-view-2d-vtkjs.js';
 import { View2dControlsShoelace } from './itk-view-2d-controls-shoelace.js';
 import './itk-view-2d-controls-shoelace.js';
-import { View2dControlsMaterial } from './itk-view-2d-controls-material.js';
 // import './itk-view-2d-controls-material.js';
 
 @customElement('itk-viewer-2d')
 export class ItkViewer2d extends LitElement {
   viewer: Ref<ItkViewer> = createRef();
   view: Ref<ItkView2d> = createRef();
-  controls: Ref<View2dControlsMaterial | View2dControlsShoelace> = createRef();
+  controls: Ref<View2dControlsShoelace> = createRef();
 
   getActor() {
     return this.viewer.value?.getActor();
@@ -32,7 +31,7 @@ export class ItkViewer2d extends LitElement {
                 ${ref(this.controls)}
               ></itk-view-2d-controls-shoelace>
               <!-- <itk-view-2d-controls-material
-                id="view-controls"
+                ${ref(this.controls)}
               ></itk-view-2d-controls-material> -->
             </div>
             <itk-view-2d ${ref(this.view)} class="fill">
