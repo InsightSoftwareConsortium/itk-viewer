@@ -1,5 +1,12 @@
 # @itk-viewer/viewer
 
+## 0.2.7
+
+### Patch Changes
+
+- Updated dependencies [bd33e7a]
+  - @itk-viewer/io@0.1.7
+
 ## 0.2.6
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @itk-viewer/io
 
+## 0.1.7
+
+### Patch Changes
+
+- bd33e7a: Add ItkWasmMultiscaleSpatialImage.
+
 ## 0.1.6
 
 ### Patch Changes

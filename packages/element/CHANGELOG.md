@@ -1,5 +1,17 @@
 # @itk-viewer/element
 
+## 0.2.11
+
+### Patch Changes
+
+- 9235b41: Hide view-2d GUI input controls if just 1 option.
+- bd33e7a: Add itk-viewer-2d componenet which wraps itk-viewer.
+- Updated dependencies [bd33e7a]
+  - @itk-viewer/io@0.1.7
+  - @itk-viewer/remote-viewport@0.2.10
+  - @itk-viewer/viewer@0.2.7
+  - @itk-viewer/vtkjs@0.0.4
+
 ## 0.2.10
 
 ### Patch Changes
