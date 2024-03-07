@@ -26,7 +26,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "ngff-zarr[dask-image]",
+  "ngff-zarr",
   "zarr",
   "hypha",
   "numpy",
