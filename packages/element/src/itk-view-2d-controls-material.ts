@@ -2,6 +2,9 @@ import { LitElement, css, html, nothing } from 'lit';
 import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { customElement } from 'lit/decorators.js';
 import { View2dControls } from './view-2d-controls-controller.js';
+import '@material/web/slider/slider.js';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
 
 @customElement('itk-view-2d-controls-material')
 export class View2dControlsMaterial extends LitElement {
@@ -15,6 +18,7 @@ export class View2dControlsMaterial extends LitElement {
 
   render() {
     const slice = this.controls.slice?.value;
+    const imageDimension = this.controls.imageDimension?.value ?? 0;
     const scale = this.controls.scale?.value;
     const scaleCount = this.controls.scaleCount?.value ?? 1;
     const scaleOptions = Array.from(
@@ -22,35 +26,45 @@ export class View2dControlsMaterial extends LitElement {
       (_, i) => i,
     ).reverse();
 
+    const showSliceSlider = imageDimension >= 3;
+    const showScale = scaleCount >= 2;
+    if (!showSliceSlider && !showScale) {
+      return '';
+    }
+
     return html`
       <div class="card">
-        <label>
-          Slice
-          <md-slider
-            .value=${slice}
-            @change="${this.controls.onSlice}"
-            min="0"
-            max="1"
-            step=".01"
-            labeled
-            label="Slice"
-          ></md-slider>
-        </label>
-        <md-outlined-select
-          @change="${this.controls.onScale}"
-          label="Image Scale"
-          style="display: block;"
-        >
-          ${scaleOptions.map(
-            (option) =>
-              html`<md-select-option
-                value=${option}
-                selected=${option === scale ? 'selected' : nothing}
-              >
-                ${option}
-              </md-select-option>`,
-          )}
-        </md-outlined-select>
+        ${showSliceSlider
+          ? html`<label>
+              Slice
+              <md-slider
+                .value=${slice}
+                @change="${this.controls.onSlice}"
+                min="0"
+                max="1"
+                step=".01"
+                labeled
+                label="Slice"
+              ></md-slider>
+            </label>`
+          : ''}
+        ${showScale
+          ? html` <md-outlined-select
+              @change="${this.controls.onScale}"
+              label="Image Scale"
+              style="display: block;"
+            >
+              ${scaleOptions.map(
+                (option) =>
+                  html`<md-select-option
+                    value=${option}
+                    selected=${option === scale ? 'selected' : nothing}
+                  >
+                    ${option}
+                  </md-select-option>`,
+              )}
+            </md-outlined-select>`
+          : ''}
       </div>
     `;
   }

@@ -13,23 +13,9 @@ export class View2dControlsShoelace extends LitElement {
     this.controls.setActor(actor);
   }
 
-  onSlice(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const slice = Number(target.value);
-    this.actor!.send({
-      type: 'setSlice',
-      slice,
-    });
-  }
-
-  onScale(event: Event) {
-    const target = event.target as HTMLInputElement;
-    const scale = Number(target.value);
-    this.actor!.send({ type: 'setScale', scale });
-  }
-
   render() {
     const slice = this.controls.slice?.value;
+    const imageDimension = this.controls.imageDimension?.value ?? 0;
     const scale = this.controls.scale?.value;
     const scaleCount = this.controls.scaleCount?.value ?? 1;
     const scaleOptions = Array.from(
@@ -37,26 +23,37 @@ export class View2dControlsShoelace extends LitElement {
       (_, i) => i,
     ).reverse();
 
+    const showSliceSlider = imageDimension >= 3;
+    const showScale = scaleCount >= 2;
+    if (!showSliceSlider && !showScale) {
+      return '';
+    }
     return html`
       <sl-card>
-        <sl-range
-          .value=${Number(slice)}
-          @sl-change="${this.controls.onSlice}"
-          min="0"
-          max="1"
-          step=".01"
-          label="Slice"
-        ></sl-range>
-        <sl-select
-          label="Image Scale"
-          value=${scale}
-          @sl-change="${this.controls.onScale}"
-        >
-          ${scaleOptions.map(
-            (option) =>
-              html`<sl-option value=${option}> ${option} </sl-option>`,
-          )}
-        </sl-select>
+        ${showSliceSlider
+          ? html`<label>
+              <sl-range
+                value=${Number(slice)}
+                @sl-change="${this.controls.onSlice}"
+                min="0"
+                max="1"
+                step=".01"
+                label="Slice"
+              ></sl-range
+            ></label>`
+          : ''}
+        ${showScale
+          ? html`<sl-select
+              label="Image Scale"
+              value=${scale}
+              @sl-change="${this.controls.onScale}"
+            >
+              ${scaleOptions.map(
+                (option) =>
+                  html`<sl-option value=${option}> ${option} </sl-option>`,
+              )}
+            </sl-select>`
+          : ''}
       </sl-card>
     `;
   }
