@@ -1,5 +1,11 @@
 # @itk-viewer/io
 
+## 0.1.8
+
+### Patch Changes
+
+- ac6ec74: Remove webworker-promise dependency so consuming Vite projects work.
+
 ## 0.1.7
 
 ### Patch Changes
