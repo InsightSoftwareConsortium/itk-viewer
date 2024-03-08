@@ -1,7 +1,7 @@
-import registerWebworker from 'webworker-promise/lib/register';
+import * as Comlink from 'comlink';
 import { createRangeHelper } from './createRangeHelper';
 
-const computeRangesInSplit = ({
+const computeRanges = ({
   split,
   numberOfSplits,
   values,
@@ -22,4 +22,6 @@ const computeRangesInSplit = ({
   return helpers.map((h) => h.getRange());
 };
 
-registerWebworker().operation('computeRanges', computeRangesInSplit);
+Comlink.expose({
+  computeRanges,
+});

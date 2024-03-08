@@ -47,10 +47,10 @@
     "@itk-viewer/blosc-zarr": "workspace:^",
     "@itk-viewer/utils": "workspace:^",
     "axios": "^1.6.3",
+    "comlink": "^4.4.1",
     "gl-matrix": "^3.4.3",
     "itk-wasm": "1.0.0-b.160",
     "p-queue": "^8.0.1",
-    "webworker-promise": "^0.5.1",
     "zod": "^3.22.4"
   },
   "eslintConfig": {

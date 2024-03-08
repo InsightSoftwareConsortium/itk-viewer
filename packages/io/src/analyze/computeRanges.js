@@ -1,4 +1,4 @@
-import webWorkerPromiseWorkerPool from './webWorkerPromiseWorkerPool';
+import { comlinkWorkerPool } from './comlinkWorkerPool.js';
 import { createRangeHelper } from './createRangeHelper';
 
 const haveSharedArrayBuffer =
@@ -9,7 +9,7 @@ const numberOfWorkers =
     ? Math.min(navigator.hardwareConcurrency, 8)
     : 4;
 
-const computeRangeWorkerPool = webWorkerPromiseWorkerPool(
+const computeRangeWorkerPool = comlinkWorkerPool(
   numberOfWorkers,
   () =>
     new Worker(new URL('./ComputeRanges.worker.js', import.meta.url), {
