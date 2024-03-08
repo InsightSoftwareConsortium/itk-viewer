@@ -1,4 +1,4 @@
-import registerWebworker from 'webworker-promise/lib/register';
+import * as Comlink from 'comlink';
 import { computeRanges } from './analyze/computeRanges';
 import { componentTypeToTypedArray } from './componentTypeToTypedArray';
 import { CXYZT, ensuredDims } from './dimensionUtils';
@@ -172,7 +172,7 @@ const makeImageDataFromChunks = ({
   return pixelArray;
 };
 
-registerWebworker().operation('imageDataFromChunks', async (chunkInfo) => {
+const imageDataFromChunks = async (chunkInfo) => {
   const pixelArray = makeImageDataFromChunks(chunkInfo);
 
   const ranges = chunkInfo.areRangesNeeded
@@ -187,5 +187,9 @@ registerWebworker().operation('imageDataFromChunks', async (chunkInfo) => {
   const response = { pixelArray, ranges };
   return haveSharedArrayBuffer
     ? response
-    : new registerWebworker.TransferableResponse(response, [pixelArray.buffer]);
+    : Comlink.transfer(response, [pixelArray.buffer]);
+};
+
+Comlink.expose({
+  imageDataFromChunks,
 });

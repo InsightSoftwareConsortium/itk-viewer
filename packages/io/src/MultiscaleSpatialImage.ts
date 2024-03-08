@@ -8,7 +8,7 @@ import {
   ReadonlyMat4,
 } from 'gl-matrix';
 import { ImageType, TypedArray } from 'itk-wasm';
-import WebworkerPromise from 'webworker-promise';
+import * as Comlink from 'comlink';
 
 import { getDtype } from '@itk-viewer/utils/dtypeUtils.js';
 import { Bounds, ReadonlyBounds } from '@itk-viewer/utils/bounding-box.js';
@@ -23,6 +23,7 @@ import {
 } from './dimensionUtils.js';
 import { transformBounds } from './transformBounds.js';
 import {
+  Dimension,
   Extent,
   ReadOnlyDimensionBounds,
   ScaleInfo,
@@ -41,11 +42,30 @@ function setMatrixElement(
   matrixData[column + row * columns] = value;
 }
 
+type ImageDataFromChunksWorkerArgs = {
+  scaleInfo: {
+    chunkSize: Map<Dimension, number>;
+    arrayShape: Map<Dimension, number>;
+    dtype: string;
+  };
+  imageType: ImageType;
+  chunkIndices: number[][];
+  chunks: ArrayBuffer[];
+  indexStart: Map<Dimension, number>;
+  indexEnd: Map<Dimension, number>;
+  areRangesNeeded: boolean;
+};
+
+type ImageDataFromChunksProxy = {
+  imageDataFromChunks: (
+    args: ImageDataFromChunksWorkerArgs,
+  ) => Promise<{ pixelArray: ArrayBuffer; ranges: Array<number> | undefined }>;
+};
 const imageDataFromChunksWorker = new Worker(
   new URL('./ImageDataFromChunks.worker.js', import.meta.url),
   { type: 'module' },
 );
-const imageDataFromChunksWorkerPromise = new WebworkerPromise(
+const imageDataFromChunksProxy = Comlink.wrap<ImageDataFromChunksProxy>(
   imageDataFromChunksWorker,
 );
 
@@ -441,7 +461,6 @@ export class MultiscaleSpatialImage {
     const chunks = await this.getChunks(scale, chunkIndices);
 
     const preComputedRanges = this.scaleInfos[scale].ranges;
-
     const args = {
       scaleInfo: {
         chunkSize: chunkSizeWith1,
@@ -455,10 +474,8 @@ export class MultiscaleSpatialImage {
       indexEnd: end,
       areRangesNeeded: !preComputedRanges,
     };
-    const { pixelArray, ranges } = await imageDataFromChunksWorkerPromise.exec(
-      'imageDataFromChunks',
-      args,
-    );
+    const { pixelArray, ranges } =
+      await imageDataFromChunksProxy.imageDataFromChunks(args);
 
     const size = (['x', 'y', 'z'] as const)
       .slice(0, this.imageType.dimension)
