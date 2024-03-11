@@ -1,3 +1,4 @@
 packages:
   - packages/*
+  - packages/viewer/typescript
   - packages/transfer-function-editor/examples/*

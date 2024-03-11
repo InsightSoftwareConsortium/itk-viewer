@@ -13,7 +13,7 @@
     "./**/vite.config.ts"
   ],
   "references": [
-    { "path": "../viewer/tsconfig.build.json" },
+    { "path": "../viewer/typescript/tsconfig.build.json" },
     { "path": "../io/tsconfig.build.json" },
     { "path": "../remote-viewport/tsconfig.build.json" }
   ]
