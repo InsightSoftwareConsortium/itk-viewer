@@ -80,7 +80,7 @@ importers:
         version: link:../remote-viewport
       '@itk-viewer/viewer':
         specifier: workspace:^
-        version: link:../viewer
+        version: link:../viewer/typescript
       '@itk-viewer/vtkjs':
         specifier: workspace:^
         version: link:../vtkjs
@@ -163,7 +163,7 @@ importers:
         version: link:../io
       '@itk-viewer/viewer':
         specifier: workspace:^
-        version: link:../viewer
+        version: link:../viewer/typescript
       '@itk-wasm/htj2k':
         specifier: 2.1.0
         version: 2.1.0
@@ -184,11 +184,11 @@ importers:
         specifier: ^5.0.10
         version: 5.0.10
 
-  packages/viewer:
+  packages/viewer/typescript:
     dependencies:
       '@itk-viewer/io':
         specifier: workspace:^
-        version: link:../io
+        version: link:../../io
       gl-matrix:
         specifier: ^3.4.3
         version: 3.4.3
@@ -210,7 +210,7 @@ importers:
         version: link:../io
       '@itk-viewer/viewer':
         specifier: workspace:^
-        version: link:../viewer
+        version: link:../viewer/typescript
       '@kitware/vtk.js':
         specifier: ^29.3.0
         version: 29.3.0(@babel/preset-env@7.23.6)(autoprefixer@10.4.16)(webpack@5.89.0)(wslink@1.12.4)
