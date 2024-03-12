@@ -41,6 +41,7 @@
   },
   "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
+    "@itk-wasm/image-io": "^1.1.1",
     "typescript": "^5.3.3"
   },
   "dependencies": {

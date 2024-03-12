@@ -1,21 +1,6 @@
-import { Image, setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
+import { setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
 import { ZarrMultiscaleSpatialImage } from './ZarrMultiscaleSpatialImage.js';
-
-const SAMPLE_SIZE = 33;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const takeSnapshot = ({ data, metadata, ...rest }: Image) => {
-  if (!data) return '';
-  const innerOffset = data.length / 2;
-  const baseline = {
-    ...rest,
-    data: [
-      ...data.slice(0, SAMPLE_SIZE),
-      ...data.slice(innerOffset, innerOffset + SAMPLE_SIZE),
-      ...data.slice(-SAMPLE_SIZE),
-    ],
-  };
-  return JSON.stringify(baseline);
-};
+import { takeSnapshot } from './testUtils.js';
 
 const IMAGE_BASELINES = [
   [
