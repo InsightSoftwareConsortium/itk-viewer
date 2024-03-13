@@ -1,0 +1,53 @@
+id: https://w3id.org/itk/viewer
+name: itk-viewer
+prefixes:
+  itk: https://w3id.org/itk/
+  viewer: https://w3id.org/itk/viewer
+  linkml: https://w3id.org/linkml/
+imports:
+  - linkml:types
+default_range: string
+default_prefix: viewer
+
+classes:
+  Actor:
+    tree_root: true
+    description: >-
+      In the Actor Model mathematical of computation, an actor is a computational entity that,
+      in response to a message it receives, can concurrently:
+
+      - send a finite number of messages to other actors;
+      - create a finite number of new actors;
+      - designate the behavior to be used for the next message it receives.
+
+      Supported messages are defined in the Event classes. The valid Events' for an Actor are defined
+      defined by the `receives` relationship. To send an Event to an Actor, use the `send` method.
+
+      Actors are typically implement as finite state machines.
+    class_uri: viewer:Actor
+
+  Viewer:
+    is_a: Actor
+    description: >-
+      A viewer is an interface that allows users to view and interact with
+      multi-dimensional images, geometry, and point sets.
+    class_uri: viewer:Viewer
+
+  Viewport:
+    is_a: Actor
+    description: >-
+      A viewport is a rectangular region of a viewer that displays a rendering of the scene.
+    class_uri: viewer:Viewport
+
+  MultiscaleImage:
+    is_a: Actor
+    description: >-
+      A multiscale image is a multi-dimensional image, based on the OME-Zarr data model, often preprocessed,
+      that supports efficient rendering at multiple resolutions.
+    class_uri: viewer:MultiscaleImage
+
+  Event:
+    description: >-
+      An event is a message that can be sent to an actor. The actor can respond to the event
+      by changing its state, sending messages to other actors, or creating new actors.
+    class_uri: viewer
