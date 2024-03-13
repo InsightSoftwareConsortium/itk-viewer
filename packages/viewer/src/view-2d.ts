@@ -90,7 +90,7 @@ export const view2d = setup({
       const bounds = await image.getWorldBounds(image.coarsestScale);
       const { pose: currentPose, verticalFieldOfView } =
         camera.getSnapshot().context;
-      // rotate so to look down -Z with +Y down on screen
+      // rotate so +Z goes into screen and +Y is down on screen
       const withAxis = { ...currentPose };
       const axis = vec3.fromValues(1, 0, 0);
       const rotation = quat.create();

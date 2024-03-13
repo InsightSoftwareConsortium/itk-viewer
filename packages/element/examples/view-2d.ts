@@ -1,6 +1,5 @@
-import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
-// import { ItkWasmMultiscaleSpatialImage } from '@itk-viewer/io/ItkWasmMultiscaleSpatialImage.js';
 import { setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
+import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { ItkViewer2d } from '../src/itk-viewer-2d.js';
 
 const pipelineWorkerUrl = '/itk/web-workers/itk-wasm-pipeline.min.worker.js';
@@ -17,9 +16,4 @@ document.addEventListener('DOMContentLoaded', async function () {
   const zarrImage = await ZarrMultiscaleSpatialImage.fromUrl(url);
 
   viewer!.send({ type: 'setImage', image: zarrImage, name: 'image' });
-
-  // const image = new ItkWasmMultiscaleSpatialImage(
-  //   await zarrImage.getImage(zarrImage.coarsestScale),
-  // );
-  // viewer!.send({ type: 'setImage', image, name: 'image' });
 });
