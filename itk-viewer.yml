@@ -46,6 +46,13 @@ classes:
       that supports efficient rendering at multiple resolutions.
     class_uri: viewer:MultiscaleImage
 
+  Renderer:
+    is_a: Actor
+    description: >-
+      A renderer is an actor that renders a scene to an in-memory RGB image for display in a viewport.
+    class_uri: viewer:Renderer
+
+
   Event:
     description: >-
       An event is a message that can be sent to an actor. The actor can respond to the event
