@@ -2,12 +2,16 @@
 
 __version__ = "0.0.1"
 
-from .viewer import Viewer
-from .viewport import Viewport
-from .multiscale_image import MultiscaleImage
+from .model import (
+  Viewer,
+  Viewport,
+  MultiscaleImage,
+  Renderer,
+)
 
 __all__ = [
   "MultiscaleImage",
+  "Renderer",
   "Viewer",
   "Viewport",
   ]
