@@ -13,6 +13,7 @@ import {
 import { CreateChild } from './children.js';
 import { Camera, reset2d } from './camera.js';
 import { ViewportActor } from './viewport.js';
+import { quat, vec3 } from 'gl-matrix';
 
 const viewContext = {
   slice: 0.5,
@@ -89,7 +90,13 @@ export const view2d = setup({
       const bounds = await image.getWorldBounds(image.coarsestScale);
       const { pose: currentPose, verticalFieldOfView } =
         camera.getSnapshot().context;
-      const pose = reset2d(currentPose, verticalFieldOfView, bounds, aspect);
+      // rotate so +Z goes into screen and +Y is down on screen
+      const withAxis = { ...currentPose };
+      const axis = vec3.fromValues(1, 0, 0);
+      const rotation = quat.create();
+      quat.setAxisAngle(rotation, axis, Math.PI);
+      withAxis.rotation = rotation;
+      const pose = reset2d(withAxis, verticalFieldOfView, bounds, aspect);
       camera.send({
         type: 'setPose',
         pose,
