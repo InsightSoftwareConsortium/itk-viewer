@@ -7,11 +7,15 @@ from .model import (
   Viewport,
   MultiscaleImage,
   Renderer,
+  RendererEvent,
+  RendererEventType,
 )
 
 __all__ = [
   "MultiscaleImage",
   "Renderer",
+  "RendererEvent",
+  "RendererEventType",
   "Viewer",
   "Viewport",
   ]

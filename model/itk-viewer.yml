@@ -100,8 +100,24 @@ classes:
         identifier: true
         description: >-
           The type of the event.
-        range: string
+        range: EventType
         required: true
+
+  RendererEvent:
+    abstract: true
+    is_a: Event
+    description: >-
+      A RendererEvent is an Event supported by a Renderer.
+    class_uri: viewer:RendererEvent
+    slot_usage:
+      type:
+        range: RendererEventType
+
+  RenderEvent:
+    is_a: RendererEvent
+    description: >-
+      A render event is a message that instructs a renderer to render a scene to an in-memory RGB image.
+    class_uri: viewer:RenderEvent
 
 slots:
   viewport:
@@ -110,3 +126,19 @@ slots:
     domain: Renderer
     range: Viewport
     required: true
+
+enums:
+  EventType:
+    description: >-
+      The types of events that can be sent to actors.
+    enum_uri: viewer:EventTypes
+
+  RendererEventType:
+    description: >-
+      The types of render events that can be sent to renderers.
+    enum_uri: viewer:RenderEventTypes
+    inherits: EventType
+    permissible_values:
+      Render:
+        description: >-
+          A render event is a message that instructs a renderer to render a scene to an in-memory RGB image.

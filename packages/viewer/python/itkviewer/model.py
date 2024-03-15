@@ -31,6 +31,23 @@ class ConfiguredBaseModel(WeakRefShimBaseModel,
 
         
 
+class EventType(str):
+    """
+    The types of events that can be sent to actors.
+    """
+    
+    dummy = "dummy"
+    
+
+class RendererEventType(str, Enum):
+    """
+    The types of render events that can be sent to renderers.
+    """
+    # A render event is a message that instructs a renderer to render a scene to an in-memory RGB image.
+    Render = "Render"
+    
+    
+
 class Actor(ConfiguredBaseModel):
     """
     In the Actor Model mathematical of computation, an actor is a computational entity that, in response to a message it receives, can concurrently:
@@ -81,7 +98,23 @@ class Event(ConfiguredBaseModel):
     """
     An event is a message that can be sent to an actor. The actor can respond to the event by changing its state, sending messages to other actors, or creating new actors.
     """
-    type: str = Field(..., description="""The type of the event.""")
+    type: EventType = Field(..., description="""The type of the event.""")
+    
+    
+
+class RendererEvent(Event):
+    """
+    A RendererEvent is an Event supported by a Renderer.
+    """
+    type: RendererEventType = Field(..., description="""The type of the event.""")
+    
+    
+
+class RenderEvent(RendererEvent):
+    """
+    A render event is a message that instructs a renderer to render a scene to an in-memory RGB image.
+    """
+    type: RendererEventType = Field(..., description="""The type of the event.""")
     
     
 
@@ -94,4 +127,6 @@ Viewport.update_forward_refs()
 MultiscaleImage.update_forward_refs()
 Renderer.update_forward_refs()
 Event.update_forward_refs()
+RendererEvent.update_forward_refs()
+RenderEvent.update_forward_refs()
 
