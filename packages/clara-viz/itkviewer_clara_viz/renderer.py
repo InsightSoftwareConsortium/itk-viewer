@@ -6,11 +6,16 @@ from typing import List
 
 from itkviewer import Viewport, Renderer, RendererEvent, RendererEventType, UnknownEventAction
 
+from clara.viz.core import Renderer as InternalRenderer
+import numpy as np
+
 class ClaraVizRenderer(Renderer):
     """itk-viewer renderer that renders images using ClaraViz."""
 
-    def __init__(self, viewport: Viewport, width: int=640, height: int=480, unknown_event_action=UnknownEventAction.Warning):
+    def __init__(self, viewport: Viewport, width: int=640, height: int=480, unknown_event_action: UnknownEventAction=UnknownEventAction.Warning):
         super().__init__(viewport, width, height, unknown_event_action)
+
+        self._renderer = InternalRenderer()
 
     async def batch(self, events: List[RendererEvent]):
         """Batch process a list of events."""
