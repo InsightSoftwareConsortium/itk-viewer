@@ -1,5 +1,6 @@
 id: https://w3id.org/itk/viewer
 name: itk-viewer
+version: 0.0.1
 description: >-
   The itk-viewer model defines the classes and relationships for a viewer that allows users to view and interact with multi-dimensional images, geometry, and point sets.
 license: https://creativecommons.org/publicdomain/zero/1.0/

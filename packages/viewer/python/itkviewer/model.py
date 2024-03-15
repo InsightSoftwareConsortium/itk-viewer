@@ -14,7 +14,7 @@ else:
 
 
 metamodel_version = "None"
-version = "None"
+version = "0.0.1"
 
 class WeakRefShimBaseModel(BaseModel):
    __slots__ = '__weakref__'
