@@ -11,7 +11,7 @@ default_prefix: viewer
 
 classes:
   Actor:
-    tree_root: true
+    abstract: true
     description: >-
       In the Actor Model mathematical of computation, an actor is a computational entity that,
       in response to a message it receives, can concurrently:
@@ -27,19 +27,23 @@ classes:
     class_uri: viewer:Actor
 
   Viewer:
+    abstract: true
     is_a: Actor
+    tree_root: true
     description: >-
       A viewer is an interface that allows users to view and interact with
       multi-dimensional images, geometry, and point sets.
     class_uri: viewer:Viewer
 
   Viewport:
+    abstract: true
     is_a: Actor
     description: >-
       A viewport is a rectangular region of a viewer that displays a rendering of the scene.
     class_uri: viewer:Viewport
 
   MultiscaleImage:
+    abstract: true
     is_a: Actor
     description: >-
       A multiscale image is a multi-dimensional image, based on the OME-Zarr data model, often preprocessed,
@@ -47,6 +51,7 @@ classes:
     class_uri: viewer:MultiscaleImage
 
   Renderer:
+    abstract: true
     is_a: Actor
     description: >-
       A renderer is an actor that renders a scene to an in-memory RGB image for display in a viewport.
@@ -54,7 +59,15 @@ classes:
 
 
   Event:
+    abstract: true
     description: >-
       An event is a message that can be sent to an actor. The actor can respond to the event
       by changing its state, sending messages to other actors, or creating new actors.
-    class_uri: viewer
+    class_uri: viewer:Event
+    attributes:
+      type:
+        identifier: true
+        description: >-
+          The type of the event.
+        range: string
+        required: true
