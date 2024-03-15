@@ -1,5 +1,13 @@
 # @itk-viewer/imjoy-api
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [cc64b6a]
+  - @itk-viewer/viewer@0.2.9
+  - @itk-viewer/element@0.2.13
+
 ## 0.0.4
 
 ### Patch Changes

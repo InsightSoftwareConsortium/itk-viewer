@@ -1,5 +1,14 @@
 # @itk-viewer/element
 
+## 0.2.13
+
+### Patch Changes
+
+- Updated dependencies [cc64b6a]
+  - @itk-viewer/viewer@0.2.9
+  - @itk-viewer/remote-viewport@0.2.12
+  - @itk-viewer/vtkjs@0.0.6
+
 ## 0.2.12
 
 ### Patch Changes
