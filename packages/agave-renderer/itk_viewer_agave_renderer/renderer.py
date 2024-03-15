@@ -13,6 +13,8 @@ from itkwasm import Image, ImageType, PixelTypes, IntTypes
 import numpy as np
 from PIL import Image as PILImage
 
+from itkviewer import Renderer, UnknownEventAction
+
 # Should match constant in connected clients.
 # The WebRTC service id is different from this
 RENDERER_SERVICE_ID = "agave-renderer"
@@ -36,20 +38,11 @@ class AgaveRendererMemoryRedraw(agave.AgaveRenderer):
         return rgba
 
 
-# how to handle unknown events
-class UnknownEventAction(Enum):
-    ERROR = auto()
-    WARNING = auto()
-    IGNORE = auto()
-
-
-class Renderer:
+class AgaveRenderer(Renderer):
     def __init__(
-        self, width=500, height=400, unknown_event_action=UnknownEventAction.WARNING
+        self, width=500, height=400, unknown_event_action=UnknownEventAction.Warning
     ):
-        self.width = width
-        self.height = height
-        self.unknown_event_action = unknown_event_action
+        super().__init__(width, height, unknown_event_action)
 
     async def setup(self):
         # Note: the agave websocket server needs to be running
@@ -125,11 +118,11 @@ class Renderer:
 
     def handle_unknown_event(self, event_type):
         match self.unknown_event_action:
-            case UnknownEventAction.ERROR:
-                raise Exception(f"Unknown event type: {event_type}")
-            case UnknownEventAction.WARNING:
+            case UnknownEventAction.Error:
+                raise ValueError(f"Unknown event type: {event_type}")
+            case UnknownEventAction.Warning:
                 print(f"Unknown event type: {event_type}", flush=True)
-            case UnknownEventAction.IGNORE:
+            case UnknownEventAction.Ignore:
                 pass
 
     async def connect(
