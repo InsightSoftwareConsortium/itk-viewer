@@ -28,6 +28,8 @@ classes:
 
       Actors are typically implement as finite state machines.
     class_uri: viewer:Actor
+    slots:
+      - unknown_event_action
 
   Viewer:
     abstract: true
@@ -126,17 +128,37 @@ slots:
     domain: Renderer
     range: Viewport
     required: true
+  unknown_event_action:
+    description: >-
+      The action to take when an unknown event is received.
+    domain: Actor
+    range: UnknownEventAction
 
 enums:
   EventType:
     description: >-
       The types of events that can be sent to actors.
-    enum_uri: viewer:EventTypes
+    enum_uri: viewer:EventType
+
+  UnknownEventAction:
+    description: >-
+      The types of actions that can be taken when an unknown event is received.
+    enum_uri: viewer:UnknownEventAction
+    permissible_values:
+      Ignore:
+        description: >-
+          Ignore the event.
+      Warn:
+        description: >-
+          Log a warning and ignore the event.
+      Error:
+        description: >-
+          Throw an error.
 
   RendererEventType:
     description: >-
       The types of render events that can be sent to renderers.
-    enum_uri: viewer:RenderEventTypes
+    enum_uri: viewer:RenderEventType
     inherits: EventType
     permissible_values:
       Render:

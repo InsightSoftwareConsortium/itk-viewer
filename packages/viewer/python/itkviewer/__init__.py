@@ -3,12 +3,13 @@
 __version__ = "0.0.1"
 
 from .model import (
-  Viewer,
-  Viewport,
   MultiscaleImage,
   Renderer,
   RendererEvent,
   RendererEventType,
+  UnknownEventAction,
+  Viewer,
+  Viewport,
 )
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
   "RendererEvent",
   "RendererEventType",
   "Viewer",
+  "UnknownEventAction",
   "Viewport",
   ]

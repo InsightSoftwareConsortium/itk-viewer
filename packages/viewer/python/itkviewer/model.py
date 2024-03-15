@@ -39,6 +39,19 @@ class EventType(str):
     dummy = "dummy"
     
 
+class UnknownEventAction(str, Enum):
+    """
+    The types of actions that can be taken when an unknown event is received.
+    """
+    # Ignore the event.
+    Ignore = "Ignore"
+    # Log a warning and ignore the event.
+    Warn = "Warn"
+    # Throw an error.
+    Error = "Error"
+    
+    
+
 class RendererEventType(str, Enum):
     """
     The types of render events that can be sent to renderers.
@@ -55,7 +68,7 @@ class Actor(ConfiguredBaseModel):
 Supported messages are defined in the Event classes. The valid Events' for an Actor are defined defined by the `receives` relationship. To send an Event to an Actor, use the `send` method.
 Actors are typically implement as finite state machines.
     """
-    None
+    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
 
@@ -63,7 +76,7 @@ class Viewer(Actor):
     """
     A viewer is an interface that allows users to view and interact with multi-dimensional images, geometry, and point sets.
     """
-    None
+    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
 
@@ -73,6 +86,7 @@ class Viewport(Actor):
     """
     width: int = Field(640, description="""The width of the viewport in pixels.""")
     height: int = Field(480, description="""The height of the viewport in pixels.""")
+    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
 
@@ -80,7 +94,7 @@ class MultiscaleImage(Actor):
     """
     A multiscale image is a multi-dimensional image, based on the OME-Zarr data model, often preprocessed, that supports efficient rendering at multiple resolutions.
     """
-    None
+    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
 
@@ -91,6 +105,7 @@ class Renderer(Actor):
     viewport: Viewport = Field(..., description="""The viewport that displays the rendered RGB image.""")
     width: int = Field(640, description="""The width of the canvas in pixels.""")
     height: int = Field(480, description="""The height of the canvas in pixels.""")
+    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
 

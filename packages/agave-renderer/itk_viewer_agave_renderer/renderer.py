@@ -16,6 +16,7 @@ from PIL import Image as PILImage
 import fractions
 from av import VideoFrame
 from aiortc import MediaStreamTrack
+from itkviewer import Renderer, UnknownEventAction
 
 # Should match constant in connected clients.
 # The WebRTC service id is different from this
@@ -40,7 +41,7 @@ class VideoTransformTrack(MediaStreamTrack):
 
         frame = VideoFrame.from_image(img)
 
-        frame.pts = self.count 
+        frame.pts = self.count
         self.count+=1
         frame.time_base = fractions.Fraction(1, 1000)
         return frame
@@ -64,22 +65,16 @@ class AgaveRendererMemoryRedraw(agave.AgaveRenderer):
         return img
 
 
-# how to handle unknown events
-class UnknownEventAction(Enum):
-    ERROR = auto()
-    WARNING = auto()
-    IGNORE = auto()
-
-
-class Renderer:
+class AgaveRenderer(Renderer):
     def __init__(
-        self, width=500, height=400, unknown_event_action=UnknownEventAction.WARNING
+        self, width=500, height=400, unknown_event_action=UnknownEventAction.Warning
     ):
         self.width = width
         self.height = height
         self.unknown_event_action = unknown_event_action
         self.render_time = .1
         self.agave = None
+        super().__init__(width, height, unknown_event_action)
 
     async def setup(self):
         # Note: the agave websocket server needs to be running
@@ -167,11 +162,11 @@ class Renderer:
 
     def handle_unknown_event(self, event_type):
         match self.unknown_event_action:
-            case UnknownEventAction.ERROR:
-                raise Exception(f"Unknown event type: {event_type}")
-            case UnknownEventAction.WARNING:
+            case UnknownEventAction.Error:
+                raise ValueError(f"Unknown event type: {event_type}")
+            case UnknownEventAction.Warning:
                 print(f"Unknown event type: {event_type}", flush=True)
-            case UnknownEventAction.IGNORE:
+            case UnknownEventAction.Ignore:
                 pass
 
 
