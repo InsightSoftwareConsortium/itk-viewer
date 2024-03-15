@@ -16,7 +16,7 @@ from PIL import Image as PILImage
 import fractions
 from av import VideoFrame
 from aiortc import MediaStreamTrack
-from itkviewer import Renderer, UnknownEventAction
+from itkviewer import Viewport, Renderer, UnknownEventAction
 
 # Should match constant in connected clients.
 # The WebRTC service id is different from this
@@ -67,14 +67,14 @@ class AgaveRendererMemoryRedraw(agave.AgaveRenderer):
 
 class AgaveRenderer(Renderer):
     def __init__(
-        self, width=500, height=400, unknown_event_action=UnknownEventAction.Warning
+        self, viewport: Viewport, width: int=500, height: int=400, unknown_event_action: UnknownEventAction=UnknownEventAction.Warning
     ):
         self.width = width
         self.height = height
         self.unknown_event_action = unknown_event_action
         self.render_time = .1
         self.agave = None
-        super().__init__(width, height, unknown_event_action)
+        super().__init__(viewport, width, height, unknown_event_action)
 
     async def setup(self):
         # Note: the agave websocket server needs to be running
