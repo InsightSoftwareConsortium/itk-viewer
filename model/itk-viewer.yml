@@ -44,6 +44,19 @@ classes:
     description: >-
       A viewport is a rectangular region of a viewer that displays a rendering of the scene.
     class_uri: viewer:Viewport
+    attributes:
+      width:
+        description: >-
+          The width of the viewport in pixels.
+        range: integer
+        required: true
+        ifabsent: int(640)
+      height:
+        description: >-
+          The height of the viewport in pixels.
+        range: integer
+        required: true
+        ifabsent: int(480)
 
   MultiscaleImage:
     abstract: true
@@ -59,6 +72,21 @@ classes:
     description: >-
       A renderer is an actor that renders a scene to an in-memory RGB image for display in a viewport.
     class_uri: viewer:Renderer
+    attributes:
+      width:
+        description: >-
+          The width of the canvas in pixels.
+        range: integer
+        required: true
+        ifabsent: int(640)
+      height:
+        description: >-
+          The height of the canvas in pixels.
+        range: integer
+        required: true
+        ifabsent: int(480)
+    slots:
+      - viewport
 
 
   Event:
@@ -74,3 +102,11 @@ classes:
           The type of the event.
         range: string
         required: true
+
+slots:
+  viewport:
+    description: >-
+      The viewport that displays the rendered RGB image.
+    domain: Renderer
+    range: Viewport
+    required: true
