@@ -6,6 +6,7 @@ description: >-
 license: https://creativecommons.org/publicdomain/zero/1.0/
 prefixes:
   itk: https://w3id.org/itk/
+  wasm: https://w3id.org/itk/wasm
   viewer: https://w3id.org/itk/viewer
   linkml: https://w3id.org/linkml/
 imports:
@@ -61,6 +62,11 @@ classes:
         required: true
         ifabsent: int(480)
 
+  Image:
+    description: >-
+      An itk-wasm Image to be displayed in the viewer.
+    class_uri: wasm:Image
+
   MultiscaleImage:
     abstract: true
     is_a: Actor
@@ -68,6 +74,15 @@ classes:
       A multiscale image is a multi-dimensional image, based on the OME-Zarr data model, often preprocessed,
       that supports efficient rendering at multiple resolutions.
     class_uri: viewer:MultiscaleImage
+
+  DataManager:
+    abstract: true
+    is_a: Actor
+    description: >-
+      A data manager is an actor that manages the loading and caching of data for rendering.
+    class_uri: viewer:DataManager
+    slots:
+      - images
 
   Renderer:
     abstract: true
@@ -106,6 +121,29 @@ classes:
         range: EventType
         required: true
 
+  ViewerEvent:
+    abstract: true
+    is_a: Event
+    description: >-
+      A ViewerEvent is an Event that can be sent to a Viewer.
+    class_uri: viewer:ViewerEvent
+    slot_usage:
+      type:
+        range: ViewerEventType
+
+  SetImageEvent:
+    is_a: ViewerEvent
+    description: >-
+      A SetImageEvent is an Event that sets an image to be displayed in a viewer.
+    class_uri: viewer:SetImageEvent
+    slots:
+      - image
+    attributes:
+      name:
+        description: >-
+          The name of the image to be displayed in the viewer.
+        range: string
+
   RendererEvent:
     abstract: true
     is_a: Event
@@ -129,11 +167,27 @@ slots:
     domain: Renderer
     range: Viewport
     required: true
+
   unknown_event_action:
     description: >-
       The action to take when an unknown event is received.
     domain: Actor
     range: UnknownEventAction
+
+  image:
+    description: >-
+      The image to be displayed in the viewer.
+    domain: SetImageEvent
+    range: Image
+    required: true
+
+  images:
+    description: >-
+      The images to be displayed in the viewer.
+    domain: DataManager
+    range: Image
+    multivalued: true
+    required: true
 
 enums:
   EventType:
@@ -155,6 +209,16 @@ enums:
       Error:
         description: >-
           Throw an error.
+
+  ViewerEventType:
+    description: >-
+      The types of events that can be sent to viewers.
+    enum_uri: viewer:ViewerEventType
+    inherits: EventType
+    permissible_values:
+      SetImage:
+        description: >-
+          Set an image to be displayed in the viewer.
 
   RendererEventType:
     description: >-

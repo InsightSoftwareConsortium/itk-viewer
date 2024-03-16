@@ -52,6 +52,15 @@ class UnknownEventAction(str, Enum):
     
     
 
+class ViewerEventType(str, Enum):
+    """
+    The types of events that can be sent to viewers.
+    """
+    # Set an image to be displayed in the viewer.
+    SetImage = "SetImage"
+    
+    
+
 class RendererEventType(str, Enum):
     """
     The types of render events that can be sent to renderers.
@@ -90,10 +99,27 @@ class Viewport(Actor):
     
     
 
+class Image(ConfiguredBaseModel):
+    """
+    An itk-wasm Image to be displayed in the viewer.
+    """
+    None
+    
+    
+
 class MultiscaleImage(Actor):
     """
     A multiscale image is a multi-dimensional image, based on the OME-Zarr data model, often preprocessed, that supports efficient rendering at multiple resolutions.
     """
+    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
+    
+    
+
+class DataManager(Actor):
+    """
+    A data manager is an actor that manages the loading and caching of data for rendering.
+    """
+    images: List[Image] = Field(default_factory=list, description="""The images to be displayed in the viewer.""")
     unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
@@ -114,6 +140,24 @@ class Event(ConfiguredBaseModel):
     An event is a message that can be sent to an actor. The actor can respond to the event by changing its state, sending messages to other actors, or creating new actors.
     """
     type: EventType = Field(..., description="""The type of the event.""")
+    
+    
+
+class ViewerEvent(Event):
+    """
+    A ViewerEvent is an Event that can be sent to a Viewer.
+    """
+    type: ViewerEventType = Field(..., description="""The type of the event.""")
+    
+    
+
+class SetImageEvent(ViewerEvent):
+    """
+    A SetImageEvent is an Event that sets an image to be displayed in a viewer.
+    """
+    image: Image = Field(..., description="""The image to be displayed in the viewer.""")
+    name: Optional[str] = Field(None, description="""The name of the image to be displayed in the viewer.""")
+    type: ViewerEventType = Field(..., description="""The type of the event.""")
     
     
 
@@ -139,9 +183,13 @@ class RenderEvent(RendererEvent):
 Actor.update_forward_refs()
 Viewer.update_forward_refs()
 Viewport.update_forward_refs()
+Image.update_forward_refs()
 MultiscaleImage.update_forward_refs()
+DataManager.update_forward_refs()
 Renderer.update_forward_refs()
 Event.update_forward_refs()
+ViewerEvent.update_forward_refs()
+SetImageEvent.update_forward_refs()
 RendererEvent.update_forward_refs()
 RenderEvent.update_forward_refs()
 
