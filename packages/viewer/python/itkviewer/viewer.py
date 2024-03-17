@@ -2,7 +2,8 @@ from typing import Optional
 
 from statemachine import StateMachine, State
 
-from .model import Viewer, ViewerEventType
+from .model import Viewer, DataManager
+from .data_manager import DataManagerMachine
 
 class ViewerMachine(StateMachine):
     idle = State(initial=True)
@@ -17,17 +18,20 @@ class ViewerMachine(StateMachine):
     def __init__(self, config: Optional[Viewer]=None):
         super(ViewerMachine, self).__init__()
 
-        self.viewer = config or Viewer()
         if config:
             self.load_config(config)
+        else:
+            self.load_config({})
 
     @property
     def config(self):
-        return self.viewer
+        return {
+            'DataManager': self.data_manager.config
+        }
 
     @config.setter
     def config(self, config: Viewer):
         self.load_config(config)
 
     def load_config(self, config: Viewer):
-        self.viewer = config
+        self.data_manager = DataManagerMachine(config=config.get('DataManager', DataManager()))
