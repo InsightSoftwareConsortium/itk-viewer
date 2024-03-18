@@ -107,6 +107,47 @@ class Image(ConfiguredBaseModel):
     
     
 
+class ImageDataUri(ConfiguredBaseModel):
+    """
+    A serialized itk-wasm Image to be displayed in the viewer, compressed and base64 encoded.
+    """
+    uri: str = Field(..., description="""The URI of the image data.""")
+    
+    
+
+class StoreModel(ConfiguredBaseModel):
+    """
+    Parameters of a Zarr store following the data model implied by Zarr-Python.
+    """
+    None
+    
+    
+
+class DirectoryStore(StoreModel):
+    """
+    A Zarr store that is backed by a directory on the file system.
+    """
+    path: str = Field(..., description="""The path to the directory on the file system that contains the Zarr store.""")
+    
+    
+
+class FSStore(StoreModel):
+    """
+    A Zarr store that can be wrapped an fsspec.FSMap in Python to give access to arbitrary filesystems
+    """
+    url: str = Field(..., description="""Protocol and path, like “s3://bucket/root.zarr” or \"https://example.com/image.ome.zarr\".""")
+    
+    
+
+class ImageData(ConfiguredBaseModel):
+    """
+    Image data displayed in the viewer.
+    """
+    dataUri: Optional[ImageDataUri] = Field(None, description="""The image data.""")
+    store: Optional[StoreModel] = Field(None, description="""The OME-Zarr store model for the image data.""")
+    
+    
+
 class MultiscaleImage(Actor):
     """
     A multiscale image is a multi-dimensional image, based on the OME-Zarr data model, often preprocessed, that supports efficient rendering at multiple resolutions.
@@ -119,7 +160,7 @@ class DataManager(Actor):
     """
     A data manager is an actor that manages the loading and caching of data for rendering.
     """
-    images: List[Image] = Field(default_factory=list, description="""The images to be displayed in the viewer.""")
+    images: List[ImageData] = Field(default_factory=list, description="""The images displayed by the viewer.""")
     unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
@@ -184,6 +225,11 @@ Actor.update_forward_refs()
 Viewer.update_forward_refs()
 Viewport.update_forward_refs()
 Image.update_forward_refs()
+ImageDataUri.update_forward_refs()
+StoreModel.update_forward_refs()
+DirectoryStore.update_forward_refs()
+FSStore.update_forward_refs()
+ImageData.update_forward_refs()
 MultiscaleImage.update_forward_refs()
 DataManager.update_forward_refs()
 Renderer.update_forward_refs()

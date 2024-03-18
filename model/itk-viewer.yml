@@ -67,6 +67,58 @@ classes:
       An itk-wasm Image to be displayed in the viewer.
     class_uri: wasm:Image
 
+  ImageDataUri:
+    description: >-
+      A serialized itk-wasm Image to be displayed in the viewer, compressed and base64 encoded.
+    class_uri: viewer:ImageDataUri
+    attributes:
+      uri:
+        description: >-
+          The URI of the image data.
+        range: string
+        required: true
+
+  StoreModel:
+    abstract: true
+    description: >-
+      Parameters of a Zarr store following the data model implied by Zarr-Python.
+
+  DirectoryStore:
+    is_a: StoreModel
+    description: >-
+      A Zarr store that is backed by a directory on the file system.
+    attributes:
+      path:
+        description: >-
+          The path to the directory on the file system that contains the Zarr store.
+        range: string
+        required: true
+
+  FSStore:
+    is_a: StoreModel
+    description: >-
+      A Zarr store that can be wrapped an fsspec.FSMap in Python to give access to arbitrary filesystems
+    attributes:
+      url:
+        description: >-
+          Protocol and path, like “s3://bucket/root.zarr” or "https://example.com/image.ome.zarr".
+        range: string
+        required: true
+
+  ImageData:
+    description: >-
+      Image data displayed in the viewer.
+    class_uri: viewer:ImageData
+    attributes:
+      dataUri:
+        description: >-
+          The image data.
+        range: ImageDataUri
+      store:
+        description: >-
+          The OME-Zarr store model for the image data.
+        range: StoreModel
+
   MultiscaleImage:
     abstract: true
     is_a: Actor
@@ -183,9 +235,9 @@ slots:
 
   images:
     description: >-
-      The images to be displayed in the viewer.
+      The images displayed by the viewer.
     domain: DataManager
-    range: Image
+    range: ImageData
     multivalued: true
     required: true
 
