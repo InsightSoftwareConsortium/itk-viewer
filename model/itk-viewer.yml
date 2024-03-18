@@ -82,6 +82,12 @@ classes:
     abstract: true
     description: >-
       Parameters of a Zarr store following the data model implied by Zarr-Python.
+    attributes:
+      type:
+        description: >-
+          The type of the Zarr store model.
+        range: StoreModelType
+        required: true
 
   DirectoryStore:
     is_a: StoreModel
@@ -281,3 +287,15 @@ enums:
       Render:
         description: >-
           A render event is a message that instructs a renderer to render a scene to an in-memory RGB image.
+
+  StoreModelType:
+    description: >-
+      The types of Zarr store models.
+    enum_uri: viewer:StoreModelType
+    permissible_values:
+      Directory:
+        description: >-
+          A Zarr store that is backed by a directory on the file system.
+      FSStore:
+        description: >-
+          A Zarr store that can be wrapped an fsspec.FSMap in Python to give access to arbitrary filesystems.
