@@ -1,5 +1,12 @@
 # @itk-viewer/vtkjs
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies [cc64b6a]
+  - @itk-viewer/viewer@0.2.9
+
 ## 0.0.5
 
 ### Patch Changes
