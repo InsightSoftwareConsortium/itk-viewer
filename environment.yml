@@ -9,3 +9,4 @@ dependencies:
     - python-dotenv
     - -e ./packages/agave-renderer
     - -e ./packages/remote-image
+    - itkwasm-image-io

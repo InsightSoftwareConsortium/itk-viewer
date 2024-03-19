@@ -31,7 +31,7 @@ classes:
       Actors are typically implement as finite state machines.
     class_uri: viewer:Actor
     slots:
-      - unknown_event_action
+      - unknownEventAction
 
   Viewer:
     abstract: true
@@ -41,6 +41,16 @@ classes:
       A viewer is an interface that allows users to view and interact with
       multi-dimensional images, geometry, and point sets.
     class_uri: viewer:Viewer
+    attributes:
+      title:
+        description: >-
+          The title of the viewer.
+        range: string
+        ifabsent: string("ITK Viewer")
+      dataManager:
+        description: >-
+          The data manager for the viewer.
+        range: DataManager
 
   Viewport:
     abstract: true
@@ -226,7 +236,7 @@ slots:
     range: Viewport
     required: true
 
-  unknown_event_action:
+  unknownEventAction:
     description: >-
       The action to take when an unknown event is received.
     domain: Actor

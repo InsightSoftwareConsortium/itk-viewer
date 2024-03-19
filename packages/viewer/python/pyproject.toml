@@ -45,6 +45,7 @@ Issues = "https://github.com/InsightSoftwareConsortium/itk-viewer/issues"
 dependencies = [
     "pytest >=2.7.3",
     "pytest-pyodide",
+    "itkwasm-image-io",
 ]
 
 [tool.hatch.envs.default.scripts]

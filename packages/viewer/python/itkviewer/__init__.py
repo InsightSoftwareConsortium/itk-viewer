@@ -3,6 +3,7 @@
 __version__ = "0.0.1"
 
 from .model import (
+  DataManager,
   MultiscaleImage,
   Renderer,
   RendererEvent,
@@ -12,12 +13,16 @@ from .model import (
   Viewport,
 )
 
+from .viewer import ViewerMachine
+
 __all__ = [
+  "DataManager",
   "MultiscaleImage",
   "Renderer",
   "RendererEvent",
   "RendererEventType",
   "Viewer",
+  "ViewerMachine",
   "UnknownEventAction",
   "Viewport",
   ]
