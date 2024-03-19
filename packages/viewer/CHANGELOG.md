@@ -1,5 +1,11 @@
 # @itk-viewer/viewer
 
+## 0.2.9
+
+### Patch Changes
+
+- cc64b6a: Fix orientation of view-2d
+
 ## 0.2.8
 
 ### Patch Changes
