@@ -1,6 +1,14 @@
-# itk-viewer
+# ITK-Viewer
 
 [![Build and test](https://github.com/InsightSoftwareConsortium/itk-viewer/actions/workflows/test.yml/badge.svg)](https://github.com/InsightSoftwareConsortium/itk-viewer/actions/workflows/test.yml)
+
+_View and interact with multi-dimensional images, geometry, and point sets._
+
+The ITK-Viewer a **modern**, **elegant visualization library** to that enables **easier**, **faster**, and more **sustainable insights** into your data.
+
+ITK-Viewer makes it more _enjoyable_ and _seamless_ to add _beautiful visualizations_ to your software.
+
+Rendering and user interface components can be flexibly combined and customized when integrated into web browser, terminal, and traditional desktop applications. Standard Web Components follow the [HTML First](https://html-first.com/) philosophy.
 
 ## Development
 
