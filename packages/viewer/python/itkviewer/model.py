@@ -4,7 +4,7 @@ from enum import Enum
 
 from decimal import Decimal
 from typing import List, Dict, Optional, Any, Union
-from pydantic import BaseModel as BaseModel, Field, validator
+from pydantic import BaseModel as BaseModel, ConfigDict,  Field, field_validator
 import re
 import sys
 if sys.version_info >= (3, 8):
@@ -16,16 +16,13 @@ else:
 metamodel_version = "None"
 version = "0.0.1"
 
-class WeakRefShimBaseModel(BaseModel):
-   __slots__ = '__weakref__'
-
-class ConfiguredBaseModel(WeakRefShimBaseModel,
-                validate_assignment = True,
-                validate_all = True,
-                underscore_attrs_are_private = True,
-                extra = 'forbid',
-                arbitrary_types_allowed = True,
-                use_enum_values = True):
+class ConfiguredBaseModel(BaseModel):
+    model_config = ConfigDict(
+        validate_assignment=True,
+        validate_default=True,
+        extra = 'forbid',
+        arbitrary_types_allowed=True,
+        use_enum_values = True)
 
     pass
 
@@ -70,6 +67,17 @@ class RendererEventType(str, Enum):
     
     
 
+class StoreModelType(str, Enum):
+    """
+    The types of Zarr store models.
+    """
+    # A Zarr store that is backed by a directory on the file system.
+    Directory = "Directory"
+    # A Zarr store that can be wrapped an fsspec.FSMap in Python to give access to arbitrary filesystems.
+    FSStore = "FSStore"
+    
+    
+
 class Actor(ConfiguredBaseModel):
     """
     In the Actor Model mathematical of computation, an actor is a computational entity that, in response to a message it receives, can concurrently:
@@ -77,7 +85,7 @@ class Actor(ConfiguredBaseModel):
 Supported messages are defined in the Event classes. The valid Events' for an Actor are defined defined by the `receives` relationship. To send an Event to an Actor, use the `send` method.
 Actors are typically implement as finite state machines.
     """
-    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
+    unknownEventAction: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
 
@@ -85,7 +93,9 @@ class Viewer(Actor):
     """
     A viewer is an interface that allows users to view and interact with multi-dimensional images, geometry, and point sets.
     """
-    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
+    title: Optional[str] = Field("\"ITK Viewer\"", description="""The title of the viewer.""")
+    dataManager: Optional[DataManager] = Field(None, description="""The data manager for the viewer.""")
+    unknownEventAction: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
 
@@ -95,7 +105,7 @@ class Viewport(Actor):
     """
     width: int = Field(640, description="""The width of the viewport in pixels.""")
     height: int = Field(480, description="""The height of the viewport in pixels.""")
-    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
+    unknownEventAction: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
 
@@ -119,7 +129,7 @@ class StoreModel(ConfiguredBaseModel):
     """
     Parameters of a Zarr store following the data model implied by Zarr-Python.
     """
-    None
+    type: StoreModelType = Field(..., description="""The type of the Zarr store model.""")
     
     
 
@@ -128,6 +138,7 @@ class DirectoryStore(StoreModel):
     A Zarr store that is backed by a directory on the file system.
     """
     path: str = Field(..., description="""The path to the directory on the file system that contains the Zarr store.""")
+    type: StoreModelType = Field(..., description="""The type of the Zarr store model.""")
     
     
 
@@ -136,6 +147,7 @@ class FSStore(StoreModel):
     A Zarr store that can be wrapped an fsspec.FSMap in Python to give access to arbitrary filesystems
     """
     url: str = Field(..., description="""Protocol and path, like “s3://bucket/root.zarr” or \"https://example.com/image.ome.zarr\".""")
+    type: StoreModelType = Field(..., description="""The type of the Zarr store model.""")
     
     
 
@@ -152,7 +164,7 @@ class MultiscaleImage(Actor):
     """
     A multiscale image is a multi-dimensional image, based on the OME-Zarr data model, often preprocessed, that supports efficient rendering at multiple resolutions.
     """
-    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
+    unknownEventAction: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
 
@@ -161,7 +173,7 @@ class DataManager(Actor):
     A data manager is an actor that manages the loading and caching of data for rendering.
     """
     images: List[ImageData] = Field(default_factory=list, description="""The images displayed by the viewer.""")
-    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
+    unknownEventAction: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
 
@@ -172,7 +184,7 @@ class Renderer(Actor):
     viewport: Viewport = Field(..., description="""The viewport that displays the rendered RGB image.""")
     width: int = Field(640, description="""The width of the canvas in pixels.""")
     height: int = Field(480, description="""The height of the canvas in pixels.""")
-    unknown_event_action: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
+    unknownEventAction: Optional[UnknownEventAction] = Field(None, description="""The action to take when an unknown event is received.""")
     
     
 
@@ -219,23 +231,23 @@ class RenderEvent(RendererEvent):
     
 
 
-# Update forward refs
-# see https://pydantic-docs.helpmanual.io/usage/postponed_annotations/
-Actor.update_forward_refs()
-Viewer.update_forward_refs()
-Viewport.update_forward_refs()
-Image.update_forward_refs()
-ImageDataUri.update_forward_refs()
-StoreModel.update_forward_refs()
-DirectoryStore.update_forward_refs()
-FSStore.update_forward_refs()
-ImageData.update_forward_refs()
-MultiscaleImage.update_forward_refs()
-DataManager.update_forward_refs()
-Renderer.update_forward_refs()
-Event.update_forward_refs()
-ViewerEvent.update_forward_refs()
-SetImageEvent.update_forward_refs()
-RendererEvent.update_forward_refs()
-RenderEvent.update_forward_refs()
+# Model rebuild
+# see https://pydantic-docs.helpmanual.io/usage/models/#rebuilding-a-model
+Actor.model_rebuild()
+Viewer.model_rebuild()
+Viewport.model_rebuild()
+Image.model_rebuild()
+ImageDataUri.model_rebuild()
+StoreModel.model_rebuild()
+DirectoryStore.model_rebuild()
+FSStore.model_rebuild()
+ImageData.model_rebuild()
+MultiscaleImage.model_rebuild()
+DataManager.model_rebuild()
+Renderer.model_rebuild()
+Event.model_rebuild()
+ViewerEvent.model_rebuild()
+SetImageEvent.model_rebuild()
+RendererEvent.model_rebuild()
+RenderEvent.model_rebuild()
 

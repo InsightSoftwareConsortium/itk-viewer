@@ -6,3 +6,4 @@ dependencies:
   - pip
   - pip:
     - hypha
+    - itkwasm-image-io
