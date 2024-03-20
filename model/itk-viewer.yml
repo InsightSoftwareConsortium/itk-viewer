@@ -85,7 +85,8 @@ classes:
       type:
         description: >-
           The type of the Zarr store model.
-        range: StoreModelType
+        designates_type: true
+        range: string
         required: true
 
   DirectoryStore:
@@ -172,10 +173,10 @@ classes:
     class_uri: viewer:Event
     attributes:
       type:
-        identifier: true
+        designates_type: true
         description: >-
           The type of the event.
-        range: EventType
+        range: string
         required: true
 
   ViewerEvent:
@@ -184,9 +185,6 @@ classes:
     description: >-
       A ViewerEvent is an Event that can be sent to a Viewer.
     class_uri: viewer:ViewerEvent
-    slot_usage:
-      type:
-        range: ViewerEventType
 
   SetImageEvent:
     is_a: ViewerEvent
@@ -207,9 +205,6 @@ classes:
     description: >-
       A RendererEvent is an Event supported by a Renderer.
     class_uri: viewer:RendererEvent
-    slot_usage:
-      type:
-        range: RendererEventType
 
   RenderEvent:
     is_a: RendererEvent
@@ -247,11 +242,6 @@ slots:
     required: true
 
 enums:
-  EventType:
-    description: >-
-      The types of events that can be sent to actors.
-    enum_uri: viewer:EventType
-
   UnknownEventAction:
     description: >-
       The types of actions that can be taken when an unknown event is received.
@@ -266,35 +256,3 @@ enums:
       Error:
         description: >-
           Throw an error.
-
-  ViewerEventType:
-    description: >-
-      The types of events that can be sent to viewers.
-    enum_uri: viewer:ViewerEventType
-    inherits: EventType
-    permissible_values:
-      SetImage:
-        description: >-
-          Set an image to be displayed in the viewer.
-
-  RendererEventType:
-    description: >-
-      The types of render events that can be sent to renderers.
-    enum_uri: viewer:RenderEventType
-    inherits: EventType
-    permissible_values:
-      Render:
-        description: >-
-          A render event is a message that instructs a renderer to render a scene to an in-memory RGB image.
-
-  StoreModelType:
-    description: >-
-      The types of Zarr store models.
-    enum_uri: viewer:StoreModelType
-    permissible_values:
-      Directory:
-        description: >-
-          A Zarr store that is backed by a directory on the file system.
-      FSStore:
-        description: >-
-          A Zarr store that can be wrapped an fsspec.FSMap in Python to give access to arbitrary filesystems.

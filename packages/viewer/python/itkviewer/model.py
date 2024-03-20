@@ -28,14 +28,6 @@ class ConfiguredBaseModel(BaseModel):
 
         
 
-class EventType(str):
-    """
-    The types of events that can be sent to actors.
-    """
-    
-    dummy = "dummy"
-    
-
 class UnknownEventAction(str, Enum):
     """
     The types of actions that can be taken when an unknown event is received.
@@ -46,35 +38,6 @@ class UnknownEventAction(str, Enum):
     Warn = "Warn"
     # Throw an error.
     Error = "Error"
-    
-    
-
-class ViewerEventType(str, Enum):
-    """
-    The types of events that can be sent to viewers.
-    """
-    # Set an image to be displayed in the viewer.
-    SetImage = "SetImage"
-    
-    
-
-class RendererEventType(str, Enum):
-    """
-    The types of render events that can be sent to renderers.
-    """
-    # A render event is a message that instructs a renderer to render a scene to an in-memory RGB image.
-    Render = "Render"
-    
-    
-
-class StoreModelType(str, Enum):
-    """
-    The types of Zarr store models.
-    """
-    # A Zarr store that is backed by a directory on the file system.
-    Directory = "Directory"
-    # A Zarr store that can be wrapped an fsspec.FSMap in Python to give access to arbitrary filesystems.
-    FSStore = "FSStore"
     
     
 
@@ -117,19 +80,11 @@ class Image(ConfiguredBaseModel):
     
     
 
-class ImageDataUri(ConfiguredBaseModel):
-    """
-    A serialized itk-wasm Image to be displayed in the viewer, compressed and base64 encoded.
-    """
-    uri: str = Field(..., description="""The URI of the image data.""")
-    
-    
-
 class StoreModel(ConfiguredBaseModel):
     """
     Parameters of a Zarr store following the data model implied by Zarr-Python.
     """
-    type: StoreModelType = Field(..., description="""The type of the Zarr store model.""")
+    type: Literal["StoreModel"] = Field("StoreModel", description="""The type of the Zarr store model.""")
     
     
 
@@ -138,7 +93,7 @@ class DirectoryStore(StoreModel):
     A Zarr store that is backed by a directory on the file system.
     """
     path: str = Field(..., description="""The path to the directory on the file system that contains the Zarr store.""")
-    type: StoreModelType = Field(..., description="""The type of the Zarr store model.""")
+    type: Literal["DirectoryStore"] = Field("DirectoryStore", description="""The type of the Zarr store model.""")
     
     
 
@@ -147,7 +102,7 @@ class FSStore(StoreModel):
     A Zarr store that can be wrapped an fsspec.FSMap in Python to give access to arbitrary filesystems
     """
     url: str = Field(..., description="""Protocol and path, like “s3://bucket/root.zarr” or \"https://example.com/image.ome.zarr\".""")
-    type: StoreModelType = Field(..., description="""The type of the Zarr store model.""")
+    type: Literal["FSStore"] = Field("FSStore", description="""The type of the Zarr store model.""")
     
     
 
@@ -155,8 +110,8 @@ class ImageData(ConfiguredBaseModel):
     """
     Image data displayed in the viewer.
     """
-    dataUri: Optional[ImageDataUri] = Field(None, description="""The image data.""")
-    store: Optional[StoreModel] = Field(None, description="""The OME-Zarr store model for the image data.""")
+    imageJson: Optional[str] = Field(None, description="""The image data in JSON format. An ITK-Wasm Image with the pixel data zstd compressed and base64-encoded.""")
+    store: Optional[Union[StoreModel,DirectoryStore,FSStore]] = Field(None, description="""The OME-Zarr store model for the image data.""")
     
     
 
@@ -192,7 +147,7 @@ class Event(ConfiguredBaseModel):
     """
     An event is a message that can be sent to an actor. The actor can respond to the event by changing its state, sending messages to other actors, or creating new actors.
     """
-    type: EventType = Field(..., description="""The type of the event.""")
+    type: Literal["Event"] = Field("Event", description="""The type of the event.""")
     
     
 
@@ -200,7 +155,7 @@ class ViewerEvent(Event):
     """
     A ViewerEvent is an Event that can be sent to a Viewer.
     """
-    type: ViewerEventType = Field(..., description="""The type of the event.""")
+    type: Literal["ViewerEvent"] = Field("ViewerEvent", description="""The type of the event.""")
     
     
 
@@ -210,7 +165,7 @@ class SetImageEvent(ViewerEvent):
     """
     image: Image = Field(..., description="""The image to be displayed in the viewer.""")
     name: Optional[str] = Field(None, description="""The name of the image to be displayed in the viewer.""")
-    type: ViewerEventType = Field(..., description="""The type of the event.""")
+    type: Literal["SetImageEvent"] = Field("SetImageEvent", description="""The type of the event.""")
     
     
 
@@ -218,7 +173,7 @@ class RendererEvent(Event):
     """
     A RendererEvent is an Event supported by a Renderer.
     """
-    type: RendererEventType = Field(..., description="""The type of the event.""")
+    type: Literal["RendererEvent"] = Field("RendererEvent", description="""The type of the event.""")
     
     
 
@@ -226,7 +181,7 @@ class RenderEvent(RendererEvent):
     """
     A render event is a message that instructs a renderer to render a scene to an in-memory RGB image.
     """
-    type: RendererEventType = Field(..., description="""The type of the event.""")
+    type: Literal["RenderEvent"] = Field("RenderEvent", description="""The type of the event.""")
     
     
 
@@ -237,7 +192,6 @@ Actor.model_rebuild()
 Viewer.model_rebuild()
 Viewport.model_rebuild()
 Image.model_rebuild()
-ImageDataUri.model_rebuild()
 StoreModel.model_rebuild()
 DirectoryStore.model_rebuild()
 FSStore.model_rebuild()
