@@ -52,5 +52,15 @@ class DataManagerMachine(StateMachine):
 
     @SetImage.on
     def set_image(self, image: Image):
+        self.image_count += 1
+        if isinstance(image, Image):
+            ngff_image = ngff_zarr.itk_image_to_ngff(image)
+            multiscales = ngff_zarr.to_multiscales(ngff_image)
+            name = image.name
+            if name in self.images:
+                name = f"{name}{self.image_count}"
+
+            image_data = MachineImageData(multiscales)
+
         pass
         # self.images
