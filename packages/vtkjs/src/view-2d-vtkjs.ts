@@ -15,6 +15,17 @@ import {
   SetContainerEvent,
   view2dLogic,
 } from './view-2d-vtkjs.machine.js';
+import { Axis } from '@itk-viewer/viewer/view-2d.js';
+
+//
+const axisToSliceMode = {
+  // @ts-expect-error can't find SlicingMode
+  x: vtkImageMapper.SlicingMode.X,
+  // @ts-expect-error can't find SlicingMode
+  y: vtkImageMapper.SlicingMode.Y,
+  // @ts-expect-error can't find SlicingMode
+  z: vtkImageMapper.SlicingMode.Z,
+} as const;
 
 const setupContainer = (
   rendererContainer: vtkGenericRenderWindow,
@@ -173,6 +184,10 @@ const createImplementation = () => {
         cameraVtk.setViewMatrix(viewMat as mat4);
 
         render();
+      },
+
+      axis: (_: unknown, { axis }: { axis: Axis }) => {
+        mapper?.setSlicingMode(axisToSliceMode[axis]);
       },
     },
   };

@@ -4,11 +4,13 @@ import GenericRenderWindow, {
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera, Pose } from '@itk-viewer/viewer/camera.js';
+import { Axis } from '@itk-viewer/viewer/view-2d.js';
 
 export type Context = {
   rendererContainer: vtkGenericRenderWindow;
   camera: Camera | undefined;
   parent: AnyActorRef;
+  axis: Axis;
 };
 
 export type SetContainerEvent = {
@@ -24,7 +26,7 @@ export const view2dLogic = setup({
       | SetContainerEvent
       | { type: 'setResolution'; resolution: [number, number] }
       | { type: 'imageBuilt'; image: BuiltImage }
-      | { type: 'setSlice'; slice: number }
+      | { type: 'axis'; axis: Axis }
       | { type: 'setCameraPose'; pose: Pose; parallelScaleRatio: number }
       | { type: 'setCamera'; camera: Camera };
   },
@@ -37,6 +39,10 @@ export const view2dLogic = setup({
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     applyCameraPose: (_, __: { pose: Pose; parallelScaleRatio: number }) => {
+      throw new Error('Function not implemented.');
+    },
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    axis: (_, __: { axis: Axis }) => {
       throw new Error('Function not implemented.');
     },
     forwardToParent: sendTo(
@@ -53,6 +59,7 @@ export const view2dLogic = setup({
         listenWindowResize: false,
       }),
       camera: undefined,
+      axis: 'z',
       parent,
     };
   },
@@ -62,7 +69,15 @@ export const view2dLogic = setup({
     vtkjs: {
       on: {
         setContainer: {
-          actions: [{ type: 'setContainer' }],
+          actions: [
+            { type: 'setContainer' },
+            {
+              type: 'axis',
+              params: ({ context: { axis } }) => ({
+                axis,
+              }),
+            },
+          ],
         },
         setResolution: {
           actions: ['forwardToParent'],
@@ -90,6 +105,19 @@ export const view2dLogic = setup({
               params: ({ event }) => ({
                 pose: event.pose,
                 parallelScaleRatio: event.parallelScaleRatio,
+              }),
+            },
+          ],
+        },
+        axis: {
+          actions: [
+            assign({
+              axis: ({ event }) => event.axis,
+            }),
+            {
+              type: 'axis',
+              params: ({ event }) => ({
+                axis: event.axis,
               }),
             },
           ],

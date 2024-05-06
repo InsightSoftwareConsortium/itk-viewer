@@ -15,13 +15,37 @@ import { Camera, reset2d } from './camera.js';
 import { ViewportActor } from './viewport.js';
 import { quat, vec3 } from 'gl-matrix';
 
+export type Axis = 'x' | 'y' | 'z';
+
+const axisToIndex = {
+  x: 0,
+  y: 1,
+  z: 2,
+} as const;
+
 const viewContext = {
   slice: 0.5,
+  axis: 'z' as Axis,
   scale: 0,
   image: undefined as MultiscaleSpatialImage | undefined,
   spawned: {} as Record<string, AnyActorRef>,
   viewport: undefined as ViewportActor | undefined,
   camera: undefined as Camera | undefined,
+};
+
+const toRotation = (axis: Axis) => {
+  // Default to z axis where +Z goes into screen and +Y is down on screen
+  let vec = vec3.fromValues(1, 0, 0);
+  let angle = Math.PI;
+  if (axis == 'x') {
+    vec = vec3.fromValues(0, 1, 0);
+    angle = Math.PI / 2;
+  } else if (axis == 'y') {
+    angle = Math.PI / 2;
+  }
+  const rotation = quat.create();
+  quat.setAxisAngle(rotation, vec, angle);
+  return rotation;
 };
 
 export const view2d = setup({
@@ -39,19 +63,33 @@ export const view2d = setup({
   actors: {
     imageBuilder: fromPromise(
       async ({
-        input: { image, scale, slice },
+        input: { image, scale, slice, axis },
       }: {
         input: {
           image: MultiscaleSpatialImage;
           scale: number;
           slice: number;
+          axis: Axis;
         };
       }) => {
         const worldBounds = await image.getWorldBounds(scale);
-        const zWidth = worldBounds[5] - worldBounds[4];
-        const worldZ = worldBounds[4] + zWidth * slice;
-        worldBounds[4] = worldZ;
-        worldBounds[5] = worldZ;
+        let sliceWorldPos = 0;
+        if (axis === 'x') {
+          const xWidth = worldBounds[1] - worldBounds[0];
+          sliceWorldPos = worldBounds[0] + xWidth * slice; // world X pos
+          worldBounds[0] = sliceWorldPos;
+          worldBounds[1] = sliceWorldPos;
+        } else if (axis === 'y') {
+          const yWidth = worldBounds[3] - worldBounds[2];
+          sliceWorldPos = worldBounds[2] + yWidth * slice;
+          worldBounds[2] = sliceWorldPos;
+          worldBounds[3] = sliceWorldPos;
+        } else if (axis === 'z') {
+          const zWidth = worldBounds[5] - worldBounds[4];
+          sliceWorldPos = worldBounds[4] + zWidth * slice;
+          worldBounds[4] = sliceWorldPos;
+          worldBounds[5] = sliceWorldPos;
+        }
         const builtImage = (await image.getImage(
           scale,
           worldBounds,
@@ -62,13 +100,20 @@ export const view2d = setup({
         }
         // buildImage could be larger than slice if cached so
         // find index of slice in builtImage
-        const builtWidthWorld = builtImage.spacing[2] * builtImage.size[2];
-        const sliceInBuildImageWorld = worldZ - builtImage.origin[2];
+        const axisIndex = axisToIndex[axis];
+        const builtWidthWorld =
+          builtImage.spacing[axisIndex] * builtImage.size[axisIndex];
+        const sliceInBuildImageWorld =
+          sliceWorldPos - builtImage.origin[axisIndex];
         const sliceIndexFloat = Math.round(
-          builtImage.size[2] * (sliceInBuildImageWorld / builtWidthWorld),
+          builtImage.size[axisIndex] *
+            (sliceInBuildImageWorld / builtWidthWorld),
         );
         // Math.round goes up with .5, so we need to clamp to max index
-        const sliceIndex = Math.min(sliceIndexFloat, builtImage.size[2] - 1);
+        const sliceIndex = Math.max(
+          0,
+          Math.min(sliceIndexFloat, builtImage.size[axisIndex] - 1),
+        );
         return { builtImage, sliceIndex };
       },
     ),
@@ -79,7 +124,7 @@ export const view2d = setup({
         actor.send(event);
       });
     },
-    resetCameraPose: async ({ context: { image, camera, viewport } }) => {
+    resetCameraPose: async ({ context: { image, camera, viewport, axis } }) => {
       if (!image || !camera) return;
       const aspect = (() => {
         if (!viewport) return 1;
@@ -88,14 +133,13 @@ export const view2d = setup({
       })();
 
       const bounds = await image.getWorldBounds(image.coarsestScale);
+
       const { pose: currentPose, verticalFieldOfView } =
         camera.getSnapshot().context;
-      // rotate so +Z goes into screen and +Y is down on screen
       const withAxis = { ...currentPose };
-      const axis = vec3.fromValues(1, 0, 0);
-      const rotation = quat.create();
-      quat.setAxisAngle(rotation, axis, Math.PI);
-      withAxis.rotation = rotation;
+
+      withAxis.rotation = toRotation(axis);
+
       const pose = reset2d(withAxis, verticalFieldOfView, bounds, aspect);
       camera.send({
         type: 'setPose',
@@ -121,13 +165,14 @@ export const view2d = setup({
             assign({
               spawned: ({
                 spawn,
-                context: { spawned, camera },
+                context: { spawned, camera, axis },
                 event: { logic, onActor },
                 self,
               }) => {
                 // @ts-expect-error cannot spawn actor of type that is not in setup()
                 const child = spawn(logic, { input: { parent: self } });
                 if (camera) child.send({ type: 'setCamera', camera });
+                child.send({ type: 'axis', axis });
                 const id = Object.keys(spawned).length.toString();
                 onActor(child);
                 return {
@@ -196,12 +241,13 @@ export const view2d = setup({
         buildingImage: {
           invoke: {
             input: ({ context }) => {
-              const { image, scale, slice } = context;
+              const { image, scale, slice, axis } = context;
               if (!image) throw new Error('No image available');
               return {
                 image,
                 scale,
                 slice,
+                axis,
               };
             },
             src: 'imageBuilder',
