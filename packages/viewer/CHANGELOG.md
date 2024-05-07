@@ -1,5 +1,11 @@
 # @itk-viewer/viewer
 
+## 0.3.0
+
+### Minor Changes
+
+- 96c064a: View 2D: Auto pick slicing axis from image bounds.
+
 ## 0.2.9
 
 ### Patch Changes
