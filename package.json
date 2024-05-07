@@ -1,7 +1,7 @@
 {
   "version": "0.0.1",
   "private": true,
-  "packageManager": "pnpm@7.12.0",
+  "packageManager": "pnpm@9.1.0",
   "description": "Multi-dimensional web-based image, mesh, and point set viewer",
   "type": "module",
   "scripts": {
