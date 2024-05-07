@@ -10,12 +10,20 @@ import {
   MultiscaleSpatialImage,
   BuiltImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { ValueOf } from '@itk-viewer/io/types.js';
+import { ReadonlyBounds } from '@itk-viewer/utils/bounding-box.js';
 import { CreateChild } from './children.js';
 import { Camera, reset2d } from './camera.js';
 import { ViewportActor } from './viewport.js';
 import { quat, vec3 } from 'gl-matrix';
 
-export type Axis = 'x' | 'y' | 'z';
+export const AXIS = {
+  X: 'x',
+  Y: 'y',
+  Z: 'z',
+} as const;
+
+export type Axis = ValueOf<typeof AXIS>;
 
 const axisToIndex = {
   x: 0,
@@ -25,7 +33,7 @@ const axisToIndex = {
 
 const viewContext = {
   slice: 0.5,
-  axis: 'z' as Axis,
+  axis: AXIS.Z as Axis,
   scale: 0,
   image: undefined as MultiscaleSpatialImage | undefined,
   spawned: {} as Record<string, AnyActorRef>,
@@ -46,6 +54,19 @@ const toRotation = (axis: Axis) => {
   const rotation = quat.create();
   quat.setAxisAngle(rotation, vec, angle);
   return rotation;
+};
+
+const computeMinSizeAxis = (bounds: ReadonlyBounds) => {
+  const xSize = Math.abs(bounds[1] - bounds[0]);
+  const ySize = Math.abs(bounds[3] - bounds[2]);
+  const zSize = Math.abs(bounds[5] - bounds[4]);
+  if (xSize < ySize && xSize < zSize) {
+    return AXIS.X;
+  }
+  if (ySize < xSize && ySize < zSize) {
+    return AXIS.Y;
+  }
+  return AXIS.Z;
 };
 
 export const view2d = setup({
@@ -115,6 +136,18 @@ export const view2d = setup({
           Math.min(sliceIndexFloat, builtImage.size[axisIndex] - 1),
         );
         return { builtImage, sliceIndex };
+      },
+    ),
+    findDefaultAxis: fromPromise(
+      async ({
+        input: { image },
+      }: {
+        input: {
+          image: MultiscaleSpatialImage;
+        };
+      }) => {
+        const worldBounds = await image.getWorldBounds(image.coarsestScale);
+        return computeMinSizeAxis(worldBounds);
       },
     ),
   },
@@ -190,7 +223,6 @@ export const view2d = setup({
               scale: ({ event }) => event.image.coarsestScale,
               slice: 0.5,
             }),
-            'resetCameraPose',
             enqueueActions(({ context, enqueue }) => {
               Object.values(context.spawned).forEach((actor) => {
                 enqueue.sendTo(actor, {
@@ -200,7 +232,7 @@ export const view2d = setup({
               });
             }),
           ],
-          target: '.buildingImage',
+          target: '.findingNewImageDefaults',
         },
         setSlice: {
           actions: [assign({ slice: ({ event }) => event.slice })],
@@ -238,6 +270,35 @@ export const view2d = setup({
       initial: 'idle',
       states: {
         idle: {},
+        findingNewImageDefaults: {
+          invoke: {
+            input: ({ context }) => {
+              const { image } = context;
+              if (!image) throw new Error('No image available');
+              return {
+                image,
+              };
+            },
+            src: 'findDefaultAxis',
+            onDone: {
+              actions: [
+                assign({
+                  axis: ({ event }) => event.output,
+                }),
+                enqueueActions(({ context, enqueue }) => {
+                  Object.values(context.spawned).forEach((actor) => {
+                    enqueue.sendTo(actor, {
+                      type: 'axis',
+                      axis: context.axis,
+                    });
+                  });
+                }),
+                'resetCameraPose',
+              ],
+              target: 'buildingImage',
+            },
+          },
+        },
         buildingImage: {
           invoke: {
             input: ({ context }) => {
