@@ -1,5 +1,12 @@
 # @itk-viewer/remote-viewport
 
+## 0.2.13
+
+### Patch Changes
+
+- Updated dependencies [96c064a]
+  - @itk-viewer/viewer@0.3.0
+
 ## 0.2.12
 
 ### Patch Changes

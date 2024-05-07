@@ -1,5 +1,18 @@
 # @itk-viewer/element
 
+## 0.3.0
+
+### Minor Changes
+
+- 96c064a: View 2D: Auto pick slicing axis from image bounds.
+
+### Patch Changes
+
+- Updated dependencies [96c064a]
+  - @itk-viewer/viewer@0.3.0
+  - @itk-viewer/vtkjs@0.1.0
+  - @itk-viewer/remote-viewport@0.2.13
+
 ## 0.2.13
 
 ### Patch Changes
