@@ -11,12 +11,12 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: 20
 
       - name: Install dependencies
-        run: |
-          npm install --location global pnpm
-          pnpm install
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
 
       - name: Build
         run: pnpm build
@@ -24,22 +24,31 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Test with Chrome
-        uses: cypress-io/github-action@v5
+      - name: Test with Electron
+        uses: cypress-io/github-action@v6
         with:
-          start: pnpm run test
+          command: pnpm run test
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test with Chrome
+        uses: cypress-io/github-action@v6
+        with:
+          install: false
           component: true
           browser: chrome
         env:
           CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Test with Firefox
-        uses: cypress-io/github-action@v5
-        with:
-          start: pnpm run cy:component
-          component: true
-          browser: firefox
-        env:
-          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Error: "The browser never connected."
+      # - name: Test with Firefox
+      #   uses: cypress-io/github-action@v6
+      #   with:
+      #     install: false
+      #     component: true
+      #     browser: firefox
+      #   env:
+      #     CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
