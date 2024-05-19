@@ -24,11 +24,10 @@ jobs:
         with:
           node-version: 20
 
-      - name: install pnpm
-        run: npm i pnpm@latest -g
-
-      - name: install dependencies
-        run: pnpm install
+      - name: Install dependencies
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: true
 
       - name: Build
         run: pnpm build
