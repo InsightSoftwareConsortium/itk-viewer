@@ -4,6 +4,7 @@ import { mat4, vec3 } from 'gl-matrix';
 import '@kitware/vtk.js/Rendering/Profiles/Volume';
 import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper.js';
+import { SlicingMode } from '@kitware/vtk.js/Rendering/Core/ImageMapper/Constants.js';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice.js';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
@@ -17,14 +18,10 @@ import {
 } from './view-2d-vtkjs.machine.js';
 import { Axis } from '@itk-viewer/viewer/view-2d.js';
 
-//
 const axisToSliceMode = {
-  // @ts-expect-error can't find SlicingMode
-  x: vtkImageMapper.SlicingMode.X,
-  // @ts-expect-error can't find SlicingMode
-  y: vtkImageMapper.SlicingMode.Y,
-  // @ts-expect-error can't find SlicingMode
-  z: vtkImageMapper.SlicingMode.Z,
+  I: SlicingMode.I,
+  J: SlicingMode.J,
+  K: SlicingMode.K,
 } as const;
 
 const setupContainer = (

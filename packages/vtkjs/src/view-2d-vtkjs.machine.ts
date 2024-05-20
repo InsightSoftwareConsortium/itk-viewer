@@ -4,7 +4,7 @@ import GenericRenderWindow, {
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera, Pose } from '@itk-viewer/viewer/camera.js';
-import { Axis } from '@itk-viewer/viewer/view-2d.js';
+import { AXIS, Axis } from '@itk-viewer/viewer/view-2d.js';
 
 export type Context = {
   rendererContainer: vtkGenericRenderWindow;
@@ -59,7 +59,7 @@ export const view2dLogic = setup({
         listenWindowResize: false,
       }),
       camera: undefined,
-      axis: 'z',
+      axis: AXIS.K,
       parent,
     };
   },
