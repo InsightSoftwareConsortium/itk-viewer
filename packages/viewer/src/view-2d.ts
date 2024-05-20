@@ -9,31 +9,33 @@ import {
 import {
   MultiscaleSpatialImage,
   BuiltImage,
+  ensure3dDirection,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { ValueOf } from '@itk-viewer/io/types.js';
-import { ReadonlyBounds } from '@itk-viewer/utils/bounding-box.js';
 import { CreateChild } from './children.js';
 import { Camera, reset2d } from './camera.js';
 import { ViewportActor } from './viewport.js';
 import { quat, vec3 } from 'gl-matrix';
+import { XYZ, ensuredDims } from '@itk-viewer/io/dimensionUtils.js';
+import { getCorners } from '@itk-viewer/utils/bounding-box.js';
 
 export const AXIS = {
-  X: 'x',
-  Y: 'y',
-  Z: 'z',
+  I: 'I',
+  J: 'J',
+  K: 'K',
 } as const;
 
 export type Axis = ValueOf<typeof AXIS>;
 
 const axisToIndex = {
-  x: 0,
-  y: 1,
-  z: 2,
+  I: 0,
+  J: 1,
+  K: 2,
 } as const;
 
 const viewContext = {
   slice: 0.5,
-  axis: AXIS.Z as Axis,
+  axis: AXIS.K as Axis,
   scale: 0,
   image: undefined as MultiscaleSpatialImage | undefined,
   spawned: {} as Record<string, AnyActorRef>,
@@ -41,32 +43,37 @@ const viewContext = {
   camera: undefined as Camera | undefined,
 };
 
-const toRotation = (axis: Axis) => {
-  // Default to z axis where +Z goes into screen and +Y is down on screen
-  let vec = vec3.fromValues(1, 0, 0);
-  let angle = Math.PI;
-  if (axis == 'x') {
-    vec = vec3.fromValues(0, 1, 0);
-    angle = Math.PI / 2;
-  } else if (axis == 'y') {
-    angle = Math.PI / 2;
-  }
+const toRotation = (direction: Float64Array, axis: Axis) => {
+  const dir3d = ensure3dDirection(direction);
+
+  const x = vec3.fromValues(dir3d[0], dir3d[1], dir3d[2]);
+  const y = vec3.fromValues(dir3d[3], dir3d[4], dir3d[5]);
+  const z = vec3.fromValues(dir3d[6], dir3d[7], dir3d[8]);
+
   const rotation = quat.create();
-  quat.setAxisAngle(rotation, vec, angle);
+  if (axis == AXIS.I) {
+    quat.setAxes(rotation, x, z, y);
+  } else if (axis == AXIS.J) {
+    quat.setAxes(rotation, y, x, z); // negate z?
+  } else {
+    vec3.negate(z, z);
+    quat.setAxes(rotation, z, x, y);
+  }
   return rotation;
 };
 
-const computeMinSizeAxis = (bounds: ReadonlyBounds) => {
-  const xSize = Math.abs(bounds[1] - bounds[0]);
-  const ySize = Math.abs(bounds[3] - bounds[2]);
-  const zSize = Math.abs(bounds[5] - bounds[4]);
-  if (xSize < ySize && xSize < zSize) {
-    return AXIS.X;
+const computeMinSizeAxis = (spacing: Array<number>, size: Array<number>) => {
+  const imageSpaceSize = size.map((s, i) => s * spacing[i]);
+  const iSize = imageSpaceSize[0];
+  const jSize = imageSpaceSize[1];
+  const kSize = imageSpaceSize[2];
+  if (iSize < jSize && iSize < kSize) {
+    return AXIS.I;
   }
-  if (ySize < xSize && ySize < zSize) {
-    return AXIS.Y;
+  if (jSize < iSize && jSize < kSize) {
+    return AXIS.J;
   }
-  return AXIS.Z;
+  return AXIS.K;
 };
 
 export const view2d = setup({
@@ -95,17 +102,17 @@ export const view2d = setup({
       }) => {
         const worldBounds = await image.getWorldBounds(scale);
         let sliceWorldPos = 0;
-        if (axis === 'x') {
+        if (axis === AXIS.I) {
           const xWidth = worldBounds[1] - worldBounds[0];
           sliceWorldPos = worldBounds[0] + xWidth * slice; // world X pos
           worldBounds[0] = sliceWorldPos;
           worldBounds[1] = sliceWorldPos;
-        } else if (axis === 'y') {
+        } else if (axis === AXIS.J) {
           const yWidth = worldBounds[3] - worldBounds[2];
           sliceWorldPos = worldBounds[2] + yWidth * slice;
           worldBounds[2] = sliceWorldPos;
           worldBounds[3] = sliceWorldPos;
-        } else if (axis === 'z') {
+        } else if (axis === AXIS.K) {
           const zWidth = worldBounds[5] - worldBounds[4];
           sliceWorldPos = worldBounds[4] + zWidth * slice;
           worldBounds[4] = sliceWorldPos;
@@ -130,7 +137,7 @@ export const view2d = setup({
           builtImage.size[axisIndex] *
             (sliceInBuildImageWorld / builtWidthWorld),
         );
-        // Math.round goes up with .5, so we need to clamp to max index
+        // Math.round goes up with .5, so clamp to max index
         const sliceIndex = Math.max(
           0,
           Math.min(sliceIndexFloat, builtImage.size[axisIndex] - 1),
@@ -146,8 +153,14 @@ export const view2d = setup({
           image: MultiscaleSpatialImage;
         };
       }) => {
-        const worldBounds = await image.getWorldBounds(image.coarsestScale);
-        return computeMinSizeAxis(worldBounds);
+        const ijkSpacing = await image.scaleSpacing(image.coarsestScale);
+        if (ijkSpacing.length > 3) {
+          ijkSpacing.push(0);
+        }
+        const shape = image.scaleInfos[image.coarsestScale].arrayShape;
+        const shape3d = ensuredDims(0, ['x', 'y', 'z'], shape);
+        const shapeArray = XYZ.map((axis) => shape3d.get(axis)!);
+        return computeMinSizeAxis(ijkSpacing, shapeArray);
       },
     ),
   },
@@ -157,7 +170,9 @@ export const view2d = setup({
         actor.send(event);
       });
     },
-    resetCameraPose: async ({ context: { image, camera, viewport, axis } }) => {
+    resetCameraPose: async ({
+      context: { image, camera, viewport, axis, scale },
+    }) => {
       if (!image || !camera) return;
       const aspect = (() => {
         if (!viewport) return 1;
@@ -165,15 +180,23 @@ export const view2d = setup({
         return dims[1] && dims[0] ? dims[0] / dims[1] : 1;
       })();
 
-      const bounds = await image.getWorldBounds(image.coarsestScale);
-
       const { pose: currentPose, verticalFieldOfView } =
         camera.getSnapshot().context;
       const withAxis = { ...currentPose };
+      withAxis.rotation = toRotation(image.direction, axis);
 
-      withAxis.rotation = toRotation(axis);
+      await image.scaleIndexToWorld(scale); // ??? TODO: this makes reset work...
+      const indexToWorld = await image.scaleIndexToWorld(scale);
+      const indexBounds = image.getIndexExtent(scale);
+      const corners = getCorners(indexBounds);
 
-      const pose = reset2d(withAxis, verticalFieldOfView, bounds, aspect);
+      // to world space
+      const pointsToFit = corners.map((corner) => {
+        return vec3.transformMat4(corner, corner, indexToWorld);
+      });
+
+      const pose = reset2d(withAxis, verticalFieldOfView, pointsToFit, aspect);
+
       camera.send({
         type: 'setPose',
         pose,

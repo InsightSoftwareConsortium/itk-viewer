@@ -2,7 +2,6 @@ import {
   Bounds,
   addPoint,
   createBounds,
-  getCorners,
   getLength,
 } from '@itk-viewer/utils/bounding-box.js';
 import { ReadonlyVec3, mat4, vec3, quat, ReadonlyQuat } from 'gl-matrix';
@@ -209,24 +208,29 @@ export const reset3d = (
 export const reset2d = (
   pose: Pose,
   verticalFieldOfView: number,
-  bounds: Bounds,
+  pointsToFit: Array<ReadonlyVec3>,
   aspect: number,
 ) => {
-  const center = vec3.fromValues(
-    (bounds[0] + bounds[1]) / 2.0,
-    (bounds[2] + bounds[3]) / 2.0,
-    (bounds[4] + bounds[5]) / 2.0,
-  );
+  const center = vec3.create();
+  for (let i = 0; i < pointsToFit.length; ++i) {
+    vec3.add(center, center, pointsToFit[i]);
+  }
+  vec3.scale(center, center, 1.0 / pointsToFit.length);
 
   // Get the bounds in view coordinates
   const viewBounds = createBounds();
-  const visiblePoints = getCorners(bounds);
   const viewMat = mat4.create();
   toMat4(viewMat, pose);
-  for (let i = 0; i < visiblePoints.length; ++i) {
-    const point = visiblePoints[i];
-    vec3.transformMat4(point, point, viewMat);
-    addPoint(viewBounds, ...point);
+  const viewSpacePoint = vec3.create();
+  for (let i = 0; i < pointsToFit.length; ++i) {
+    const point = pointsToFit[i];
+    vec3.transformMat4(viewSpacePoint, point, viewMat);
+    addPoint(
+      viewBounds,
+      viewSpacePoint[0],
+      viewSpacePoint[1],
+      viewSpacePoint[2],
+    );
   }
 
   const xLength = getLength(viewBounds, 0);

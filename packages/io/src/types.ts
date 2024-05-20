@@ -1,4 +1,4 @@
-import { mat4 } from 'gl-matrix';
+import { ReadonlyMat4 } from 'gl-matrix';
 import { TypedArray } from 'itk-wasm';
 
 export type ValueOf<T> = T[keyof T];
@@ -40,7 +40,7 @@ export type ScaleInfo = {
   ranges?: Array<Array<number>>; // Map('1': [0, 140], '2': [3, 130]) or null if unknown. Range of values for each component
   name?: string; // dataset name
 
-  indexToWorld?: mat4;
+  indexToWorld?: ReadonlyMat4;
 
   // Zarr specific
   pixelArrayMetadata?: {

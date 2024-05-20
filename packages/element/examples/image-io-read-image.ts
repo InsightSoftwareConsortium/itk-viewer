@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   const viewerElement = document.querySelector('#viewer')! as ItkViewer2d;
   const viewer = viewerElement.getActor();
 
-  const path = 'HeadMRVolume.nrrd';
+  const path = 'prostate-slight-rotation.nrrd';
   const url = new URL(path, document.location.origin);
   const response = await fetch(url.href);
   const data = new Uint8Array(await response.arrayBuffer());

@@ -80,7 +80,7 @@ function inflate(bounds: Bounds, delta: number) {
 }
 
 // code modified from vtk.js/ImageData
-const extentToBounds = (ex: Extent, indexToWorld: mat4) => {
+const extentToBounds = (ex: Extent, indexToWorld: ReadonlyMat4) => {
   // prettier-ignore
   const corners = [
     ex[0], ex[2], ex[4],
@@ -129,7 +129,8 @@ const extentToBounds = (ex: Extent, indexToWorld: mat4) => {
   return bounds;
 };
 
-export const ensure3dDirection = (d: Float64Array): ReadonlyMat3 => {
+// returns a copy
+export const ensure3dDirection = (d: Float64Array): mat3 => {
   if (d.length >= 9) {
     return mat3.fromValues(
       d[0],
@@ -389,6 +390,13 @@ export class MultiscaleSpatialImage {
         setMatrixElement(direction, dimension, d, d, 1.0);
       }
     }
+
+    // const rotation = quat.create();
+    // quat.fromEuler(rotation, 0, 55, 30);
+    // quat.fromEuler(rotation, 0, 45, 0);
+    // quat.fromEuler(rotation, 35, 0, 0);
+    // mat3.fromQuat(direction, rotation);
+
     return direction;
   }
 
@@ -497,7 +505,7 @@ export class MultiscaleSpatialImage {
   async scaleIndexToWorld(requestedScale: number) {
     const scale = Math.min(requestedScale, this.scaleInfos.length - 1);
     if (this.scaleInfos[scale].indexToWorld)
-      return this.scaleInfos[scale].indexToWorld as mat4;
+      return this.scaleInfos[scale].indexToWorld as ReadonlyMat4;
 
     // compute and cache origin/scale on info
     const [origin, spacing] = await Promise.all([
@@ -511,7 +519,7 @@ export class MultiscaleSpatialImage {
       direction,
       origin,
       spacing,
-    });
+    }) as ReadonlyMat4;
     this.scaleInfos[scale].indexToWorld = indexToWorld;
     return indexToWorld;
   }
@@ -555,8 +563,7 @@ export class MultiscaleSpatialImage {
     );
   }
 
-  async getWorldBounds(scale: number) {
-    const indexToWorld = await this.scaleIndexToWorld(scale);
+  getIndexExtent(scale: number) {
     const imageBounds = ensuredDims(
       [0, 1],
       ['x', 'y', 'z'],
@@ -566,6 +573,12 @@ export class MultiscaleSpatialImage {
       imageBounds.get(dim),
     ) as Bounds;
     inflate(bounds, 0.5);
+    return bounds;
+  }
+
+  async getWorldBounds(scale: number) {
+    const indexToWorld = await this.scaleIndexToWorld(scale);
+    const bounds = this.getIndexExtent(scale);
     return extentToBounds(bounds, indexToWorld);
   }
 }
