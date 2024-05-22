@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "itkviewer-clara-viz"
+description = "NVIDIA clara-viz renderer for itkviewer."
+authors = [{name = "Matt McCormick", email = "matt.mccormick@kitware.com"}]
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Developers',
+    'Intended Audience :: Science/Research',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.8',
+    'Programming Language :: Python :: 3.9',
+]
+keywords = [
+    "itk",
+    "imaging",
+    "visualization",
+]
+dynamic = ["version"]
+
+requires-python = ">=3.8, <3.10"
+dependencies = [
+    "clara-viz-core",
+]
+
+[project.urls]
+Home = "https://github.com/InsightSoftwareConsorrtium/itk-viewer"
+Source = "https://github.com/InsightSoftwareConsortium/itk-viewer"
+Issues = "https://github.com/InsightSoftwareConsortium/itk-viewer/issues"
+
+[tool.hatch.envs.default]
+dependencies = [
+    "pytest >=2.7.3",
+]
+
+[tool.hatch.version]
+path = "itkviewer_clara_viz/__init__.py"

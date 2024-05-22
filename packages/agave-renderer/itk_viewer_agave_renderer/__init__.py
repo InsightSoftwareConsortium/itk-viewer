@@ -2,4 +2,4 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-from .renderer import Renderer
+from .renderer import AgaveRenderer

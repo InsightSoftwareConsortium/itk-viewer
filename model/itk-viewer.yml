@@ -1,0 +1,258 @@
+id: https://w3id.org/itk/viewer
+name: itk-viewer
+version: 0.0.1
+description: >-
+  The itk-viewer model defines the classes and relationships for a viewer that allows users to view and interact with multi-dimensional images, geometry, and point sets.
+license: https://creativecommons.org/publicdomain/zero/1.0/
+prefixes:
+  itk: https://w3id.org/itk/
+  wasm: https://w3id.org/itk/wasm
+  viewer: https://w3id.org/itk/viewer
+  linkml: https://w3id.org/linkml/
+imports:
+  - linkml:types
+default_range: string
+default_prefix: viewer
+
+classes:
+  Actor:
+    abstract: true
+    description: >-
+      In the Actor Model mathematical of computation, an actor is a computational entity that,
+      in response to a message it receives, can concurrently:
+
+      - send a finite number of messages to other actors;
+      - create a finite number of new actors;
+      - designate the behavior to be used for the next message it receives.
+
+      Supported messages are defined in the Event classes. The valid Events' for an Actor are defined
+      defined by the `receives` relationship. To send an Event to an Actor, use the `send` method.
+
+      Actors are typically implement as finite state machines.
+    class_uri: viewer:Actor
+    slots:
+      - unknownEventAction
+
+  Viewer:
+    abstract: true
+    is_a: Actor
+    tree_root: true
+    description: >-
+      A viewer is an interface that allows users to view and interact with
+      multi-dimensional images, geometry, and point sets.
+    class_uri: viewer:Viewer
+    attributes:
+      title:
+        description: >-
+          The title of the viewer.
+        range: string
+        ifabsent: string("ITK Viewer")
+      dataManager:
+        description: >-
+          The data manager for the viewer.
+        range: DataManager
+
+  Viewport:
+    abstract: true
+    is_a: Actor
+    description: >-
+      A viewport is a rectangular region of a viewer that displays a rendering of the scene.
+    class_uri: viewer:Viewport
+    attributes:
+      width:
+        description: >-
+          The width of the viewport in pixels.
+        range: integer
+        required: true
+        ifabsent: int(640)
+      height:
+        description: >-
+          The height of the viewport in pixels.
+        range: integer
+        required: true
+        ifabsent: int(480)
+
+  Image:
+    description: >-
+      An itk-wasm Image to be displayed in the viewer.
+    class_uri: wasm:Image
+
+  StoreModel:
+    abstract: true
+    description: >-
+      Parameters of a Zarr store following the data model implied by Zarr-Python.
+    attributes:
+      type:
+        description: >-
+          The type of the Zarr store model.
+        designates_type: true
+        range: string
+        required: true
+
+  DirectoryStore:
+    is_a: StoreModel
+    description: >-
+      A Zarr store that is backed by a directory on the file system.
+    attributes:
+      path:
+        description: >-
+          The path to the directory on the file system that contains the Zarr store.
+        range: string
+        required: true
+
+  FSStore:
+    is_a: StoreModel
+    description: >-
+      A Zarr store that can be wrapped an fsspec.FSMap in Python to give access to arbitrary filesystems
+    attributes:
+      url:
+        description: >-
+          Protocol and path, like “s3://bucket/root.zarr” or "https://example.com/image.ome.zarr".
+        range: string
+        required: true
+
+  ImageData:
+    description: >-
+      Image data displayed in the viewer.
+    class_uri: viewer:ImageData
+    attributes:
+      imageJson:
+        description: >-
+          The image data in JSON format. An ITK-Wasm Image with the pixel data zstd compressed and base64-encoded.
+        range: string
+      store:
+        description: >-
+          The OME-Zarr store model for the image data.
+        range: StoreModel
+
+  MultiscaleImage:
+    abstract: true
+    is_a: Actor
+    description: >-
+      A multiscale image is a multi-dimensional image, based on the OME-Zarr data model, often preprocessed,
+      that supports efficient rendering at multiple resolutions.
+    class_uri: viewer:MultiscaleImage
+
+  DataManager:
+    abstract: true
+    is_a: Actor
+    description: >-
+      A data manager is an actor that manages the loading and caching of data for rendering.
+    class_uri: viewer:DataManager
+    slots:
+      - images
+
+  Renderer:
+    abstract: true
+    is_a: Actor
+    description: >-
+      A renderer is an actor that renders a scene to an in-memory RGB image for display in a viewport.
+    class_uri: viewer:Renderer
+    attributes:
+      width:
+        description: >-
+          The width of the canvas in pixels.
+        range: integer
+        required: true
+        ifabsent: int(640)
+      height:
+        description: >-
+          The height of the canvas in pixels.
+        range: integer
+        required: true
+        ifabsent: int(480)
+    slots:
+      - viewport
+
+
+  Event:
+    abstract: true
+    description: >-
+      An event is a message that can be sent to an actor. The actor can respond to the event
+      by changing its state, sending messages to other actors, or creating new actors.
+    class_uri: viewer:Event
+    attributes:
+      type:
+        designates_type: true
+        description: >-
+          The type of the event.
+        range: string
+        required: true
+
+  ViewerEvent:
+    abstract: true
+    is_a: Event
+    description: >-
+      A ViewerEvent is an Event that can be sent to a Viewer.
+    class_uri: viewer:ViewerEvent
+
+  SetImageEvent:
+    is_a: ViewerEvent
+    description: >-
+      A SetImageEvent is an Event that sets an image to be displayed in a viewer.
+    class_uri: viewer:SetImageEvent
+    slots:
+      - image
+    attributes:
+      name:
+        description: >-
+          The name of the image to be displayed in the viewer.
+        range: string
+
+  RendererEvent:
+    abstract: true
+    is_a: Event
+    description: >-
+      A RendererEvent is an Event supported by a Renderer.
+    class_uri: viewer:RendererEvent
+
+  RenderEvent:
+    is_a: RendererEvent
+    description: >-
+      A render event is a message that instructs a renderer to render a scene to an in-memory RGB image.
+    class_uri: viewer:RenderEvent
+
+slots:
+  viewport:
+    description: >-
+      The viewport that displays the rendered RGB image.
+    domain: Renderer
+    range: Viewport
+    required: true
+
+  unknownEventAction:
+    description: >-
+      The action to take when an unknown event is received.
+    domain: Actor
+    range: UnknownEventAction
+
+  image:
+    description: >-
+      The image to be displayed in the viewer.
+    domain: SetImageEvent
+    range: Image
+    required: true
+
+  images:
+    description: >-
+      The images displayed by the viewer.
+    domain: DataManager
+    range: ImageData
+    multivalued: true
+    required: true
+
+enums:
+  UnknownEventAction:
+    description: >-
+      The types of actions that can be taken when an unknown event is received.
+    enum_uri: viewer:UnknownEventAction
+    permissible_values:
+      Ignore:
+        description: >-
+          Ignore the event.
+      Warn:
+        description: >-
+          Log a warning and ignore the event.
+      Error:
+        description: >-
+          Throw an error.
