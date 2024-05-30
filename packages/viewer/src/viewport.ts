@@ -2,7 +2,7 @@ import { Actor, AnyActorRef, assign, sendParent, setup } from 'xstate';
 import { ReadonlyMat4 } from 'gl-matrix';
 
 import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { cameraMachine, Camera, reset3d } from './camera.js';
+import { cameraMachine, Camera } from './camera.js';
 import { CreateChild } from './children.js';
 
 type Context = {
@@ -48,22 +48,6 @@ export const viewportMachine = setup({
         actor.send(event);
       });
     },
-    resetCameraPose: async ({ context: { image, resolution: dims }, self }) => {
-      const { camera } = self.getSnapshot().children;
-      if (!image || !camera) return;
-
-      const aspect = (() => {
-        return dims[1] && dims[0] ? dims[0] / dims[1] : 1;
-      })();
-      const bounds = await image.getWorldBounds(image.coarsestScale);
-      const { pose: currentPose, verticalFieldOfView } =
-        camera.getSnapshot().context;
-      const pose = reset3d(currentPose, verticalFieldOfView, bounds, aspect);
-      camera.send({
-        type: 'setPose',
-        pose,
-      });
-    },
   },
 }).createMachine({
   id: 'viewport',
@@ -104,7 +88,6 @@ export const viewportMachine = setup({
             assign({
               image: ({ event: { image } }: { event: SetImageEvent }) => image,
             }),
-            'resetCameraPose',
             'forwardToSpawned',
           ],
         },
@@ -114,7 +97,6 @@ export const viewportMachine = setup({
               camera: ({ event: { camera } }: { event: SetCameraEvent }) =>
                 camera,
             }),
-            'resetCameraPose',
             'forwardToSpawned',
           ],
         },
