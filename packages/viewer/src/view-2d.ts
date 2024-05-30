@@ -5,6 +5,7 @@ import {
   enqueueActions,
   fromPromise,
   setup,
+  stateIn,
 } from 'xstate';
 import {
   MultiscaleSpatialImage,
@@ -147,17 +148,18 @@ export const view2d = setup({
     ),
     findDefaultAxis: fromPromise(
       async ({
-        input: { image },
+        input: { image, scale },
       }: {
         input: {
           image: MultiscaleSpatialImage;
+          scale: number;
         };
       }) => {
-        const ijkSpacing = await image.scaleSpacing(image.coarsestScale);
+        const ijkSpacing = await image.scaleSpacing(scale);
         if (ijkSpacing.length > 3) {
           ijkSpacing.push(0);
         }
-        const shape = image.scaleInfos[image.coarsestScale].arrayShape;
+        const shape = image.scaleInfos[scale].arrayShape;
         const shape3d = ensuredDims(0, ['x', 'y', 'z'], shape);
         const shapeArray = XYZ.map((axis) => shape3d.get(axis)!);
         return computeMinSizeAxis(ijkSpacing, shapeArray);
@@ -185,7 +187,6 @@ export const view2d = setup({
       const withAxis = { ...currentPose };
       withAxis.rotation = toRotation(image.direction, axis);
 
-      await image.scaleIndexToWorld(scale); // ??? TODO: this makes reset work...
       const indexToWorld = await image.scaleIndexToWorld(scale);
       const indexBounds = image.getIndexExtent(scale);
       const corners = getCorners(indexBounds);
@@ -257,14 +258,18 @@ export const view2d = setup({
           ],
           target: '.findingNewImageDefaults',
         },
-        setSlice: {
-          actions: [assign({ slice: ({ event }) => event.slice })],
-          target: '.buildingImage',
-        },
-        setScale: {
-          actions: [assign({ scale: ({ event }) => event.scale })],
-          target: '.buildingImage',
-        },
+        setSlice: [
+          // if buildingImage, rebuild image
+          {
+            guard: stateIn('view2d.buildingImage'),
+            target: '.buildingImage',
+            actions: [assign({ slice: ({ event }) => event.slice })],
+          },
+          // else eventually going to buildingImage
+          {
+            actions: [assign({ slice: ({ event }) => event.slice })],
+          },
+        ],
         setViewport: {
           actions: [
             assign({
@@ -292,14 +297,27 @@ export const view2d = setup({
       },
       initial: 'idle',
       states: {
-        idle: {},
+        idle: {
+          on: {
+            setScale: {
+              actions: [
+                assign({
+                  scale: ({ event }) => {
+                    return event.scale;
+                  },
+                }),
+              ],
+            },
+          },
+        },
         findingNewImageDefaults: {
           invoke: {
             input: ({ context }) => {
-              const { image } = context;
+              const { image, scale } = context;
               if (!image) throw new Error('No image available');
               return {
                 image,
+                scale,
               };
             },
             src: 'findDefaultAxis',
@@ -319,6 +337,19 @@ export const view2d = setup({
                 'resetCameraPose',
               ],
               target: 'buildingImage',
+            },
+          },
+          on: {
+            setScale: {
+              actions: [
+                assign({
+                  scale: ({ event }) => {
+                    return event.scale;
+                  },
+                }),
+              ],
+              target: '.',
+              reenter: true,
             },
           },
         },
@@ -347,6 +378,19 @@ export const view2d = setup({
                   });
                 }),
               ],
+            },
+          },
+          on: {
+            setScale: {
+              actions: [
+                assign({
+                  scale: ({ event }) => {
+                    return event.scale;
+                  },
+                }),
+              ],
+              target: '.',
+              reenter: true,
             },
           },
         },
