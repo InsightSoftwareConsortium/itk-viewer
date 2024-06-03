@@ -21,7 +21,7 @@ export type TypedArrayConstructor = Constructor<TypedArray>;
 
 export type SpatialDimensions = ['x'] | ['x', 'y'] | ['x', 'y', 'z'];
 
-type ChunkParameter = Map<Dimension, number>;
+export type ChunkParameter = Map<Dimension, number>;
 type LazyCoords = {
   get: (dim: Dimension) => Awaitable<Float32Array | undefined>;
   has: (dim: Dimension) => boolean;
