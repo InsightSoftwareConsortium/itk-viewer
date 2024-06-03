@@ -1,6 +1,7 @@
 import { Dimension, SpatialDimensions } from './types.js';
 
 export const CXYZT = Object.freeze(['c', 'x', 'y', 'z', 't'] as const); // viewer indexing
+export const XYZ = Object.freeze(['x', 'y', 'z']) as SpatialDimensions;
 
 export const ensuredDims = <T>(
   defaultValue: T,
@@ -30,7 +31,7 @@ export const orderBy =
       }),
     );
 
-export const chunk = <T>(chunkSize: number, array: Array<T>) => {
+export const chunk = <T>(chunkSize: number, array: ReadonlyArray<T>) => {
   const chunks = [];
   for (let i = 0; i < array.length; i += chunkSize) {
     chunks.push(array.slice(i, i + chunkSize));
@@ -41,5 +42,3 @@ export const chunk = <T>(chunkSize: number, array: Array<T>) => {
 export const nonNullable = <T>(value: T): value is NonNullable<T> => {
   return value != null;
 };
-
-export const XYZ = Object.freeze(['x', 'y', 'z']) as SpatialDimensions;

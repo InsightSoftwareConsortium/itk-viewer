@@ -23,6 +23,7 @@ import {
 } from './dimensionUtils.js';
 import { transformBounds } from './transformBounds.js';
 import {
+  ChunkParameter,
   Dimension,
   Extent,
   ReadOnlyDimensionBounds,
@@ -41,6 +42,11 @@ function setMatrixElement(
 ): void {
   matrixData[column + row * columns] = value;
 }
+
+type ReadonlyFloatArray =
+  | Readonly<Float32Array>
+  | Readonly<Float64Array>
+  | ReadonlyMat3;
 
 type ImageDataFromChunksWorkerArgs = {
   scaleInfo: {
@@ -80,7 +86,8 @@ function inflate(bounds: Bounds, delta: number) {
 }
 
 // code modified from vtk.js/ImageData
-const extentToBounds = (ex: Extent, indexToWorld: ReadonlyMat4) => {
+const extentToBounds = (extent: Extent, indexToWorld: ReadonlyMat4) => {
+  const ex = extent;
   // prettier-ignore
   const corners = [
     ex[0], ex[2], ex[4],
@@ -130,7 +137,10 @@ const extentToBounds = (ex: Extent, indexToWorld: ReadonlyMat4) => {
 };
 
 // returns a copy
-export const ensure3dDirection = (d: Float64Array): mat3 => {
+export const ensure3dDirection = (
+  maybe2dDirection: ReadonlyFloatArray,
+): mat3 => {
+  const d = maybe2dDirection;
   if (d.length >= 9) {
     return mat3.fromValues(
       d[0],
@@ -173,21 +183,28 @@ const makeMat4 = ({
   return mat4.scale(mat, mat, spacing);
 };
 
-const makeIndexToWorld = ({
+type Maybe2dVec =
+  | [number, number]
+  | [number, number, number]
+  | vec3
+  | Array<number>;
+
+const maybe2dSpatialToMat4 = ({
   direction: inDirection,
   origin,
   spacing,
 }: {
-  direction: ReadonlyMat3;
-  origin: Array<number>;
-  spacing: Array<number>;
+  direction: ReadonlyFloatArray;
+  origin: Maybe2dVec;
+  spacing: Maybe2dVec;
 }) => {
+  const inDirection3d = ensure3dDirection(inDirection);
   // ITK (and VTKMath) uses row-major index axis, but gl-matrix uses column-major. Transpose.
   const DIMENSIONS = 3;
-  const direction = Array(inDirection.length) as mat3;
+  const direction = Array(inDirection3d.length) as mat3;
   for (let idx = 0; idx < DIMENSIONS; ++idx) {
     for (let col = 0; col < DIMENSIONS; ++col) {
-      direction[col + idx * 3] = inDirection[idx + col * DIMENSIONS];
+      direction[col + idx * 3] = inDirection3d[idx + col * DIMENSIONS];
     }
   }
 
@@ -238,6 +255,53 @@ export const worldBoundsToIndexBounds = ({
     (dim) => [dim, fullIndexBoundsWithZCT.get(dim)!] as const,
   );
   return new Map([...spaceBounds, ...ctBounds]);
+};
+
+// Ensures CXYZT dimensions are present
+const ensureBoundsCXYZT = ({
+  indexBounds,
+  fullIndexBounds,
+}: {
+  indexBounds: ReadonlyBounds;
+  fullIndexBounds: ReadOnlyDimensionBounds;
+}) => {
+  const fullIndexBoundsWithZCT = ensuredDims(
+    [0, 1] as [number, number],
+    CXYZT,
+    fullIndexBounds,
+  );
+  // clamp to existing integer indexes
+  const imageBoundsByDim = chunk(2, indexBounds);
+  const spaceBounds = (['x', 'y', 'z'] as const).map((dim, idx) => {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const [min, max] = fullIndexBoundsWithZCT.get(dim)!;
+    const [bmin, bmax] = imageBoundsByDim[idx];
+    return [
+      dim,
+      [
+        Math.floor(Math.min(max, Math.max(min, bmin))),
+        Math.ceil(Math.min(max, Math.max(min, bmax))),
+      ],
+    ] as const;
+  });
+  const ctBounds = (['c', 't'] as const).map(
+    (dim) => [dim, fullIndexBoundsWithZCT.get(dim)!] as const,
+  );
+  return new Map([...spaceBounds, ...ctBounds]);
+};
+
+const normalizedImageBoundsToIndexBounds = (
+  arrayShape: ChunkParameter,
+  normalizedImageBounds: ReadonlyBounds,
+) => {
+  const toIndexScale = XYZ.map((axis) => arrayShape.get(axis) ?? 1);
+  const normalizedToIndex = maybe2dSpatialToMat4({
+    direction: mat3.identity(mat3.create()),
+    origin: vec3.create(),
+    spacing: toIndexScale,
+  }) as ReadonlyMat4;
+  const indexBounds = transformBounds(normalizedToIndex, normalizedImageBounds);
+  return indexBounds;
 };
 
 function isContained(
@@ -328,7 +392,7 @@ export class MultiscaleSpatialImage {
     const info = this.scaleInfos[scale];
     if (info.origin) return info.origin;
 
-    const origin = new Array(this.spatialDims.length);
+    const origin = new Array<number>(this.spatialDims.length);
     for (let index = 0; index < this.spatialDims.length; index++) {
       const dim = this.spatialDims[index];
       if (info.coords.has(dim)) {
@@ -347,7 +411,7 @@ export class MultiscaleSpatialImage {
     const info = this.scaleInfos[scale];
     if (info.spacing) return info.spacing;
 
-    const spacing = new Array(this.spatialDims.length);
+    const spacing = new Array<number>(this.spatialDims.length);
     for (let index = 0; index < this.spatialDims.length; index++) {
       const dim = this.spatialDims[index];
       const dimCoords = await info.coords.get(dim);
@@ -390,12 +454,6 @@ export class MultiscaleSpatialImage {
         setMatrixElement(direction, dimension, d, d, 1.0);
       }
     }
-
-    // const rotation = quat.create();
-    // quat.fromEuler(rotation, 0, 55, 30);
-    // quat.fromEuler(rotation, 0, 45, 0);
-    // quat.fromEuler(rotation, 35, 0, 0);
-    // mat3.fromQuat(direction, rotation);
 
     return direction;
   }
@@ -513,15 +571,37 @@ export class MultiscaleSpatialImage {
       this.scaleSpacing(scale),
     ]);
 
-    const direction = ensure3dDirection(this.direction);
-
-    const indexToWorld = makeIndexToWorld({
-      direction,
+    const indexToWorld = maybe2dSpatialToMat4({
+      direction: this.direction,
       origin,
       spacing,
     }) as ReadonlyMat4;
     this.scaleInfos[scale].indexToWorld = indexToWorld;
     return indexToWorld;
+  }
+
+  async buildAndCacheImage(scale: number, indexBounds: Bounds) {
+    const indexBoundsCXYZT = ensureBoundsCXYZT({
+      indexBounds,
+      fullIndexBounds: this.getIndexBounds(scale),
+    });
+    const { dims } = this.scaleInfos[scale];
+    const indexBoundsByDimension = orderBy(dims)(indexBoundsCXYZT);
+    const cachedImage = findImageInBounds({
+      cache: this.cachedImages,
+      scale,
+      bounds: indexBoundsByDimension,
+    });
+    if (cachedImage) return cachedImage;
+
+    const image = await this.buildImage(scale, indexBoundsByDimension);
+    storeImage({
+      cache: this.cachedImages,
+      scale,
+      bounds: indexBoundsByDimension,
+      image,
+    });
+    return image;
   }
 
   /* Retrieve bounded image at scale. */
@@ -532,25 +612,29 @@ export class MultiscaleSpatialImage {
     const scale = Math.min(requestedScale, this.scaleInfos.length - 1);
     const indexToWorld = await this.scaleIndexToWorld(scale);
 
-    const { dims } = this.scaleInfos[scale];
-    const indexBounds = orderBy(dims)(
-      worldBoundsToIndexBounds({
-        bounds: worldBounds,
-        fullIndexBounds: this.getIndexBounds(scale),
-        worldToIndex: mat4.invert(mat4.create(), indexToWorld),
-      }),
+    const fullIndexBounds = ensuredDims(
+      [0, 0],
+      XYZ,
+      this.getIndexBounds(scale),
     );
+    let indexBounds = XYZ.flatMap((dim) => fullIndexBounds.get(dim)) as Bounds;
+    if (worldBounds) {
+      const worldToIndex = mat4.invert(mat4.create(), indexToWorld);
+      indexBounds = transformBounds(worldToIndex, worldBounds);
+    }
 
-    const cachedImage = findImageInBounds({
-      cache: this.cachedImages,
-      scale,
-      bounds: indexBounds,
-    });
-    if (cachedImage) return cachedImage;
+    return this.buildAndCacheImage(scale, indexBounds);
+  }
 
-    const image = await this.buildImage(scale, indexBounds);
-    storeImage({ cache: this.cachedImages, scale, bounds: indexBounds, image });
-    return image;
+  async getImageInImageSpace(
+    scale: number,
+    normalizedImageBounds: ReadonlyBounds = [0, 1, 0, 1, 0, 1],
+  ) {
+    const indexBounds = normalizedImageBoundsToIndexBounds(
+      this.scaleInfos[scale].arrayShape,
+      normalizedImageBounds,
+    );
+    return this.buildAndCacheImage(scale, indexBounds);
   }
 
   getIndexBounds(scale: number) {
