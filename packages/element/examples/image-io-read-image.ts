@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   const url = new URL(path, document.location.origin);
   const response = await fetch(url.href);
   const data = new Uint8Array(await response.arrayBuffer());
-  const inputFile = { data, path: path };
+  const inputFile = { data, path };
   const { image: itkimage } = await readImage(inputFile);
   const image = new ItkWasmMultiscaleSpatialImage(itkimage);
 

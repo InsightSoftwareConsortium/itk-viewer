@@ -1,7 +1,7 @@
 import { Actor, AnyEventObject } from 'xstate';
 import { mat4, vec3 } from 'gl-matrix';
 
-import '@kitware/vtk.js/Rendering/Profiles/Volume';
+import '@kitware/vtk.js/Rendering/Profiles/Volume.js';
 import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper.js';
 import { SlicingMode } from '@kitware/vtk.js/Rendering/Core/ImageMapper/Constants.js';

@@ -16,7 +16,7 @@ import { ValueOf } from '@itk-viewer/io/types.js';
 import { CreateChild } from './children.js';
 import { Camera, reset2d } from './camera.js';
 import { ViewportActor } from './viewport.js';
-import { mat4, quat, vec3 } from 'gl-matrix';
+import { mat3, mat4, quat, vec3 } from 'gl-matrix';
 import { XYZ, ensuredDims } from '@itk-viewer/io/dimensionUtils.js';
 import { Bounds, getCorners } from '@itk-viewer/utils/bounding-box.js';
 
@@ -52,21 +52,26 @@ const viewContext = {
 };
 
 const toRotation = (direction: Float64Array, axis: AxisType) => {
-  const dir3d = ensure3dDirection(direction);
-
-  const x = vec3.fromValues(dir3d[0], dir3d[1], dir3d[2]);
-  const y = vec3.fromValues(dir3d[3], dir3d[4], dir3d[5]);
-  const z = vec3.fromValues(dir3d[6], dir3d[7], dir3d[8]);
+  const direction3d = ensure3dDirection(direction);
+  // ITK (and VTKMath) uses row-major index axis, but gl-matrix uses column-major. Transpose.
+  mat3.transpose(direction3d, direction3d);
 
   const rotation = quat.create();
   if (axis == Axis.I) {
-    quat.setAxes(rotation, x, z, y);
+    quat.fromEuler(rotation, 0, 90, 0);
+    const roll = quat.fromEuler(quat.create(), 0, 0, 90);
+    quat.multiply(rotation, rotation, roll);
   } else if (axis == Axis.J) {
-    quat.setAxes(rotation, y, x, z); // negate z?
+    quat.fromEuler(rotation, 90, 0, 0);
   } else {
-    vec3.negate(z, z);
-    quat.setAxes(rotation, z, x, y);
+    quat.fromEuler(rotation, 0, 0, 180);
   }
+  const sliceAxisRotation = mat3.fromQuat(mat3.create(), rotation);
+
+  mat3.multiply(direction3d, direction3d, sliceAxisRotation);
+  quat.fromMat3(rotation, direction3d);
+  quat.normalize(rotation, rotation);
+
   return rotation;
 };
 
