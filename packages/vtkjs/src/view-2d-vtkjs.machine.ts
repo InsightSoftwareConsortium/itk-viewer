@@ -4,13 +4,13 @@ import GenericRenderWindow, {
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera, Pose } from '@itk-viewer/viewer/camera.js';
-import { AXIS, Axis } from '@itk-viewer/viewer/view-2d.js';
+import { Axis, AxisType } from '@itk-viewer/viewer/view-2d.js';
 
 export type Context = {
   rendererContainer: vtkGenericRenderWindow;
   camera: Camera | undefined;
   parent: AnyActorRef;
-  axis: Axis;
+  axis: AxisType;
 };
 
 export type SetContainerEvent = {
@@ -26,7 +26,7 @@ export const view2dLogic = setup({
       | SetContainerEvent
       | { type: 'setResolution'; resolution: [number, number] }
       | { type: 'imageBuilt'; image: BuiltImage }
-      | { type: 'axis'; axis: Axis }
+      | { type: 'axis'; axis: AxisType }
       | { type: 'setCameraPose'; pose: Pose; parallelScaleRatio: number }
       | { type: 'setCamera'; camera: Camera };
   },
@@ -42,7 +42,7 @@ export const view2dLogic = setup({
       throw new Error('Function not implemented.');
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    axis: (_, __: { axis: Axis }) => {
+    axis: (_, __: { axis: AxisType }) => {
       throw new Error('Function not implemented.');
     },
     forwardToParent: sendTo(
@@ -59,7 +59,7 @@ export const view2dLogic = setup({
         listenWindowResize: false,
       }),
       camera: undefined,
-      axis: AXIS.K,
+      axis: Axis.K,
       parent,
     };
   },

@@ -16,17 +16,17 @@ import { ValueOf } from '@itk-viewer/io/types.js';
 import { CreateChild } from './children.js';
 import { Camera, reset2d } from './camera.js';
 import { ViewportActor } from './viewport.js';
-import { quat, vec3 } from 'gl-matrix';
+import { mat4, quat, vec3 } from 'gl-matrix';
 import { XYZ, ensuredDims } from '@itk-viewer/io/dimensionUtils.js';
-import { getCorners } from '@itk-viewer/utils/bounding-box.js';
+import { Bounds, getCorners } from '@itk-viewer/utils/bounding-box.js';
 
-export const AXIS = {
+export const Axis = {
   I: 'I',
   J: 'J',
   K: 'K',
 } as const;
 
-export type Axis = ValueOf<typeof AXIS>;
+export type AxisType = ValueOf<typeof Axis>;
 
 const axisToIndex = {
   I: 0,
@@ -34,9 +34,16 @@ const axisToIndex = {
   K: 2,
 } as const;
 
+// To MultiScaleImage dimension
+const axisToDim = {
+  I: 'x',
+  J: 'y',
+  K: 'z',
+} as const;
+
 const viewContext = {
   slice: 0.5,
-  axis: AXIS.K as Axis,
+  axis: Axis.K as AxisType,
   scale: 0,
   image: undefined as MultiscaleSpatialImage | undefined,
   spawned: {} as Record<string, AnyActorRef>,
@@ -44,7 +51,7 @@ const viewContext = {
   camera: undefined as Camera | undefined,
 };
 
-const toRotation = (direction: Float64Array, axis: Axis) => {
+const toRotation = (direction: Float64Array, axis: AxisType) => {
   const dir3d = ensure3dDirection(direction);
 
   const x = vec3.fromValues(dir3d[0], dir3d[1], dir3d[2]);
@@ -52,9 +59,9 @@ const toRotation = (direction: Float64Array, axis: Axis) => {
   const z = vec3.fromValues(dir3d[6], dir3d[7], dir3d[8]);
 
   const rotation = quat.create();
-  if (axis == AXIS.I) {
+  if (axis == Axis.I) {
     quat.setAxes(rotation, x, z, y);
-  } else if (axis == AXIS.J) {
+  } else if (axis == Axis.J) {
     quat.setAxes(rotation, y, x, z); // negate z?
   } else {
     vec3.negate(z, z);
@@ -69,12 +76,12 @@ const computeMinSizeAxis = (spacing: Array<number>, size: Array<number>) => {
   const jSize = imageSpaceSize[1];
   const kSize = imageSpaceSize[2];
   if (iSize < jSize && iSize < kSize) {
-    return AXIS.I;
+    return Axis.I;
   }
   if (jSize < iSize && jSize < kSize) {
-    return AXIS.J;
+    return Axis.J;
   }
-  return AXIS.K;
+  return Axis.K;
 };
 
 export const view2d = setup({
@@ -97,51 +104,66 @@ export const view2d = setup({
         input: {
           image: MultiscaleSpatialImage;
           scale: number;
-          slice: number;
-          axis: Axis;
+          slice: number; // 0 to 1 for depth on slice axis
+          axis: AxisType;
         };
       }) => {
-        const worldBounds = await image.getWorldBounds(scale);
-        let sliceWorldPos = 0;
-        if (axis === AXIS.I) {
-          const xWidth = worldBounds[1] - worldBounds[0];
-          sliceWorldPos = worldBounds[0] + xWidth * slice; // world X pos
-          worldBounds[0] = sliceWorldPos;
-          worldBounds[1] = sliceWorldPos;
-        } else if (axis === AXIS.J) {
-          const yWidth = worldBounds[3] - worldBounds[2];
-          sliceWorldPos = worldBounds[2] + yWidth * slice;
-          worldBounds[2] = sliceWorldPos;
-          worldBounds[3] = sliceWorldPos;
-        } else if (axis === AXIS.K) {
-          const zWidth = worldBounds[5] - worldBounds[4];
-          sliceWorldPos = worldBounds[4] + zWidth * slice;
-          worldBounds[4] = sliceWorldPos;
-          worldBounds[5] = sliceWorldPos;
+        const normalizedImageBounds = [0, 1, 0, 1, 0, 1] as Bounds;
+        if (axis === Axis.I) {
+          normalizedImageBounds[0] = slice;
+          normalizedImageBounds[1] = slice;
+        } else if (axis === Axis.J) {
+          normalizedImageBounds[2] = slice;
+          normalizedImageBounds[3] = slice;
+        } else if (axis === Axis.K) {
+          normalizedImageBounds[4] = slice;
+          normalizedImageBounds[5] = slice;
         }
-        const builtImage = (await image.getImage(
+
+        const builtImage = (await image.getImageInImageSpace(
           scale,
-          worldBounds,
+          normalizedImageBounds,
         )) as BuiltImage;
 
         if (builtImage.imageType.dimension === 2) {
           return { builtImage, sliceIndex: 0 };
         }
+
         // buildImage could be larger than slice if cached so
         // find index of slice in builtImage
-        const axisIndex = axisToIndex[axis];
-        const builtWidthWorld =
-          builtImage.spacing[axisIndex] * builtImage.size[axisIndex];
-        const sliceInBuildImageWorld =
-          sliceWorldPos - builtImage.origin[axisIndex];
-        const sliceIndexFloat = Math.round(
-          builtImage.size[axisIndex] *
-            (sliceInBuildImageWorld / builtWidthWorld),
+        const indexToWorld = await image.scaleIndexToWorld(scale);
+        const worldToIndex = mat4.invert(mat4.create(), indexToWorld);
+        const wholeImageOrigin = [...(await image.scaleOrigin(scale))] as vec3;
+        if (wholeImageOrigin.length == 2) {
+          wholeImageOrigin[2] = 0;
+        }
+        vec3.transformMat4(wholeImageOrigin, wholeImageOrigin, worldToIndex);
+        const buildImageOrigin = [...builtImage.origin] as vec3;
+        if (buildImageOrigin.length == 2) {
+          buildImageOrigin[2] = 0;
+        }
+        vec3.transformMat4(buildImageOrigin, buildImageOrigin, worldToIndex);
+
+        // vector from whole image origin to build image origin
+        const wholeImageToBuildImageOrigin = vec3.subtract(
+          buildImageOrigin,
+          buildImageOrigin,
+          wholeImageOrigin,
         );
+        const builtOriginIndex =
+          wholeImageToBuildImageOrigin[axisToIndex[axis]];
+
+        const axisIndexSize =
+          image.scaleInfos[scale].arrayShape.get(axisToDim[axis]) ?? 1;
+        const fullImageSliceIndex = slice * axisIndexSize;
+
+        const sliceIndexInBuildImageFloat =
+          fullImageSliceIndex - builtOriginIndex;
+        const sliceIndexFloat = Math.round(sliceIndexInBuildImageFloat);
         // Math.round goes up with .5, so clamp to max index
         const sliceIndex = Math.max(
           0,
-          Math.min(sliceIndexFloat, builtImage.size[axisIndex] - 1),
+          Math.min(sliceIndexFloat, builtImage.size[axisToIndex[axis]] - 1),
         );
         return { builtImage, sliceIndex };
       },

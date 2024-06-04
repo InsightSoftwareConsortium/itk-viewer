@@ -16,7 +16,7 @@ import {
   SetContainerEvent,
   view2dLogic,
 } from './view-2d-vtkjs.machine.js';
-import { Axis } from '@itk-viewer/viewer/view-2d.js';
+import { AxisType } from '@itk-viewer/viewer/view-2d.js';
 
 const axisToSliceMode = {
   I: SlicingMode.I,
@@ -183,7 +183,7 @@ const createImplementation = () => {
         render();
       },
 
-      axis: (_: unknown, { axis }: { axis: Axis }) => {
+      axis: (_: unknown, { axis }: { axis: AxisType }) => {
         mapper?.setSlicingMode(axisToSliceMode[axis]);
       },
     },
