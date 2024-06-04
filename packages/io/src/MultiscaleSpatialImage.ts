@@ -183,11 +183,12 @@ const makeMat4 = ({
   return mat4.scale(mat, mat, spacing);
 };
 
-type Maybe2dVec =
+// Number array of length 2 or 3
+type Vec2dOr3d =
   | [number, number]
   | [number, number, number]
-  | vec3
-  | Array<number>;
+  | Array<number>
+  | vec3;
 
 const maybe2dSpatialToMat4 = ({
   direction: inDirection,
@@ -195,8 +196,8 @@ const maybe2dSpatialToMat4 = ({
   spacing,
 }: {
   direction: ReadonlyFloatArray;
-  origin: Maybe2dVec;
-  spacing: Maybe2dVec;
+  origin: Vec2dOr3d;
+  spacing: Vec2dOr3d;
 }) => {
   const inDirection3d = ensure3dDirection(inDirection);
   // ITK (and VTKMath) uses row-major index axis, but gl-matrix uses column-major. Transpose.
@@ -294,11 +295,11 @@ const normalizedImageBoundsToIndexBounds = (
   arrayShape: ChunkParameter,
   normalizedImageBounds: ReadonlyBounds,
 ) => {
-  const toIndexScale = XYZ.map((axis) => arrayShape.get(axis) ?? 1);
+  const normalizedToIndexScale = XYZ.map((axis) => arrayShape.get(axis) ?? 1);
   const normalizedToIndex = maybe2dSpatialToMat4({
     direction: mat3.identity(mat3.create()),
     origin: vec3.create(),
-    spacing: toIndexScale,
+    spacing: normalizedToIndexScale,
   }) as ReadonlyMat4;
   const indexBounds = transformBounds(normalizedToIndex, normalizedImageBounds);
   return indexBounds;
