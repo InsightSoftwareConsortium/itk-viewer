@@ -225,7 +225,6 @@ const createScaledImageInfo = async ({
     axesNames,
     chunkCount: toDimensionMap(
       dims,
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       dims.map((dim) => Math.ceil(arrayShape.get(dim)! / chunkSize.get(dim)!)),
     ),
     chunkSize,

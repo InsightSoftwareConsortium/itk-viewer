@@ -1,7 +1,0 @@
-dist
-cypress
-cypress.config.ts
-environment.yml
-micromamba/*
-packages/blosc-zarr/*
-!packages/blosc-zarr/bloscZarrDecompress.js

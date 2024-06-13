@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import {
   mat4,
   vec3,
@@ -241,7 +240,6 @@ export const worldBoundsToIndexBounds = ({
   // clamp to existing integer indexes
   const imageBoundsByDim = chunk(2, imageBounds);
   const spaceBounds = (['x', 'y', 'z'] as const).map((dim, idx) => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const [min, max] = fullIndexBoundsWithZCT.get(dim)!;
     const [bmin, bmax] = imageBoundsByDim[idx];
     return [
@@ -274,7 +272,6 @@ const ensureBoundsCXYZT = ({
   // clamp to existing integer indexes
   const imageBoundsByDim = chunk(2, indexBounds);
   const spaceBounds = (['x', 'y', 'z'] as const).map((dim, idx) => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const [min, max] = fullIndexBoundsWithZCT.get(dim)!;
     const [bmin, bmax] = imageBoundsByDim[idx];
     return [
