@@ -11,6 +11,7 @@ export default defineConfig({
     },
     watchForFileChanges: true,
     defaultCommandTimeout: 30000,
+    devServerPublicPathRoute: '', // needed for vite 5.0 https://github.com/cypress-io/cypress/issues/28347#issuecomment-2111054407
   },
   // videos are not reliable in github action: https://github.com/cypress-io/github-action/issues/337
   video: false,
