@@ -57,10 +57,10 @@ const setupContainer = (
 };
 
 const createImplementation = () => {
-  let actor: vtkImageSlice.vtkImageSlice | undefined = undefined;
-  let mapper: vtkImageMapper.vtkImageMapper | undefined = undefined;
-  let renderer: vtkRenderer.vtkRenderer | undefined = undefined;
-  let renderWindow: vtkRenderWindow.vtkRenderWindow | undefined = undefined;
+  let actor: vtkImageSlice | undefined = undefined;
+  let mapper: vtkImageMapper | undefined = undefined;
+  let renderer: vtkRenderer | undefined = undefined;
+  let renderWindow: vtkRenderWindow | undefined = undefined;
 
   const viewMat = mat4.create();
   let addedActorToRenderer = false;

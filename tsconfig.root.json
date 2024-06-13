@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
+    "module": "esnext",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "target": "ES2022",
     "declaration": true,
@@ -9,7 +9,7 @@
     "noUnusedParameters": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
