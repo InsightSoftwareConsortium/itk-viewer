@@ -21,22 +21,22 @@
     "ci:publish": "pnpm --filter=!vtk-js-transfer-function-example publish -r --access public"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.1",
-    "@cypress/mount-utils": "^4.0.0",
+    "@changesets/cli": "^2.27.5",
+    "@cypress/mount-utils": "^4.1.1",
     "@thewtex/setup-micromamba": "^1.9.7",
-    "@typescript-eslint/eslint-plugin": "^6.16.0",
-    "@typescript-eslint/parser": "^6.16.0",
+    "@typescript-eslint/eslint-plugin": "^7.13.0",
+    "@typescript-eslint/parser": "^7.13.0",
     "concurrently": "^8.2.2",
-    "cypress": "^13.6.2",
+    "cypress": "^13.11.0",
     "cypress-lit": "^0.0.8",
-    "eslint": "^8.56.0",
-    "follow-redirects": "^1.15.3",
-    "lit": "^3.1.0",
-    "prettier": "^3.1.1",
-    "tar": "^6.2.0",
-    "typescript": "^5.3.3",
+    "eslint": "^9.4.0",
+    "follow-redirects": "^1.15.6",
+    "lit": "^3.1.4",
+    "prettier": "^3.3.2",
+    "tar": "^7.2.0",
+    "typescript": "^5.4.5",
     "vite": "^4.4.11",
-    "vite-plugin-static-copy": "^0.17.0"
+    "vite-plugin-static-copy": "^1.0.5"
   },
   "prettier": {
     "singleQuote": true

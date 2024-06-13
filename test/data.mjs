@@ -1,6 +1,6 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
-import tar from 'tar';
+import * as tar from 'tar';
 import fs from 'fs';
 import followRedirects from 'follow-redirects';
 import zlib from 'zlib';
