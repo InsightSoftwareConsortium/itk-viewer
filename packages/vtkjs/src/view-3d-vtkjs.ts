@@ -1,7 +1,7 @@
 import { Actor, AnyEventObject } from 'xstate';
 import { mat4 } from 'gl-matrix';
 
-import '@kitware/vtk.js/Rendering/Profiles/Volume';
+import '@kitware/vtk.js/Rendering/Profiles/Volume.js';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume.js';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper.js';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction.js';
@@ -48,12 +48,11 @@ const setupContainer = (
 };
 
 const createImplementation = () => {
-  let actor: vtkVolume.vtkVolume | undefined = undefined;
-  let mapper: vtkVolumeMapper.vtkVolumeMapper | undefined = undefined;
-  let renderer: vtkRenderer.vtkRenderer | undefined = undefined;
-  let renderWindow: vtkRenderWindow.vtkRenderWindow | undefined = undefined;
-  let piecewiseFunction: vtkPiecewiseFunction.vtkPiecewiseFunction | undefined =
-    undefined;
+  let actor: vtkVolume | undefined = undefined;
+  let mapper: vtkVolumeMapper | undefined = undefined;
+  let renderer: vtkRenderer | undefined = undefined;
+  let renderWindow: vtkRenderWindow | undefined = undefined;
+  let piecewiseFunction: vtkPiecewiseFunction | undefined = undefined;
 
   const viewMat = mat4.create();
   let addedActorToRenderer = false;
