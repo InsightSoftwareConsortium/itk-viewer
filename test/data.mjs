@@ -23,7 +23,7 @@ async function downloadData() {
   }
 
   const url = `https://github.com/Kitware/itk-vtk-viewer/releases/download/v14.35.1/itk-vtk-viewer-testing-data.tar.gz`;
-  const request = followRedirects.https.get(url, function (response) {
+  followRedirects.https.get(url, function (response) {
     response
       .pipe(zlib.Unzip())
       .pipe(tar.x({ C: testDir }))
