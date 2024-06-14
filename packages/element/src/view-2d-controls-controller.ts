@@ -1,5 +1,5 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
-import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
+import { AxisType, View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { SelectorController } from 'xstate-lit';
 
 export class View2dControls implements ReactiveController {
@@ -9,6 +9,7 @@ export class View2dControls implements ReactiveController {
   scale: SelectorController<View2dActor, number> | undefined;
   scaleCount: SelectorController<View2dActor, number> | undefined;
   slice: SelectorController<View2dActor, number> | undefined;
+  axis: SelectorController<View2dActor, AxisType> | undefined;
   imageDimension: SelectorController<View2dActor, number> | undefined;
 
   constructor(host: ReactiveControllerHost) {
@@ -38,6 +39,11 @@ export class View2dControls implements ReactiveController {
       this.actor,
       (state) => state.context.slice,
     );
+    this.axis = new SelectorController(
+      this.host,
+      this.actor,
+      (state) => state.context.axis,
+    );
     this.imageDimension = new SelectorController(
       this.host,
       this.actor,
@@ -52,6 +58,15 @@ export class View2dControls implements ReactiveController {
     this.actor!.send({
       type: 'setSlice',
       slice,
+    });
+  }
+
+  onAxis(event: Event) {
+    const target = event.target as HTMLInputElement;
+    const axis = target.value as AxisType;
+    this.actor!.send({
+      type: 'setAxis',
+      axis,
     });
   }
 

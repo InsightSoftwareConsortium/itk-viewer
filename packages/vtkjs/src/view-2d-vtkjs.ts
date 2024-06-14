@@ -183,7 +183,7 @@ const createImplementation = () => {
         render();
       },
 
-      axis: (_: unknown, { axis }: { axis: AxisType }) => {
+      applyAxis: (_: unknown, { axis }: { axis: AxisType }) => {
         mapper?.setSlicingMode(axisToSliceMode[axis]);
       },
     },
