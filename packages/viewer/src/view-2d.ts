@@ -95,6 +95,7 @@ export const view2d = setup({
     events:
       | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'setSlice'; slice: number }
+      | { type: 'setAxis'; axis: AxisType }
       | { type: 'setScale'; scale: number }
       | { type: 'setViewport'; viewport: ViewportActor }
       | { type: 'setResolution'; resolution: [number, number] }
@@ -124,7 +125,6 @@ export const view2d = setup({
           normalizedImageBounds[4] = slice;
           normalizedImageBounds[5] = slice;
         }
-
         const builtImage = (await image.getImageInImageSpace(
           scale,
           normalizedImageBounds,
@@ -226,6 +226,10 @@ export const view2d = setup({
       const pose = reset2d(withAxis, verticalFieldOfView, pointsToFit, aspect);
 
       camera.send({
+        type: 'setEnableRotation',
+        enable: true,
+      });
+      camera.send({
         type: 'setPose',
         pose,
       });
@@ -297,6 +301,26 @@ export const view2d = setup({
             actions: [assign({ slice: ({ event }) => event.slice })],
           },
         ],
+        setAxis: [
+          // if buildingImage, rebuild image
+          {
+            guard: stateIn('view2d.buildingImage'),
+            target: '.buildingImage',
+            actions: [
+              assign({ axis: ({ event }) => event.axis }),
+              'forwardToSpawned',
+              'resetCameraPose',
+            ],
+          },
+          // else eventually going to buildingImage
+          {
+            actions: [
+              assign({ axis: ({ event }) => event.axis }),
+              'forwardToSpawned',
+              'resetCameraPose',
+            ],
+          },
+        ],
         setViewport: {
           actions: [
             assign({
@@ -356,7 +380,7 @@ export const view2d = setup({
                 enqueueActions(({ context, enqueue }) => {
                   Object.values(context.spawned).forEach((actor) => {
                     enqueue.sendTo(actor, {
-                      type: 'axis',
+                      type: 'setAxis',
                       axis: context.axis,
                     });
                   });

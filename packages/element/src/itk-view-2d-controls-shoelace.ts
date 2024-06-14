@@ -15,6 +15,7 @@ export class View2dControlsShoelace extends LitElement {
 
   render() {
     const slice = this.controls.slice?.value;
+    const axis = this.controls.axis?.value;
     const imageDimension = this.controls.imageDimension?.value ?? 0;
     const scale = this.controls.scale?.value;
     const scaleCount = this.controls.scaleCount?.value ?? 1;
@@ -23,24 +24,35 @@ export class View2dControlsShoelace extends LitElement {
       (_, i) => i,
     ).reverse();
 
-    const showSliceSlider = imageDimension >= 3;
+    const threeD = imageDimension >= 3;
     const showScale = scaleCount >= 2;
-    if (!showSliceSlider && !showScale) {
+    if (!threeD && !showScale) {
       return '';
     }
     return html`
       <sl-card>
-        ${showSliceSlider
-          ? html`<label>
-              <sl-range
-                value=${Number(slice)}
-                @sl-change="${this.controls.onSlice}"
-                min="0"
-                max="1"
-                step=".01"
-                label="Slice"
-              ></sl-range
-            ></label>`
+        ${threeD
+          ? html`
+              <label>
+                <sl-range
+                  value=${Number(slice)}
+                  @sl-change="${this.controls.onSlice}"
+                  min="0"
+                  max="1"
+                  step=".01"
+                  label="Slice"
+                ></sl-range
+              ></label>
+              <sl-radio-group
+                label="Slice Axis"
+                value=${axis}
+                @sl-change="${this.controls.onAxis}"
+              >
+                <sl-radio-button value="I">X</sl-radio-button>
+                <sl-radio-button value="J">Y</sl-radio-button>
+                <sl-radio-button value="K">Z</sl-radio-button>
+              </sl-select>
+            `
           : ''}
         ${showScale
           ? html`<sl-select
@@ -50,7 +62,7 @@ export class View2dControlsShoelace extends LitElement {
             >
               ${scaleOptions.map(
                 (option) =>
-                  html`<sl-option value=${option}> ${option} </sl-option>`,
+                  html`<sl-option value=${option}>${option}</sl-option>`,
               )}
             </sl-select>`
           : ''}

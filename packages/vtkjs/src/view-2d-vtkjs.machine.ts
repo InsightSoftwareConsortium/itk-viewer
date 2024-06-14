@@ -26,7 +26,7 @@ export const view2dLogic = setup({
       | SetContainerEvent
       | { type: 'setResolution'; resolution: [number, number] }
       | { type: 'imageBuilt'; image: BuiltImage }
-      | { type: 'axis'; axis: AxisType }
+      | { type: 'setAxis'; axis: AxisType }
       | { type: 'setCameraPose'; pose: Pose; parallelScaleRatio: number }
       | { type: 'setCamera'; camera: Camera };
   },
@@ -42,7 +42,7 @@ export const view2dLogic = setup({
       throw new Error('Function not implemented.');
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    axis: (_, __: { axis: AxisType }) => {
+    applyAxis: (_, __: { axis: AxisType }) => {
       throw new Error('Function not implemented.');
     },
     forwardToParent: sendTo(
@@ -72,7 +72,7 @@ export const view2dLogic = setup({
           actions: [
             { type: 'setContainer' },
             {
-              type: 'axis',
+              type: 'applyAxis',
               params: ({ context: { axis } }) => ({
                 axis,
               }),
@@ -109,13 +109,13 @@ export const view2dLogic = setup({
             },
           ],
         },
-        axis: {
+        setAxis: {
           actions: [
             assign({
               axis: ({ event }) => event.axis,
             }),
             {
-              type: 'axis',
+              type: 'applyAxis',
               params: ({ event }) => ({
                 axis: event.axis,
               }),
