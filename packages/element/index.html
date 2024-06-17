@@ -4,20 +4,43 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>itk-viewer</title>
-    <link rel="stylesheet" href="/examples/index.css" />
-    <script type="module" src="/src/itk-remote-viewport.ts"></script>
-    <script type="module" src="/src/itk-viewer-element.ts"></script>
-    <script type="module" src="/examples/remote-viewport.ts"></script>
+    <title>itk-viewer examples</title>
+    <link rel="stylesheet" href="examples/index.css" />
+    <style>
+      li {
+        font-size: larger;
+      }
+    </style>
   </head>
 
   <body>
-    <itk-viewer class="fill">
-      <itk-remote-viewport
-        class="fill"
-        id="right-viewport"
-        server-config='{ "serverUrl": "%VITE_HYPHA_URL%", "serviceId": "%VITE_HYPHA_RENDER_SERVICE_ID%" }'
-      ></itk-remote-viewport>
-    </itk-viewer>
+    <h1>itk-viewer examples</h1>
+    <div>
+      <ul>
+        <li><a href="examples/view-2d.html">2D Slice View</a></li>
+        <li><a href="examples/view-3d.html">3D Volume Rendering</a></li>
+        <li><a href="examples/multi-views.html">Multiple Viewports</a></li>
+        <li>
+          <a href="examples/compare.html"
+            >Compare 2 images with linked camera</a
+          >
+        </li>
+        <li>
+          <a href="examples/image-io-read-image.html"
+            >@itk-wasm/image-io readImage</a
+          >
+        </li>
+        <li>
+          <a href="examples/remote-webrtc.html"
+            >Remote Rendering with WebRTC Frames</a
+          >
+        </li>
+        <li>
+          <a href="examples/remote-viewport.html"
+            >Remote Rendering with HTJ2K Frames</a
+          >
+        </li>
+      </ul>
+    </div>
   </body>
 </html>

@@ -41,6 +41,7 @@ export class View2dControlsShoelace extends LitElement {
                   max="1"
                   step=".01"
                   label="Slice"
+                  style="min-width: 8rem;"
                 ></sl-range
               ></label>
               <sl-radio-group
@@ -55,16 +56,20 @@ export class View2dControlsShoelace extends LitElement {
             `
           : ''}
         ${showScale
-          ? html`<sl-select
-              label="Image Scale"
-              value=${scale}
-              @sl-change="${this.controls.onScale}"
-            >
-              ${scaleOptions.map(
-                (option) =>
-                  html`<sl-option value=${option}>${option}</sl-option>`,
-              )}
-            </sl-select>`
+          ? html`
+              <sl-radio-group
+                label="Image Scale"
+                value=${scale}
+                @sl-change="${this.controls.onAxis}"
+              >
+                ${scaleOptions.map(
+                  (option) =>
+                    html`<sl-radio-button value=${option}
+                      >${option}</sl-radio-button
+                    >`,
+                )}
+              </sl-radio-group>
+            `
           : ''}
       </sl-card>
     `;
