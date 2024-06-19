@@ -4,6 +4,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 export default defineConfig({
   publicDir: '../../test/data/input',
   build: {
+    outDir: 'examples/dist',
     lib: {
       entry: 'src/itk-viewer-element.ts',
       formats: ['es'],
