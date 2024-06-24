@@ -60,7 +60,7 @@ export class View2dControlsShoelace extends LitElement {
               <sl-radio-group
                 label="Image Scale"
                 value=${scale}
-                @sl-change="${this.controls.onAxis}"
+                @sl-change="${this.controls.onScale}"
               >
                 ${scaleOptions.map(
                   (option) =>
