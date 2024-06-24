@@ -1,12 +1,15 @@
-const styleTooltip = (tooltip: HTMLElement) => {
+export const FONT_SIZE = 12;
+
+export const styleTooltip = (tooltip: HTMLElement) => {
   tooltip.style.color = 'black';
   tooltip.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
   tooltip.style.position = 'absolute';
   tooltip.style.borderStyle = 'solid';
   tooltip.style.borderColor = 'black';
   tooltip.style.borderWidth = '1px';
-  tooltip.style.fontSize = '12px';
-  tooltip.style.padding = '4px 6px';
+  tooltip.style.fontSize = `${FONT_SIZE}px`;
+  tooltip.style.lineHeight = '18px';
+  tooltip.style.padding = '0px 6px';
   tooltip.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.2)';
   tooltip.style.transition = 'opacity 0.1s ease-in-out';
   tooltip.style.opacity = '0';

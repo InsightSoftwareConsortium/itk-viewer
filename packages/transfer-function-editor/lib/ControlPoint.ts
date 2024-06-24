@@ -244,4 +244,8 @@ export class ControlPoint {
   setColor(color: string) {
     this.circle.setAttribute('fill', color);
   }
+
+  setVisibility(visible: boolean) {
+    this.element.style.display = visible ? 'block' : 'none';
+  }
 }

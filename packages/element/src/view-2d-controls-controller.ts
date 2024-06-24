@@ -1,6 +1,7 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { AxisType, View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { SelectorController } from 'xstate-lit';
+import { TransferFunctionEditor } from '../../transfer-function-editor/dist/TransferFunctionEditor.es.js';
 
 export class View2dControls implements ReactiveController {
   host: ReactiveControllerHost;
@@ -11,6 +12,7 @@ export class View2dControls implements ReactiveController {
   slice: SelectorController<View2dActor, number> | undefined;
   axis: SelectorController<View2dActor, AxisType> | undefined;
   imageDimension: SelectorController<View2dActor, number> | undefined;
+  transferFunctionEditor: TransferFunctionEditor | undefined;
 
   constructor(host: ReactiveControllerHost) {
     this.host = host;
@@ -74,5 +76,35 @@ export class View2dControls implements ReactiveController {
     const target = event.target as HTMLInputElement;
     const scale = Number(target.value);
     this.actor!.send({ type: 'setScale', scale });
+  }
+
+  setTransferFunctionContainer(container: Element | undefined) {
+    if (container) {
+      this.transferFunctionEditor = new TransferFunctionEditor(container);
+
+      const colorTransferFunction = (function () {
+        const lowColor = [0, 0, 0, 1];
+        const highColor = [1, 1, 1, 1];
+        const mappingRange = [0, 10] as [number, number];
+        return {
+          getMappingRange: () => mappingRange,
+          getUint8Table: () => new Uint8Array([255, 255, 255, 255]),
+          getSize: () => 2,
+          getColor: (intensity: number, rgbaOut: Array<number>) => {
+            const midway =
+              (mappingRange[1] - mappingRange[0]) / 2 + mappingRange[0];
+            if (intensity < midway)
+              rgbaOut.splice(0, rgbaOut.length, ...lowColor);
+            else rgbaOut.splice(0, rgbaOut.length, ...highColor);
+          },
+        };
+      })();
+      this.transferFunctionEditor.setColorTransferFunction(
+        colorTransferFunction,
+      );
+      this.transferFunctionEditor.setColorRange([0.2, 0.8]);
+      this.transferFunctionEditor.setRange([0, 10]);
+      this.transferFunctionEditor.setRangeViewOnly(true);
+    }
   }
 }

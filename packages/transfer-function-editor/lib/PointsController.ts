@@ -13,6 +13,7 @@ export class PointsController {
   private onPointsUpdated: () => void;
   private controlPoints: ControlPoint[] = [];
   private isNewPointFromPointer = false;
+  private rangeViewOnly = false;
 
   constructor(
     container: ContainerType,
@@ -42,6 +43,7 @@ export class PointsController {
   }
 
   onPointerDown(event: PointerEvent) {
+    if (this.rangeViewOnly) return;
     const [x, y] = this.container
       .domToNormalized(event.clientX, event.clientY)
       .map(clamp0to1);
@@ -96,5 +98,10 @@ export class PointsController {
         }),
       );
     }
+  }
+
+  setRangeViewOnly(rangeViewOnly: boolean) {
+    this.rangeViewOnly = rangeViewOnly;
+    this.controlPoints.forEach((cp) => cp.setVisibility(!rangeViewOnly));
   }
 }
