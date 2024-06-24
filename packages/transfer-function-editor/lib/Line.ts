@@ -129,4 +129,9 @@ export class Line {
       this.update();
     });
   }
+
+  setVisibility(visible: boolean) {
+    this.element.style.display = visible ? 'block' : 'none';
+    this.clickabeElement.style.display = visible ? 'block' : 'none';
+  }
 }

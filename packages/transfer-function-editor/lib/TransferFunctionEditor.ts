@@ -144,4 +144,11 @@ export class TransferFunctionEditor {
   setRange(range: [number, number]) {
     this.dataRange.setRange(range);
   }
+
+  setRangeViewOnly(rangeViewOnly: boolean) {
+    this.line.setVisibility(!rangeViewOnly);
+    this.background.setVisibility(!rangeViewOnly);
+    this.pointController.setRangeViewOnly(rangeViewOnly);
+    this.container.setRangeViewOnly(rangeViewOnly);
+  }
 }

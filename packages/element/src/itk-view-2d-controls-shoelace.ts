@@ -2,6 +2,7 @@ import { LitElement, html } from 'lit';
 import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { customElement } from 'lit/decorators.js';
 import { View2dControls } from './view-2d-controls-controller.js';
+import { ref } from 'lit/directives/ref.js';
 
 @customElement('itk-view-2d-controls-shoelace')
 export class View2dControlsShoelace extends LitElement {
@@ -11,6 +12,10 @@ export class View2dControlsShoelace extends LitElement {
   setActor(actor: View2dActor) {
     this.actor = actor;
     this.controls.setActor(actor);
+  }
+
+  transferFunctionContainerChanged(container: Element | undefined) {
+    this.controls.setTransferFunctionContainer(container);
   }
 
   render() {
@@ -71,6 +76,11 @@ export class View2dControlsShoelace extends LitElement {
               </sl-radio-group>
             `
           : ''}
+        <div style="padding-top: 0.4rem;">Color Range</div>
+        <div
+          ${ref(this.transferFunctionContainerChanged)}
+          style="width: 14rem; height: 2rem;"
+        ></div>
       </sl-card>
     `;
   }

@@ -1,25 +1,11 @@
 import { ContainerType } from './Container';
 import { DataRange } from './DataRange';
+import { styleTooltip, FONT_SIZE } from './addTooltip';
 import { createOrGates } from './utils';
 
 // pixels dom space
 const Y_OFFSET = -2;
-const FONT_SIZE = 12;
 const BORDER_STROKE = 21;
-
-const styleLabel = (label: HTMLElement) => {
-  label.style.color = 'black';
-  label.style.position = 'absolute';
-  label.style.backgroundColor = 'white';
-  label.style.borderStyle = 'solid';
-  label.style.borderColor = 'black';
-  label.style.borderWidth = '1px';
-  label.style.fontSize = `${FONT_SIZE}px`;
-  label.style.padding = '0px 6px';
-  label.style.lineHeight = '18px';
-  label.style.boxSizing = 'border-box';
-  label.style.transition = 'opacity 0.1s ease-in-out';
-};
 
 export const AxisLabels = (container: ContainerType, dataRange: DataRange) => {
   const { appendChild, addSizeObserver, paddedBorder } = container;
@@ -37,7 +23,7 @@ export const AxisLabels = (container: ContainerType, dataRange: DataRange) => {
       'http://www.w3.org/1999/xhtml',
       'div',
     );
-    styleLabel(label);
+    styleTooltip(label);
     foreignObject.appendChild(label);
     appendChild(foreignObject, 'overlay');
     return label;
