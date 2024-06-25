@@ -1,7 +1,7 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { AxisType, View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { SelectorController } from 'xstate-lit';
-import { TransferFunctionEditor } from '../../transfer-function-editor/dist/TransferFunctionEditor.es.js';
+import { TransferFunctionEditor } from '@itk-viewer/transfer-function-editor/TransferFunctionEditor.js';
 
 export class View2dControls implements ReactiveController {
   host: ReactiveControllerHost;

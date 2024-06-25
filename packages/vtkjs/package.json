@@ -22,8 +22,7 @@
   "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
     "itk-wasm": "1.0.0-b.160",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.10"
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "@itk-viewer/io": "workspace:^",

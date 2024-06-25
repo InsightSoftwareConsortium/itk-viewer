@@ -31,10 +31,7 @@ export class TransferFunctionEditor {
 
   private dataRange = createDataRange();
 
-  constructor(
-    root: HTMLElement,
-    container: ContainerType | undefined = undefined,
-  ) {
+  constructor(root: Element, container: ContainerType | undefined = undefined) {
     this.container = container || Container(root);
     WheelZoom(this.container);
 
