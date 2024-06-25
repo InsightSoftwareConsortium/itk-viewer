@@ -12,7 +12,8 @@
   ],
   "scripts": {
     "dev": "tsc --watch --project tsconfig.build.json & vite",
-    "build": "tsc --project tsconfig.build.json"
+    "build:examples": "vite build",
+    "build": "tsc --project tsconfig.build.json && pnpm run build:examples"
   },
   "repository": {
     "type": "git",
