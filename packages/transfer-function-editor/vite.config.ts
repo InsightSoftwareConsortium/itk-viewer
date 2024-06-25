@@ -4,14 +4,6 @@ import { fileURLToPath } from 'url';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-  build: {
-    lib: {
-      entry: 'lib/TransferFunctionEditor.ts',
-      name: 'TransferFunctionEditor',
-      fileName: (format) => `TransferFunctionEditor.${format}.js`,
-    },
-    sourcemap: true,
-  },
   server: {
     port: 5174,
   },

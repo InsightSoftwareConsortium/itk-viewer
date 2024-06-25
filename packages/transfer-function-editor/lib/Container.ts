@@ -20,7 +20,7 @@ const makeSvg = () => {
   return { svg, underlay, overlay, defs };
 };
 
-export const Container = (parent: HTMLElement) => {
+export const Container = (parent: Element) => {
   let rangeViewOnly = false;
 
   const root = document.createElement('div');
