@@ -62,9 +62,10 @@ type ImageDataFromChunksWorkerArgs = {
 };
 
 type ImageDataFromChunksProxy = {
-  imageDataFromChunks: (
-    args: ImageDataFromChunksWorkerArgs,
-  ) => Promise<{ pixelArray: ArrayBuffer; ranges: Array<number> | undefined }>;
+  imageDataFromChunks: (args: ImageDataFromChunksWorkerArgs) => Promise<{
+    pixelArray: ArrayBuffer;
+    ranges: Array<Array<number>> | undefined;
+  }>;
 };
 const imageDataFromChunksWorker = new Worker(
   new URL('./ImageDataFromChunks.worker.js', import.meta.url),

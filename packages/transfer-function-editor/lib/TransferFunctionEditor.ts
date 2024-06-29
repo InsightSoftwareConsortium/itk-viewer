@@ -138,7 +138,7 @@ export class TransferFunctionEditor {
     this.background.setHistogram(logTransform(histogram));
   }
 
-  setRange(range: [number, number]) {
+  setRange(range: readonly [number, number]) {
     this.dataRange.setRange(range);
   }
 

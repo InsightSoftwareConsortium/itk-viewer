@@ -1,12 +1,17 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
-import { AxisType, View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { SelectorController } from 'xstate-lit';
+import { AxisType, View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { TransferFunctionEditor } from '@itk-viewer/transfer-function-editor/TransferFunctionEditor.js';
+import { ImageSnapshot } from '@itk-viewer/viewer/image.js';
+import { Subscription } from 'xstate';
+
+type View2dSnapshot = ReturnType<View2dActor['getSnapshot']>;
 
 export class View2dControls implements ReactiveController {
   host: ReactiveControllerHost;
 
   actor: View2dActor | undefined;
+  imageSubscription: Subscription | undefined;
   scale: SelectorController<View2dActor, number> | undefined;
   scaleCount: SelectorController<View2dActor, number> | undefined;
   slice: SelectorController<View2dActor, number> | undefined;
@@ -51,6 +56,8 @@ export class View2dControls implements ReactiveController {
       this.actor,
       (state) => state.context.image?.imageType.dimension ?? 0,
     );
+    this.actor.subscribe(this.onSnapshot);
+    this.onSnapshot(this.actor.getSnapshot());
     this.host.requestUpdate(); // trigger render with selected state
   }
 
@@ -103,8 +110,22 @@ export class View2dControls implements ReactiveController {
         colorTransferFunction,
       );
       this.transferFunctionEditor.setColorRange([0.2, 0.8]);
-      this.transferFunctionEditor.setRange([0, 10]);
       this.transferFunctionEditor.setRangeViewOnly(true);
     }
   }
+
+  onSnapshot = (snapshot: View2dSnapshot) => {
+    const { imageActor } = snapshot.context;
+    if (!imageActor) return;
+    if (!this.imageSubscription) {
+      this.imageSubscription = imageActor.subscribe(this.onImageActorSnapshot);
+      this.onImageActorSnapshot(imageActor.getSnapshot());
+    }
+  };
+
+  onImageActorSnapshot = (snapshot: ImageSnapshot) => {
+    const { dataRanges } = snapshot.context;
+    if (dataRanges.length === 0) return;
+    this.transferFunctionEditor?.setRange(dataRanges[0]);
+  };
 }

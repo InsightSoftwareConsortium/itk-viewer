@@ -13,12 +13,13 @@ import {
   ensure3dDirection,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { ValueOf } from '@itk-viewer/io/types.js';
-import { CreateChild } from './children.js';
-import { Camera, reset2d } from './camera.js';
-import { ViewportActor } from './viewport.js';
-import { mat3, mat4, quat, vec3 } from 'gl-matrix';
 import { XYZ, ensuredDims } from '@itk-viewer/io/dimensionUtils.js';
 import { Bounds, getCorners } from '@itk-viewer/utils/bounding-box.js';
+import { CreateChild } from './children.js';
+import { Camera, reset2d } from './camera.js';
+import { image, Image } from './image.js';
+import { ViewportActor } from './viewport.js';
+import { mat3, mat4, quat, vec3 } from 'gl-matrix';
 
 export const Axis = {
   I: 'I',
@@ -49,6 +50,7 @@ const viewContext = {
   spawned: {} as Record<string, AnyActorRef>,
   viewport: undefined as ViewportActor | undefined,
   camera: undefined as Camera | undefined,
+  imageActor: undefined as Image | undefined,
 };
 
 const toRotation = (direction: Float64Array, axis: AxisType) => {
@@ -192,6 +194,7 @@ export const view2d = setup({
         return computeMinSizeAxis(ijkSpacing, shapeArray);
       },
     ),
+    image,
   },
   actions: {
     forwardToSpawned: ({ context, event }) => {
@@ -258,7 +261,9 @@ export const view2d = setup({
                 self,
               }) => {
                 // @ts-expect-error cannot spawn actor of type that is not in setup()
-                const child = spawn(logic, { input: { parent: self } });
+                const child = spawn(logic, {
+                  input: { parent: self },
+                }) as AnyActorRef;
                 if (camera) child.send({ type: 'setCamera', camera });
                 child.send({ type: 'axis', axis });
                 const id = Object.keys(spawned).length.toString();
@@ -277,6 +282,8 @@ export const view2d = setup({
               image: ({ event }) => event.image,
               scale: ({ event }) => event.image.coarsestScale,
               slice: 0.5,
+              imageActor: ({ event, spawn }) =>
+                spawn('image', { input: event.image }),
             }),
             enqueueActions(({ context, enqueue }) => {
               Object.values(context.spawned).forEach((actor) => {
@@ -428,6 +435,12 @@ export const view2d = setup({
                     });
                   });
                 }),
+                ({ context, event: { output } }) => {
+                  context.imageActor!.send({
+                    type: 'builtImage',
+                    builtImage: output.builtImage,
+                  });
+                },
               ],
             },
           },
