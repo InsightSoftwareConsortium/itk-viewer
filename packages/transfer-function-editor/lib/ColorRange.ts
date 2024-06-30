@@ -4,6 +4,7 @@ import { ControlPoint, FULL_RADIUS } from './ControlPoint';
 import { ContainerType } from './Container';
 import { ColorTransferFunction, rgbaToHexa } from './PiecewiseUtils';
 import { Line } from './Line';
+import { Range } from './utils';
 
 const Y_OFFSET = -2.75; // pixels dom space
 
@@ -70,7 +71,7 @@ export const ColorRange = () => {
   return {
     getPoints,
     getColorRange,
-    setColorRange: (normalized: Array<number>) => {
+    setColorRange: (normalized: Range) => {
       // Wait for all points to be updated before dispatching
       // Keeps update of first point from triggering update of second point in downstream app
       batchUpdated = true;

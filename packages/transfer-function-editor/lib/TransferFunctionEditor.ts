@@ -13,6 +13,7 @@ import {
 } from './ColorRange';
 import { AxisLabels } from './AxisLabels';
 import { createDataRange } from './DataRange';
+import { Range } from './utils';
 
 export { windowPointsForSort, getNodes } from './PiecewiseUtils';
 
@@ -116,7 +117,7 @@ export class TransferFunctionEditor {
     return this.colorRange.getColorRange();
   }
 
-  setColorRange(normalized: Array<number>) {
+  setColorRange(normalized: Range) {
     return this.colorRange.setColorRange(normalized);
   }
 
@@ -138,7 +139,7 @@ export class TransferFunctionEditor {
     this.background.setHistogram(logTransform(histogram));
   }
 
-  setRange(range: readonly [number, number]) {
+  setRange(range: Range) {
     this.dataRange.setRange(range);
   }
 

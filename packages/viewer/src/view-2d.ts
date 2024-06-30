@@ -260,6 +260,7 @@ export const view2d = setup({
                 event: { logic, onActor },
                 self,
               }) => {
+                // view-2d-vtkjs could be a child actor
                 // @ts-expect-error cannot spawn actor of type that is not in setup()
                 const child = spawn(logic, {
                   input: { parent: self },
@@ -290,6 +291,10 @@ export const view2d = setup({
                 enqueue.sendTo(actor, {
                   type: 'setImage',
                   image: context.image,
+                });
+                enqueue.sendTo(actor, {
+                  type: 'setImageActor',
+                  image: context.imageActor,
                 });
               });
             }),
