@@ -11,6 +11,7 @@ export class View2dControls implements ReactiveController {
   host: ReactiveControllerHost;
 
   actor: View2dActor | undefined;
+  viewSubscription: Subscription | undefined;
   imageSubscription: Subscription | undefined;
   imageActor: Image | undefined;
   scale: SelectorController<View2dActor, number> | undefined;
@@ -57,9 +58,12 @@ export class View2dControls implements ReactiveController {
       this.actor,
       (state) => state.context.image?.imageType.dimension ?? 0,
     );
-    this.actor.subscribe(this.onSnapshot);
-    this.onSnapshot(this.actor.getSnapshot());
     this.host.requestUpdate(); // trigger render with selected state
+
+    // wire up Transfer Function Editor
+    if (this.viewSubscription) this.viewSubscription.unsubscribe();
+    this.viewSubscription = this.actor.subscribe(this.onViewSnapshot);
+    this.onViewSnapshot(this.actor.getSnapshot());
   }
 
   onSlice(event: Event) {
@@ -126,7 +130,7 @@ export class View2dControls implements ReactiveController {
     }
   }
 
-  onSnapshot = (snapshot: View2dSnapshot) => {
+  onViewSnapshot = (snapshot: View2dSnapshot) => {
     const { imageActor } = snapshot.context;
     if (this.imageActor !== imageActor && this.imageSubscription) {
       this.imageSubscription.unsubscribe();
@@ -149,12 +153,11 @@ export class View2dControls implements ReactiveController {
     if (normalizedColorRanges.length === 0) return;
     const currentColorRange = this.transferFunctionEditor?.getColorRange();
     // avoid infinite loop
-    if (
-      currentColorRange?.every(
-        (v, i) => v === normalizedColorRanges[component][i],
-      )
-    )
-      return;
+    const noChange = currentColorRange?.every(
+      (v, i) => v === normalizedColorRanges[component][i],
+    );
+    if (noChange) return;
+
     this.transferFunctionEditor?.setColorRange(
       normalizedColorRanges[component],
     );
