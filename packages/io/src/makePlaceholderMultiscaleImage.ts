@@ -20,7 +20,7 @@ const makeScaleInfo = (image: string) => {
     name: image,
     pixelArrayPath: '',
     coords: new Map(),
-    ranges: [[-1, 0]],
+    ranges: [[-1, 0] as const],
     direction: [],
     axesNames: [],
     chunkCount: new Map(),

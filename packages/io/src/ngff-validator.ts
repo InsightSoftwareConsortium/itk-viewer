@@ -8,7 +8,7 @@
 import { z } from 'zod';
 
 const direction = z.array(z.array(z.number()).length(3)).length(3);
-const ranges = z.array(z.array(z.number()).length(2));
+const ranges = z.array(z.tuple([z.number(), z.number()]));
 
 const dimension = z.enum(['x', 'y', 'z', 'c', 't']);
 

@@ -2,7 +2,7 @@ import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { SelectorController } from 'xstate-lit';
 import { AxisType, View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { TransferFunctionEditor } from '@itk-viewer/transfer-function-editor/TransferFunctionEditor.js';
-import { ImageSnapshot } from '@itk-viewer/viewer/image.js';
+import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
 import { Subscription } from 'xstate';
 
 type View2dSnapshot = ReturnType<View2dActor['getSnapshot']>;
@@ -12,6 +12,7 @@ export class View2dControls implements ReactiveController {
 
   actor: View2dActor | undefined;
   imageSubscription: Subscription | undefined;
+  imageActor: Image | undefined;
   scale: SelectorController<View2dActor, number> | undefined;
   scaleCount: SelectorController<View2dActor, number> | undefined;
   slice: SelectorController<View2dActor, number> | undefined;
@@ -109,23 +110,53 @@ export class View2dControls implements ReactiveController {
       this.transferFunctionEditor.setColorTransferFunction(
         colorTransferFunction,
       );
-      this.transferFunctionEditor.setColorRange([0.2, 0.8]);
       this.transferFunctionEditor.setRangeViewOnly(true);
+
+      this.transferFunctionEditor.eventTarget.addEventListener(
+        'colorRange',
+        (e) => {
+          const range = (<CustomEvent>e).detail as [number, number];
+          this.imageActor?.send({
+            type: 'normalizedColorRange',
+            range,
+            component: 0,
+          });
+        },
+      );
     }
   }
 
   onSnapshot = (snapshot: View2dSnapshot) => {
     const { imageActor } = snapshot.context;
-    if (!imageActor) return;
+    if (this.imageActor !== imageActor && this.imageSubscription) {
+      this.imageSubscription.unsubscribe();
+    }
+    this.imageActor = imageActor;
+    if (!this.imageActor) return;
     if (!this.imageSubscription) {
-      this.imageSubscription = imageActor.subscribe(this.onImageActorSnapshot);
-      this.onImageActorSnapshot(imageActor.getSnapshot());
+      this.imageSubscription = this.imageActor.subscribe(
+        this.onImageActorSnapshot,
+      );
+      this.onImageActorSnapshot(this.imageActor.getSnapshot());
     }
   };
 
   onImageActorSnapshot = (snapshot: ImageSnapshot) => {
-    const { dataRanges } = snapshot.context;
+    const component = 0;
+    const { dataRanges, normalizedColorRanges } = snapshot.context;
     if (dataRanges.length === 0) return;
-    this.transferFunctionEditor?.setRange(dataRanges[0]);
+    this.transferFunctionEditor?.setRange(dataRanges[component]);
+    if (normalizedColorRanges.length === 0) return;
+    const currentColorRange = this.transferFunctionEditor?.getColorRange();
+    // avoid infinite loop
+    if (
+      currentColorRange?.every(
+        (v, i) => v === normalizedColorRanges[component][i],
+      )
+    )
+      return;
+    this.transferFunctionEditor?.setColorRange(
+      normalizedColorRanges[component],
+    );
   };
 }
