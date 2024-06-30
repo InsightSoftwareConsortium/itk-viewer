@@ -91,9 +91,8 @@ export const image = setup({
             assign({
               normalizedColorRanges: ({ context }) => {
                 return context.dataRanges.map((dataRange, component) => {
-                  const oldNormalizedRange =
-                    context.normalizedColorRanges[component];
-                  if (!oldNormalizedRange) return NORMALIZED_RANGE_DEFAULT;
+                  if (!context.normalizedColorRanges[component])
+                    return NORMALIZED_RANGE_DEFAULT;
                   // if data range changes
                   // scale normalizedColorRange so colorRanges doesn't change
                   const colorRange = context.colorRanges[component];

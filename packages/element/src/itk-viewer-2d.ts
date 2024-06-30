@@ -51,12 +51,6 @@ export class ItkViewer2d extends LitElement {
   }
 
   static styles = css`
-    :host {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
     .fill {
       flex: 1;
       min-height: 0;

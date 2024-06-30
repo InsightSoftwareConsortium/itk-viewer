@@ -42,17 +42,6 @@ const axisToDim = {
   K: 'z',
 } as const;
 
-const viewContext = {
-  slice: 0.5,
-  axis: Axis.K as AxisType,
-  scale: 0,
-  image: undefined as MultiscaleSpatialImage | undefined,
-  spawned: {} as Record<string, AnyActorRef>,
-  viewport: undefined as ViewportActor | undefined,
-  camera: undefined as Camera | undefined,
-  imageActor: undefined as Image | undefined,
-};
-
 const toRotation = (direction: Float64Array, axis: AxisType) => {
   const direction3d = ensure3dDirection(direction);
   // ITK (and VTKMath) uses row-major index axis, but gl-matrix uses column-major. Transpose.
@@ -93,7 +82,16 @@ const computeMinSizeAxis = (spacing: Array<number>, size: Array<number>) => {
 
 export const view2d = setup({
   types: {} as {
-    context: typeof viewContext;
+    context: {
+      slice: number;
+      axis: AxisType;
+      scale: number;
+      image?: MultiscaleSpatialImage;
+      spawned: Record<string, AnyActorRef>;
+      viewport?: ViewportActor;
+      camera?: Camera;
+      imageActor?: Image;
+    };
     events:
       | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'setSlice'; slice: number }
@@ -244,7 +242,12 @@ export const view2d = setup({
   },
 }).createMachine({
   context: () => {
-    return JSON.parse(JSON.stringify(viewContext));
+    return {
+      slice: 0.5,
+      axis: Axis.K,
+      scale: 0,
+      spawned: {},
+    };
   },
   id: 'view2d',
   initial: 'view2d',
