@@ -29,6 +29,7 @@ export class TransferFunctionEditor {
   private pointController: PointsController;
   private container: ContainerType;
   private background: BackgroundType;
+  private axisLabels: AxisLabels;
 
   private dataRange = createDataRange();
 
@@ -51,10 +52,7 @@ export class TransferFunctionEditor {
       this.dataRange.toDataSpace,
     );
 
-    const { createSetVisibilityGate } = AxisLabels(
-      this.container,
-      this.dataRange,
-    );
+    this.axisLabels = AxisLabels(this.container, this.dataRange);
 
     this.colorRange = ColorRange();
     this.colorRangeController = ColorRangeController(
@@ -76,7 +74,7 @@ export class TransferFunctionEditor {
     });
 
     // show axis labels when hovering on Control Point or changing viewbox (zooming)
-    const setOpacityHovering = createSetVisibilityGate();
+    const setOpacityHovering = this.axisLabels.createSetVisibilityGate();
     this.pointController.eventTarget.addEventListener(
       'hovered-updated',
       (e) => {
@@ -84,7 +82,7 @@ export class TransferFunctionEditor {
         setOpacityHovering(hovered);
       },
     );
-    const setZooming = createSetVisibilityGate();
+    const setZooming = this.axisLabels.createSetVisibilityGate();
     let debounceTimeout: ReturnType<typeof setTimeout>;
     this.container.eventTarget.addEventListener('viewbox-updated', () => {
       setZooming(true);
@@ -148,5 +146,6 @@ export class TransferFunctionEditor {
     this.background.setVisibility(!rangeViewOnly);
     this.pointController.setRangeViewOnly(rangeViewOnly);
     this.container.setRangeViewOnly(rangeViewOnly);
+    this.axisLabels.setRangeViewOnly(rangeViewOnly);
   }
 }
