@@ -1,5 +1,11 @@
 # @itk-viewer/io
 
+## 0.2.0
+
+### Minor Changes
+
+- 99d78de: View-2d slices in IJK image space instead of world XYZ.
+
 ## 0.1.8
 
 ### Patch Changes
