@@ -1,5 +1,17 @@
 # @itk-viewer/viewer
 
+## 0.4.0
+
+### Minor Changes
+
+- 99d78de: View-2d slices in IJK image space instead of world XYZ.
+- ff46215: Add slice axis GUI controls for View 2D
+
+### Patch Changes
+
+- Updated dependencies [99d78de]
+  - @itk-viewer/io@0.2.0
+
 ## 0.3.0
 
 ### Minor Changes

@@ -1,5 +1,20 @@
 # @itk-viewer/element
 
+## 0.4.0
+
+### Minor Changes
+
+- ff46215: Add slice axis GUI controls for View 2D
+
+### Patch Changes
+
+- Updated dependencies [99d78de]
+- Updated dependencies [ff46215]
+  - @itk-viewer/viewer@0.4.0
+  - @itk-viewer/vtkjs@0.2.0
+  - @itk-viewer/io@0.2.0
+  - @itk-viewer/remote-viewport@0.2.14
+
 ## 0.3.0
 
 ### Minor Changes
