@@ -82,9 +82,9 @@ export class Line {
       .join(' ');
   }
 
-  drag(e: PointerEvent) {
-    const [originX, originY] = this.container.domToNormalized(0, 0);
-    const [x, y] = this.container.domToNormalized(e.movementX, e.movementY);
+  drag(startXY: readonly [number, number], e: PointerEvent) {
+    const [originX, originY] = startXY;
+    const [x, y] = this.container.domToNormalized(e.clientX, e.clientY);
     const movementX = x - originX;
     const movementY = y - originY;
     this.applyOffset(movementX, movementY);
@@ -129,11 +129,15 @@ export class Line {
     });
   }
 
-  startInteraction() {
+  startInteraction(event: PointerEvent) {
     this.element.setAttribute('stroke-width', '5');
+
+    let startXY = this.container.domToNormalized(event.clientX, event.clientY);
+
     const onPointerMove = (e: PointerEvent) => {
       this.dragging = true;
-      this.drag(e);
+      this.drag(startXY, e);
+      startXY = this.container.domToNormalized(e.clientX, e.clientY);
     };
     document.addEventListener('pointermove', onPointerMove);
 
@@ -151,7 +155,7 @@ export class Line {
   setupInteraction() {
     this.clickableElement.addEventListener('pointerdown', (event) => {
       event.stopPropagation();
-      this.startInteraction();
+      this.startInteraction(event);
     });
     this.clickableElement.addEventListener('pointerenter', () => {
       this.pointerEntered = true;
