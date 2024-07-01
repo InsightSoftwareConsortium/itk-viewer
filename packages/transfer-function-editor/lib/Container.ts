@@ -147,9 +147,9 @@ export const Container = (parent: Element) => {
 
   const remove = () => parent.removeChild(root);
 
-  const setRangeViewOnly = (onlyRange: boolean) => {
-    rangeViewOnly = onlyRange;
-    root.style.height = onlyRange ? '42px' : '100%';
+  const setRangeViewOnly = (rangeOnly: boolean) => {
+    rangeViewOnly = rangeOnly;
+    root.style.height = rangeOnly ? '42px' : '100%';
     updateBorder();
   };
 
