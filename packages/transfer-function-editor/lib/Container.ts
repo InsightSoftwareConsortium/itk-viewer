@@ -117,7 +117,7 @@ export const Container = (parent: Element) => {
     return [
       ((x - left) / width) * valueRange + viewBox[0],
       (1 - (y - top) / height) * opacityRange + viewBox[2],
-    ];
+    ] as const;
   };
 
   const normalizedToSvg = (x: number, y: number) => {
