@@ -19,7 +19,7 @@ export class Line {
   protected container: ContainerType;
   private onPointsUpdated: () => void;
   element: SVGPolylineElement;
-  clickabeElement: SVGPolylineElement;
+  clickableElement: SVGPolylineElement;
   private dragging = false;
   private pointerEntered = false;
 
@@ -30,11 +30,11 @@ export class Line {
     this.element = createLine();
     this.element.setAttribute('pointer-events', 'none');
     this.container.appendChild(this.element);
-    this.clickabeElement = createLine();
-    this.clickabeElement.setAttribute('stroke-width', '8');
-    this.clickabeElement.setAttribute('stroke', 'none');
-    this.clickabeElement.setAttribute('pointer-events', 'stroke');
-    this.container.appendChild(this.clickabeElement);
+    this.clickableElement = createLine();
+    this.clickableElement.setAttribute('stroke-width', '8');
+    this.clickableElement.setAttribute('stroke', 'none');
+    this.clickableElement.setAttribute('pointer-events', 'stroke');
+    this.container.appendChild(this.clickableElement);
 
     this.onPointsUpdated = () => this.update();
     this.points.eventTarget.addEventListener('updated', this.onPointsUpdated);
@@ -66,13 +66,13 @@ export class Line {
     }
     if (this.points.points.length === 0) {
       this.element.setAttribute('points', '');
-      this.clickabeElement.setAttribute('points', '');
+      this.clickableElement.setAttribute('points', '');
       return;
     }
     const stringPoints = this.computeStringPoints();
 
     this.element.setAttribute('points', stringPoints);
-    this.clickabeElement.setAttribute('points', stringPoints);
+    this.clickableElement.setAttribute('points', stringPoints);
   }
 
   computeStringPoints() {
@@ -91,8 +91,41 @@ export class Line {
   }
 
   applyOffset(movementX: number, movementY: number) {
+    const inBoundsPoints = this.points.points.filter((point) => {
+      const { x, y } = point;
+      return x >= 0 && x <= 1 && y >= 0 && y <= 1;
+    });
+
+    const newlyOutOfBoundPointsX = inBoundsPoints.filter((point) => {
+      const x = point.x + movementX;
+      return x < 0 || x > 1;
+    });
+    let clampedMovementX = movementX;
+    if (newlyOutOfBoundPointsX.length === inBoundsPoints.length) {
+      const outOfBoundPoint = inBoundsPoints[0];
+      if (outOfBoundPoint.x + movementX < 0) {
+        clampedMovementX = -outOfBoundPoint.x;
+      } else {
+        clampedMovementX = 1 - outOfBoundPoint.x;
+      }
+    }
+
+    const newlyOutOfBoundPointsY = inBoundsPoints.filter((point) => {
+      const y = point.y + movementY;
+      return y < 0 || y > 1;
+    });
+    let clampedMovementY = movementY;
+    if (newlyOutOfBoundPointsY.length === inBoundsPoints.length) {
+      const outOfBoundPoint = inBoundsPoints[0];
+      if (outOfBoundPoint.y + movementY < 0) {
+        clampedMovementY = -outOfBoundPoint.y;
+      } else {
+        clampedMovementY = 1 - outOfBoundPoint.y;
+      }
+    }
+
     this.points.points.forEach((point) => {
-      point.setPosition(point.x + movementX, point.y + movementY);
+      point.setPosition(point.x + clampedMovementX, point.y + clampedMovementY);
     });
   }
 
@@ -116,15 +149,15 @@ export class Line {
   }
 
   setupInteraction() {
-    this.clickabeElement.addEventListener('pointerdown', (event) => {
+    this.clickableElement.addEventListener('pointerdown', (event) => {
       event.stopPropagation();
       this.startInteraction();
     });
-    this.clickabeElement.addEventListener('pointerenter', () => {
+    this.clickableElement.addEventListener('pointerenter', () => {
       this.pointerEntered = true;
       this.update();
     });
-    this.clickabeElement.addEventListener('pointerleave', () => {
+    this.clickableElement.addEventListener('pointerleave', () => {
       this.pointerEntered = false;
       this.update();
     });
@@ -132,6 +165,6 @@ export class Line {
 
   setVisibility(visible: boolean) {
     this.element.style.display = visible ? 'block' : 'none';
-    this.clickabeElement.style.display = visible ? 'block' : 'none';
+    this.clickableElement.style.display = visible ? 'block' : 'none';
   }
 }
