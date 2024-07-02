@@ -2,6 +2,7 @@ import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { SelectorController } from 'xstate-lit';
 import { AxisType, View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { TransferFunctionEditor } from '@itk-viewer/transfer-function-editor/TransferFunctionEditor.js';
+import { ColorTransferFunction } from '@itk-viewer/transfer-function-editor/ColorTransferFunction.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
 import { Subscription } from 'xstate';
 
@@ -94,25 +95,8 @@ export class View2dControls implements ReactiveController {
     if (container) {
       this.transferFunctionEditor = new TransferFunctionEditor(container);
 
-      const colorTransferFunction = (function () {
-        const lowColor = [0, 0, 0, 1];
-        const highColor = [1, 1, 1, 1];
-        const mappingRange = [0, 10] as [number, number];
-        return {
-          getMappingRange: () => mappingRange,
-          getUint8Table: () => new Uint8Array([255, 255, 255, 255]),
-          getSize: () => 2,
-          getColor: (intensity: number, rgbaOut: Array<number>) => {
-            const midway =
-              (mappingRange[1] - mappingRange[0]) / 2 + mappingRange[0];
-            if (intensity < midway)
-              rgbaOut.splice(0, rgbaOut.length, ...lowColor);
-            else rgbaOut.splice(0, rgbaOut.length, ...highColor);
-          },
-        };
-      })();
       this.transferFunctionEditor.setColorTransferFunction(
-        colorTransferFunction,
+        new ColorTransferFunction(),
       );
       this.transferFunctionEditor.setRangeViewOnly(true);
 
@@ -132,12 +116,12 @@ export class View2dControls implements ReactiveController {
 
   onViewSnapshot = (snapshot: View2dSnapshot) => {
     const { imageActor } = snapshot.context;
-    if (this.imageActor !== imageActor && this.imageSubscription) {
-      this.imageSubscription.unsubscribe();
+    if (this.imageActor !== imageActor) {
+      this.imageSubscription?.unsubscribe();
     }
     this.imageActor = imageActor;
-    if (!this.imageActor) return;
-    if (!this.imageSubscription) {
+    // If imageActor exists and there's no subscription, subscribe to it.
+    if (this.imageActor && !this.imageSubscription) {
       this.imageSubscription = this.imageActor.subscribe(
         this.onImageActorSnapshot,
       );
