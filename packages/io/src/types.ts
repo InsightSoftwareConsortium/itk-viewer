@@ -7,6 +7,8 @@ export type Awaitable<T> = Promise<T> | T;
 export type Extent = [number, number, number, number, number, number];
 export type Range = [number, number];
 export type ReadonlyRange = readonly [number, number];
+export type Ranges = Array<ReadonlyRange>;
+
 export type Vector3 = [number, number, number];
 
 export type Dimension = 'x' | 'y' | 'z' | 'c' | 't';
@@ -37,7 +39,7 @@ export type ScaleInfo = {
   chunkCount: ChunkParameter; // array shape in chunks
   chunkSize: ChunkParameter; // chunk shape in elements
   arrayShape: ChunkParameter; // array shape in elements
-  ranges?: Array<Array<number>>; // Map('1': [0, 140], '2': [3, 130]) or null if unknown. Range of values for each component
+  ranges?: Ranges; // Range of values for each component
   name?: string; // dataset name
 
   indexToWorld?: ReadonlyMat4;

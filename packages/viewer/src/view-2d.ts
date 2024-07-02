@@ -13,12 +13,13 @@ import {
   ensure3dDirection,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { ValueOf } from '@itk-viewer/io/types.js';
-import { CreateChild } from './children.js';
-import { Camera, reset2d } from './camera.js';
-import { ViewportActor } from './viewport.js';
-import { mat3, mat4, quat, vec3 } from 'gl-matrix';
 import { XYZ, ensuredDims } from '@itk-viewer/io/dimensionUtils.js';
 import { Bounds, getCorners } from '@itk-viewer/utils/bounding-box.js';
+import { CreateChild } from './children.js';
+import { Camera, reset2d } from './camera.js';
+import { image, Image } from './image.js';
+import { ViewportActor } from './viewport.js';
+import { mat3, mat4, quat, vec3 } from 'gl-matrix';
 
 export const Axis = {
   I: 'I',
@@ -40,16 +41,6 @@ const axisToDim = {
   J: 'y',
   K: 'z',
 } as const;
-
-const viewContext = {
-  slice: 0.5,
-  axis: Axis.K as AxisType,
-  scale: 0,
-  image: undefined as MultiscaleSpatialImage | undefined,
-  spawned: {} as Record<string, AnyActorRef>,
-  viewport: undefined as ViewportActor | undefined,
-  camera: undefined as Camera | undefined,
-};
 
 const toRotation = (direction: Float64Array, axis: AxisType) => {
   const direction3d = ensure3dDirection(direction);
@@ -91,7 +82,16 @@ const computeMinSizeAxis = (spacing: Array<number>, size: Array<number>) => {
 
 export const view2d = setup({
   types: {} as {
-    context: typeof viewContext;
+    context: {
+      slice: number;
+      axis: AxisType;
+      scale: number;
+      image?: MultiscaleSpatialImage;
+      spawned: Record<string, AnyActorRef>;
+      viewport?: ViewportActor;
+      camera?: Camera;
+      imageActor?: Image;
+    };
     events:
       | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'setSlice'; slice: number }
@@ -192,6 +192,7 @@ export const view2d = setup({
         return computeMinSizeAxis(ijkSpacing, shapeArray);
       },
     ),
+    image,
   },
   actions: {
     forwardToSpawned: ({ context, event }) => {
@@ -241,7 +242,12 @@ export const view2d = setup({
   },
 }).createMachine({
   context: () => {
-    return JSON.parse(JSON.stringify(viewContext));
+    return {
+      slice: 0.5,
+      axis: Axis.K,
+      scale: 0,
+      spawned: {},
+    };
   },
   id: 'view2d',
   initial: 'view2d',
@@ -257,8 +263,11 @@ export const view2d = setup({
                 event: { logic, onActor },
                 self,
               }) => {
+                // view-2d-vtkjs could be a child actor
                 // @ts-expect-error cannot spawn actor of type that is not in setup()
-                const child = spawn(logic, { input: { parent: self } });
+                const child = spawn(logic, {
+                  input: { parent: self },
+                }) as AnyActorRef;
                 if (camera) child.send({ type: 'setCamera', camera });
                 child.send({ type: 'axis', axis });
                 const id = Object.keys(spawned).length.toString();
@@ -277,12 +286,18 @@ export const view2d = setup({
               image: ({ event }) => event.image,
               scale: ({ event }) => event.image.coarsestScale,
               slice: 0.5,
+              imageActor: ({ event, spawn }) =>
+                spawn('image', { input: event.image }),
             }),
             enqueueActions(({ context, enqueue }) => {
               Object.values(context.spawned).forEach((actor) => {
                 enqueue.sendTo(actor, {
                   type: 'setImage',
                   image: context.image,
+                });
+                enqueue.sendTo(actor, {
+                  type: 'setImageActor',
+                  image: context.imageActor,
                 });
               });
             }),
@@ -428,6 +443,12 @@ export const view2d = setup({
                     });
                   });
                 }),
+                ({ context, event: { output } }) => {
+                  context.imageActor!.send({
+                    type: 'builtImage',
+                    builtImage: output.builtImage,
+                  });
+                },
               ],
             },
           },

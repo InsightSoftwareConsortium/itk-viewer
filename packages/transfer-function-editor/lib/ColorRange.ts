@@ -4,6 +4,7 @@ import { ControlPoint, FULL_RADIUS } from './ControlPoint';
 import { ContainerType } from './Container';
 import { ColorTransferFunction, rgbaToHexa } from './PiecewiseUtils';
 import { Line } from './Line';
+import { Range } from './utils';
 
 const Y_OFFSET = -2.75; // pixels dom space
 
@@ -26,7 +27,7 @@ class ColorLine extends Line {
   constructor(container: ContainerType, points: Points) {
     super(container, points);
     this.element.removeAttribute('clip-path');
-    this.clickabeElement.removeAttribute('clip-path');
+    this.clickableElement.removeAttribute('clip-path');
   }
 
   computeStringPoints() {
@@ -39,8 +40,29 @@ class ColorLine extends Line {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   applyOffset(movementX: number, _: number) {
+    const newlyOutOfBoundPoints = this.points.points.filter((point) => {
+      const x = point.x + movementX;
+      return x < 0 || x > 1;
+    });
+    const inBoundsPoints = this.points.points.filter((point) => {
+      const x = point.x;
+      return x >= 0 && x <= 1;
+    });
+    let clampedMovementX = movementX;
+    if (
+      inBoundsPoints.length >= 1 &&
+      newlyOutOfBoundPoints.length === this.points.points.length
+    ) {
+      const outOfBoundPoint = inBoundsPoints[0];
+      if (outOfBoundPoint.x + movementX < 0) {
+        clampedMovementX = -outOfBoundPoint.x;
+      } else {
+        clampedMovementX = 1 - outOfBoundPoint.x;
+      }
+    }
+
     this.points.points.forEach((point) => {
-      point.setPosition(point.x + movementX, point.y);
+      point.setPosition(point.x + clampedMovementX, point.y);
     });
   }
 }
@@ -55,14 +77,14 @@ export const ColorRange = () => {
   const getPoints = () => points.points.sort((p1, p2) => p1.x - p2.x);
   const getColorRange = () => getPoints().map((p) => p.x);
   const eventTarget = new EventTarget();
-  const dispachUpdated = () =>
+  const dispatchUpdated = () =>
     eventTarget.dispatchEvent(
       new CustomEvent('updated', { detail: getColorRange() }),
     );
   let batchUpdated = false;
   const setupPoint = (point: Point) => {
     point.eventTarget.addEventListener('updated', () => {
-      if (!batchUpdated) dispachUpdated();
+      if (!batchUpdated) dispatchUpdated();
     });
   };
   points.points.forEach(setupPoint);
@@ -70,7 +92,7 @@ export const ColorRange = () => {
   return {
     getPoints,
     getColorRange,
-    setColorRange: (normalized: Array<number>) => {
+    setColorRange: (normalized: Range) => {
       // Wait for all points to be updated before dispatching
       // Keeps update of first point from triggering update of second point in downstream app
       batchUpdated = true;
@@ -78,7 +100,7 @@ export const ColorRange = () => {
         p.x = normalized[i];
       });
       batchUpdated = false;
-      dispachUpdated();
+      dispatchUpdated();
     },
     eventTarget,
     points,

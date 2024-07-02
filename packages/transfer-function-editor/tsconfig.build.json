@@ -1,11 +1,9 @@
 {
-  "extends": "./tsconfig",
-  "exclude": ["examples/**/*"],
+  "extends": "../../tsconfig.build",
   "compilerOptions": {
-    "skipLibCheck": true,
-    "noEmit": false,
     "outDir": "dist",
-    "declaration": true,
-    "emitDeclarationOnly": true
-  }
+    "rootDir": "lib",
+    "tsBuildInfoFile": "./dist/tsconfig.build.tsbuildinfo"
+  },
+  "include": ["lib"]
 }

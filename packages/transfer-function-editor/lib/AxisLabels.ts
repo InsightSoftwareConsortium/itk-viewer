@@ -1,41 +1,28 @@
 import { ContainerType } from './Container';
 import { DataRange } from './DataRange';
+import { styleTooltip, styleLabelText, FONT_SIZE } from './addTooltip';
 import { createOrGates } from './utils';
 
 // pixels dom space
-const Y_OFFSET = -2;
-const FONT_SIZE = 12;
+const HISTOGRAM_Y_OFFSET = -2;
+const RANGE_VIEW_ONLY_Y_OFFSET = -22;
 const BORDER_STROKE = 21;
 
-let stylesSetup = false;
-const setupStyles = () => {
-  if (stylesSetup) return;
-  stylesSetup = true;
-  const style = document.createElement('style');
-
-  // background-color: inherit;
-
-  style.innerHTML = `
-      .tfeditor-svg-axis-label {
-        color: black;
-        position: absolute;
-        background-color: white;
-        border-style: solid;
-        border-color: black;
-        border-width: 1px;
-        font-size: ${FONT_SIZE}px;
-        padding: 2px 6px;
-        box-sizing: border-box;
-        transition: opacity 0.1s ease-in-out;
-      }
-    `;
-  document.head.appendChild(style);
+const styleAxisLabel = (align: 'Left' | 'Right', label: HTMLElement) => {
+  styleLabelText(label);
+  label.style.backgroundColor = 'initial';
+  label.style.borderStyle = 'initial';
+  label.style.borderColor = 'initial';
+  label.style.borderWidth = 'initial';
+  label.style[`border${align}`] = '.15rem solid black';
+  label.style.boxShadow = 'initial';
+  label.style.opacity = '1';
 };
 
 export const AxisLabels = (container: ContainerType, dataRange: DataRange) => {
   const { appendChild, addSizeObserver, paddedBorder } = container;
+  let rangeViewOnly = false;
 
-  setupStyles();
   const createLabel = () => {
     const foreignObject = document.createElementNS(
       'http://www.w3.org/2000/svg',
@@ -49,7 +36,7 @@ export const AxisLabels = (container: ContainerType, dataRange: DataRange) => {
       'http://www.w3.org/1999/xhtml',
       'div',
     );
-    label.setAttribute('class', 'tfeditor-svg-axis-label');
+    styleTooltip(label);
     foreignObject.appendChild(label);
     appendChild(foreignObject, 'overlay');
     return label;
@@ -69,7 +56,10 @@ export const AxisLabels = (container: ContainerType, dataRange: DataRange) => {
 
   const getSvgPosition = (xNormalized: number) => {
     const [xSvg, bottom] = container.normalizedToSvg(xNormalized, 0);
-    const ySvg = bottom + Y_OFFSET + FONT_SIZE;
+    const yOffset = rangeViewOnly
+      ? RANGE_VIEW_ONLY_Y_OFFSET
+      : HISTOGRAM_Y_OFFSET;
+    const ySvg = bottom + yOffset + FONT_SIZE;
     return [xSvg, ySvg];
   };
 
@@ -104,8 +94,13 @@ export const AxisLabels = (container: ContainerType, dataRange: DataRange) => {
   addSizeObserver(updateLabels);
   dataRange.eventTarget.addEventListener('updated', updateLabels);
 
+  const computeOpacity = (visibility: boolean) => {
+    if (rangeViewOnly) return '1';
+    return visibility ? '1' : '0';
+  };
+
   const setVisibility = (visibility: boolean) => {
-    const opacity = visibility ? '1' : '0';
+    const opacity = computeOpacity(visibility);
     low.style.opacity = opacity;
     high.style.opacity = opacity;
   };
@@ -120,5 +115,21 @@ export const AxisLabels = (container: ContainerType, dataRange: DataRange) => {
     setVisFromBorder(false);
   });
 
-  return { createSetVisibilityGate };
+  const setRangeViewOnly = (rangeOnly: boolean) => {
+    rangeViewOnly = rangeOnly;
+    if (rangeOnly) {
+      styleAxisLabel('Left', low);
+      styleAxisLabel('Right', high);
+    } else {
+      styleTooltip(low);
+      styleTooltip(high);
+    }
+
+    setVisibility(rangeViewOnly);
+    updateLabels();
+  };
+
+  return { createSetVisibilityGate, setRangeViewOnly };
 };
+
+export type AxisLabels = ReturnType<typeof AxisLabels>;

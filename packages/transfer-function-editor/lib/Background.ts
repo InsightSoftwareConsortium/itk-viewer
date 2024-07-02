@@ -163,6 +163,10 @@ export const Background = (
     render();
   };
 
+  const setVisibility = (visible: boolean) => {
+    canvas.style.display = visible ? 'block' : 'none';
+  };
+
   return {
     container,
     canvas,
@@ -170,6 +174,7 @@ export const Background = (
     setHistogram,
     render,
     remove: () => container.root.removeChild(canvas),
+    setVisibility,
   };
 };
 

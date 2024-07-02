@@ -13,6 +13,7 @@ import {
 } from './ColorRange';
 import { AxisLabels } from './AxisLabels';
 import { createDataRange } from './DataRange';
+import { Range } from './utils';
 
 export { windowPointsForSort, getNodes } from './PiecewiseUtils';
 
@@ -28,13 +29,11 @@ export class TransferFunctionEditor {
   private pointController: PointsController;
   private container: ContainerType;
   private background: BackgroundType;
+  private axisLabels: AxisLabels;
 
   private dataRange = createDataRange();
 
-  constructor(
-    root: HTMLElement,
-    container: ContainerType | undefined = undefined,
-  ) {
+  constructor(root: Element, container: ContainerType | undefined = undefined) {
     this.container = container || Container(root);
     WheelZoom(this.container);
 
@@ -53,10 +52,7 @@ export class TransferFunctionEditor {
       this.dataRange.toDataSpace,
     );
 
-    const { createSetVisibilityGate } = AxisLabels(
-      this.container,
-      this.dataRange,
-    );
+    this.axisLabels = AxisLabels(this.container, this.dataRange);
 
     this.colorRange = ColorRange();
     this.colorRangeController = ColorRangeController(
@@ -78,7 +74,7 @@ export class TransferFunctionEditor {
     });
 
     // show axis labels when hovering on Control Point or changing viewbox (zooming)
-    const setOpacityHovering = createSetVisibilityGate();
+    const setOpacityHovering = this.axisLabels.createSetVisibilityGate();
     this.pointController.eventTarget.addEventListener(
       'hovered-updated',
       (e) => {
@@ -86,7 +82,7 @@ export class TransferFunctionEditor {
         setOpacityHovering(hovered);
       },
     );
-    const setZooming = createSetVisibilityGate();
+    const setZooming = this.axisLabels.createSetVisibilityGate();
     let debounceTimeout: ReturnType<typeof setTimeout>;
     this.container.eventTarget.addEventListener('viewbox-updated', () => {
       setZooming(true);
@@ -119,7 +115,7 @@ export class TransferFunctionEditor {
     return this.colorRange.getColorRange();
   }
 
-  setColorRange(normalized: Array<number>) {
+  setColorRange(normalized: Range) {
     return this.colorRange.setColorRange(normalized);
   }
 
@@ -141,7 +137,15 @@ export class TransferFunctionEditor {
     this.background.setHistogram(logTransform(histogram));
   }
 
-  setRange(range: [number, number]) {
+  setRange(range: Range) {
     this.dataRange.setRange(range);
+  }
+
+  setRangeViewOnly(rangeViewOnly: boolean) {
+    this.line.setVisibility(!rangeViewOnly);
+    this.background.setVisibility(!rangeViewOnly);
+    this.pointController.setRangeViewOnly(rangeViewOnly);
+    this.container.setRangeViewOnly(rangeViewOnly);
+    this.axisLabels.setRangeViewOnly(rangeViewOnly);
   }
 }

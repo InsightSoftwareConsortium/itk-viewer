@@ -9,6 +9,7 @@
     "packages/**/dist/",
     "packages/**/types/",
     "packages/**/*.cy.ts",
-    "packages/**/vite.config.ts"
+    "packages/**/vite.config.ts",
+    "packages/**/vitest.setup.ts"
   ]
 }

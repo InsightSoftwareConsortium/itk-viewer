@@ -17,6 +17,7 @@ import {
   view2dLogic,
 } from './view-2d-vtkjs.machine.js';
 import { AxisType } from '@itk-viewer/viewer/view-2d.js';
+import { ImageSnapshot } from '@itk-viewer/viewer/image.js';
 
 const axisToSliceMode = {
   I: SlicingMode.I,
@@ -107,7 +108,6 @@ const createImplementation = () => {
         renderer = scene.renderer;
         renderWindow = scene.renderWindow;
       },
-
       imageBuilt: ({
         event,
         context,
@@ -136,7 +136,6 @@ const createImplementation = () => {
         }
         render();
       },
-
       applyCameraPose: (
         _: unknown,
         {
@@ -182,9 +181,20 @@ const createImplementation = () => {
 
         render();
       },
-
       applyAxis: (_: unknown, { axis }: { axis: AxisType }) => {
         mapper?.setSlicingMode(axisToSliceMode[axis]);
+      },
+      imageSnapshot: (_: unknown, state: ImageSnapshot) => {
+        if (!actor) return;
+        const { colorRanges } = state.context;
+        if (colorRanges.length === 0) return;
+        const range = colorRanges[0];
+        const window = Math.abs(range[1] - range[0]);
+        const level = range[0] + window / 2;
+        const property = actor.getProperty();
+        property.setColorWindow(window);
+        property.setColorLevel(level);
+        render();
       },
     },
   };

@@ -1,10 +1,10 @@
 export const createDataRange = () => {
-  let range = [0, 1] as [number, number];
+  let range = [0, 1] as readonly [number, number];
 
   const eventTarget = new EventTarget();
 
-  const setRange = (newRange: [number, number]) => {
-    range = newRange;
+  const setRange = (newRange: readonly [number, number]) => {
+    range = [...newRange];
     eventTarget.dispatchEvent(new CustomEvent('updated', { detail: range }));
   };
 

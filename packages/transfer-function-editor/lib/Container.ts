@@ -20,7 +20,9 @@ const makeSvg = () => {
   return { svg, underlay, overlay, defs };
 };
 
-export const Container = (parent: HTMLElement) => {
+export const Container = (parent: Element) => {
+  let rangeViewOnly = false;
+
   const root = document.createElement('div');
   root.setAttribute(
     'style',
@@ -115,7 +117,7 @@ export const Container = (parent: HTMLElement) => {
     return [
       ((x - left) / width) * valueRange + viewBox[0],
       (1 - (y - top) / height) * opacityRange + viewBox[2],
-    ];
+    ] as const;
   };
 
   const normalizedToSvg = (x: number, y: number) => {
@@ -129,7 +131,8 @@ export const Container = (parent: HTMLElement) => {
 
   const borderSize = () => {
     const [left, bottom] = normalizedToSvg(0, 0);
-    const [right, top] = normalizedToSvg(1, 1);
+    const [right, fullTop] = normalizedToSvg(1, 1);
+    const top = rangeViewOnly ? bottom - 1 : fullTop;
     return { left, bottom, right, top };
   };
 
@@ -144,6 +147,12 @@ export const Container = (parent: HTMLElement) => {
 
   const remove = () => parent.removeChild(root);
 
+  const setRangeViewOnly = (rangeOnly: boolean) => {
+    rangeViewOnly = rangeOnly;
+    root.style.height = rangeOnly ? '42px' : '100%';
+    updateBorder();
+  };
+
   return {
     appendChild,
     removeChild,
@@ -154,6 +163,7 @@ export const Container = (parent: HTMLElement) => {
     normalizedToSvg,
     borderSize,
     remove,
+    setRangeViewOnly,
     root,
     overlay,
     eventTarget,
