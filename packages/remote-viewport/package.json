@@ -1,6 +1,6 @@
 {
   "name": "@itk-viewer/remote-viewport",
-  "version": "0.2.14",
+  "version": "0.2.15",
   "description": "",
   "type": "module",
   "exports": {

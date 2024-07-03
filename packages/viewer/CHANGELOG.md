@@ -1,5 +1,16 @@
 # @itk-viewer/viewer
 
+## 0.5.0
+
+### Minor Changes
+
+- ac23fbc: 2D-View: Add color range slider using Transfer Function Editor
+
+### Patch Changes
+
+- Updated dependencies [ac23fbc]
+  - @itk-viewer/io@0.3.0
+
 ## 0.4.0
 
 ### Minor Changes
