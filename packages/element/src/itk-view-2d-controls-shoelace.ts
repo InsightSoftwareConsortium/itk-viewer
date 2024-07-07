@@ -41,7 +41,7 @@ export class View2dControlsShoelace extends LitElement {
               <label>
                 <sl-range
                   value=${Number(slice)}
-                  @sl-change="${this.controls.onSlice}"
+                  @sl-input="${this.controls.onSlice}"
                   min="0"
                   max="1"
                   step=".01"

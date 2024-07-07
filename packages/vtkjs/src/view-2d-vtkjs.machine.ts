@@ -4,7 +4,7 @@ import GenericRenderWindow, {
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera, Pose } from '@itk-viewer/viewer/camera.js';
-import { Axis, AxisType } from '@itk-viewer/viewer/view-2d.js';
+import { Axis, AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
 
 export type Context = {

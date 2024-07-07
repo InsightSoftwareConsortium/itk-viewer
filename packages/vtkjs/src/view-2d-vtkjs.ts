@@ -16,7 +16,7 @@ import {
   SetContainerEvent,
   view2dLogic,
 } from './view-2d-vtkjs.machine.js';
-import { AxisType } from '@itk-viewer/viewer/view-2d.js';
+import { AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { ImageSnapshot } from '@itk-viewer/viewer/image.js';
 
 const axisToSliceMode = {

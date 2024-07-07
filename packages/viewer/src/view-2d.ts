@@ -12,35 +12,17 @@ import {
   BuiltImage,
   ensure3dDirection,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import { ValueOf } from '@itk-viewer/io/types.js';
 import { XYZ, ensuredDims } from '@itk-viewer/io/dimensionUtils.js';
-import { Bounds, getCorners } from '@itk-viewer/utils/bounding-box.js';
+import { getCorners } from '@itk-viewer/utils/bounding-box.js';
 import { CreateChild } from './children.js';
 import { Camera, reset2d } from './camera.js';
 import { image, Image } from './image.js';
 import { ViewportActor } from './viewport.js';
-import { mat3, mat4, quat, vec3 } from 'gl-matrix';
+import { mat3, quat, vec3 } from 'gl-matrix';
+import { AxisType, Axis } from './slice-utils.js';
+import { ImageBuilder, imageBuilder } from './image-builder.js';
 
-export const Axis = {
-  I: 'I',
-  J: 'J',
-  K: 'K',
-} as const;
-
-export type AxisType = ValueOf<typeof Axis>;
-
-const axisToIndex = {
-  I: 0,
-  J: 1,
-  K: 2,
-} as const;
-
-// To MultiScaleImage dimension
-const axisToDim = {
-  I: 'x',
-  J: 'y',
-  K: 'z',
-} as const;
+const IMAGE_BUILDERS_LIMIT = 4;
 
 const toRotation = (direction: Float64Array, axis: AxisType) => {
   const direction3d = ensure3dDirection(direction);
@@ -91,6 +73,7 @@ export const view2d = setup({
       viewport?: ViewportActor;
       camera?: Camera;
       imageActor?: Image;
+      imageBuilders: Array<ImageBuilder>;
     };
     events:
       | { type: 'setImage'; image: MultiscaleSpatialImage }
@@ -100,79 +83,16 @@ export const view2d = setup({
       | { type: 'setViewport'; viewport: ViewportActor }
       | { type: 'setResolution'; resolution: [number, number] }
       | { type: 'setCamera'; camera: Camera }
+      | {
+          type: 'imageBuilt';
+          builtImage: BuiltImage;
+          sliceIndex: number;
+          actor: ImageBuilder;
+        }
       | CreateChild;
   },
   actors: {
-    imageBuilder: fromPromise(
-      async ({
-        input: { image, scale, slice, axis },
-      }: {
-        input: {
-          image: MultiscaleSpatialImage;
-          scale: number;
-          slice: number; // 0 to 1 for depth on slice axis
-          axis: AxisType;
-        };
-      }) => {
-        const normalizedImageBounds = [0, 1, 0, 1, 0, 1] as Bounds;
-        if (axis === Axis.I) {
-          normalizedImageBounds[0] = slice;
-          normalizedImageBounds[1] = slice;
-        } else if (axis === Axis.J) {
-          normalizedImageBounds[2] = slice;
-          normalizedImageBounds[3] = slice;
-        } else if (axis === Axis.K) {
-          normalizedImageBounds[4] = slice;
-          normalizedImageBounds[5] = slice;
-        }
-        const builtImage = (await image.getImageInImageSpace(
-          scale,
-          normalizedImageBounds,
-        )) as BuiltImage;
-
-        if (builtImage.imageType.dimension === 2) {
-          return { builtImage, sliceIndex: 0 };
-        }
-
-        // buildImage could be larger than slice if cached so
-        // find index of slice in builtImage
-        const indexToWorld = await image.scaleIndexToWorld(scale);
-        const worldToIndex = mat4.invert(mat4.create(), indexToWorld);
-        const wholeImageOrigin = [...(await image.scaleOrigin(scale))] as vec3;
-        if (wholeImageOrigin.length == 2) {
-          wholeImageOrigin[2] = 0;
-        }
-        vec3.transformMat4(wholeImageOrigin, wholeImageOrigin, worldToIndex);
-        const buildImageOrigin = [...builtImage.origin] as vec3;
-        if (buildImageOrigin.length == 2) {
-          buildImageOrigin[2] = 0;
-        }
-        vec3.transformMat4(buildImageOrigin, buildImageOrigin, worldToIndex);
-
-        // vector from whole image origin to build image origin
-        const wholeImageToBuildImageOrigin = vec3.subtract(
-          buildImageOrigin,
-          buildImageOrigin,
-          wholeImageOrigin,
-        );
-        const builtOriginIndex =
-          wholeImageToBuildImageOrigin[axisToIndex[axis]];
-
-        const axisIndexSize =
-          image.scaleInfos[scale].arrayShape.get(axisToDim[axis]) ?? 1;
-        const fullImageSliceIndex = slice * axisIndexSize;
-
-        const sliceIndexInBuildImageFloat =
-          fullImageSliceIndex - builtOriginIndex;
-        const sliceIndexFloat = Math.round(sliceIndexInBuildImageFloat);
-        // Math.round goes up with .5, so clamp to max index
-        const sliceIndex = Math.max(
-          0,
-          Math.min(sliceIndexFloat, builtImage.size[axisToIndex[axis]] - 1),
-        );
-        return { builtImage, sliceIndex };
-      },
-    ),
+    imageBuilder,
     findDefaultAxis: fromPromise(
       async ({
         input: { image, scale },
@@ -247,6 +167,7 @@ export const view2d = setup({
       axis: Axis.K,
       scale: 0,
       spawned: {},
+      imageBuilders: [],
     };
   },
   id: 'view2d',
@@ -420,39 +341,64 @@ export const view2d = setup({
           },
         },
         buildingImage: {
-          invoke: {
-            input: ({ context }) => {
-              const { image, scale, slice, axis } = context;
-              if (!image) throw new Error('No image available');
-              return {
-                image,
-                scale,
-                slice,
-                axis,
-              };
-            },
-            src: 'imageBuilder',
-            onDone: {
+          entry: [
+            assign({
+              imageBuilders: ({
+                context: { imageBuilders, scale, slice, axis, image },
+                spawn,
+              }) => {
+                if (!image) throw new Error('No image available');
+                const actor = spawn('imageBuilder', {
+                  input: { scale, slice, axis, image },
+                });
+
+                const cancelCount = imageBuilders.length - IMAGE_BUILDERS_LIMIT;
+                if (cancelCount > 0) {
+                  const staleActors = imageBuilders.splice(0, cancelCount);
+                  staleActors.forEach((actor) => {
+                    actor.send({ type: 'cancel' });
+                  });
+                }
+                return [...imageBuilders, actor];
+              },
+            }),
+          ],
+          on: {
+            imageBuilt: {
               actions: [
-                enqueueActions(({ context, enqueue, event: { output } }) => {
-                  Object.values(context.spawned).forEach((actor) => {
-                    enqueue.sendTo(actor, {
-                      type: 'imageBuilt',
-                      image: output.builtImage,
-                      sliceIndex: output.sliceIndex,
+                enqueueActions(
+                  ({
+                    context: { imageBuilders, spawned, imageActor },
+                    enqueue,
+                    event: { builtImage, sliceIndex, actor },
+                  }) => {
+                    const actorIndex = imageBuilders.indexOf(actor);
+                    const isStale = actorIndex === -1;
+                    if (isStale) return;
+
+                    Object.values(spawned).forEach((actor) => {
+                      enqueue.sendTo(actor, {
+                        type: 'imageBuilt',
+                        image: builtImage,
+                        sliceIndex: sliceIndex,
+                      });
                     });
-                  });
-                }),
-                ({ context, event: { output } }) => {
-                  context.imageActor!.send({
-                    type: 'builtImage',
-                    builtImage: output.builtImage,
-                  });
-                },
+                    enqueue.sendTo(imageActor!, {
+                      type: 'builtImage',
+                      builtImage: builtImage,
+                    });
+
+                    const staleActors = imageBuilders.splice(0, actorIndex + 1);
+                    staleActors.forEach((actor) => {
+                      enqueue.sendTo(actor, { type: 'cancel' });
+                    });
+                    enqueue.assign({
+                      imageBuilders: [...imageBuilders],
+                    });
+                  },
+                ),
               ],
             },
-          },
-          on: {
             setScale: {
               actions: [
                 assign({

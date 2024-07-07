@@ -1,6 +1,7 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { SelectorController } from 'xstate-lit';
-import { AxisType, View2dActor } from '@itk-viewer/viewer/view-2d.js';
+import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
+import { AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { TransferFunctionEditor } from '@itk-viewer/transfer-function-editor/TransferFunctionEditor.js';
 import { ColorTransferFunction } from '@itk-viewer/transfer-function-editor/ColorTransferFunction.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
