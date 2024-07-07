@@ -1,4 +1,4 @@
-import { ActorRefFrom, assign, setup } from 'xstate';
+import { ActorRefFrom, AnyActorRef, assign, setup } from 'xstate';
 import {
   BuiltImage,
   MultiscaleSpatialImage,
@@ -39,6 +39,7 @@ export const image = setup({
     input: MultiscaleSpatialImage;
     context: Context;
     events:
+      | { type: 'getWorker'; receiver: AnyActorRef }
       | { type: 'builtImage'; builtImage: BuiltImage }
       | {
           type: 'normalizedColorRange';
@@ -56,7 +57,7 @@ export const image = setup({
     }),
   },
 }).createMachine({
-  id: 'camera',
+  id: 'image',
   initial: 'active',
   context: ({ input: image }) => ({
     image,

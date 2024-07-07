@@ -161,6 +161,7 @@ export const view2d = setup({
     },
   },
 }).createMachine({
+  id: 'view2d',
   context: () => {
     return {
       slice: 0.5,
@@ -170,7 +171,6 @@ export const view2d = setup({
       imageBuilders: [],
     };
   },
-  id: 'view2d',
   initial: 'view2d',
   states: {
     view2d: {
@@ -344,12 +344,20 @@ export const view2d = setup({
           entry: [
             assign({
               imageBuilders: ({
-                context: { imageBuilders, scale, slice, axis, image },
+                context: {
+                  imageBuilders,
+                  scale,
+                  slice,
+                  axis,
+                  image,
+                  imageActor,
+                },
                 spawn,
               }) => {
-                if (!image) throw new Error('No image available');
+                if (!image || !imageActor)
+                  throw new Error('No image available');
                 const actor = spawn('imageBuilder', {
-                  input: { scale, slice, axis, image },
+                  input: { scale, slice, axis, image, imageActor },
                 });
 
                 const cancelCount = imageBuilders.length - IMAGE_BUILDERS_LIMIT;
