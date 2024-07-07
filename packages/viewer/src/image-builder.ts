@@ -1,4 +1,11 @@
-import { ActorRefFrom, fromPromise, sendParent, setup } from 'xstate';
+import {
+  ActorRefFrom,
+  AnyActorRef,
+  assign,
+  fromPromise,
+  sendParent,
+  setup,
+} from 'xstate';
 import { mat4, vec3 } from 'gl-matrix';
 import { Bounds } from '@itk-viewer/utils/bounding-box.js';
 import {
@@ -6,6 +13,7 @@ import {
   MultiscaleSpatialImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { AxisType, Axis } from './slice-utils.js';
+import { Image } from './image.js';
 
 const axisToIndex = {
   I: 0,
@@ -24,44 +32,35 @@ export const imageBuilder = setup({
   types: {} as {
     input: {
       image: MultiscaleSpatialImage;
+      imageActor: Image;
       scale: number;
       slice: number;
       axis: AxisType;
     };
+    context: {
+      slice: number;
+      axis: AxisType;
+      scale: number;
+      image: MultiscaleSpatialImage;
+      imageActor?: Image;
+      builtImage?: BuiltImage;
+      worker?: AnyActorRef;
+    };
   },
-  actions: {},
+  // actions: {},
   actors: {
-    imageBuilder: fromPromise(
+    findSliceIndex: fromPromise(
       async ({
-        input: { image, scale, slice, axis },
+        input: { image, builtImage, scale, slice, axis },
       }: {
         input: {
           image: MultiscaleSpatialImage;
+          builtImage: BuiltImage;
           scale: number;
           slice: number; // 0 to 1 for depth on slice axis
           axis: AxisType;
         };
       }) => {
-        const normalizedImageBounds = [0, 1, 0, 1, 0, 1] as Bounds;
-        if (axis === Axis.I) {
-          normalizedImageBounds[0] = slice;
-          normalizedImageBounds[1] = slice;
-        } else if (axis === Axis.J) {
-          normalizedImageBounds[2] = slice;
-          normalizedImageBounds[3] = slice;
-        } else if (axis === Axis.K) {
-          normalizedImageBounds[4] = slice;
-          normalizedImageBounds[5] = slice;
-        }
-        const builtImage = (await image.getImageInImageSpace(
-          scale,
-          normalizedImageBounds,
-        )) as BuiltImage;
-
-        if (builtImage.imageType.dimension === 2) {
-          return { builtImage, sliceIndex: 0 };
-        }
-
         // buildImage could be larger than slice if cached so
         // find index of slice in builtImage
         const indexToWorld = await image.scaleIndexToWorld(scale);
@@ -104,29 +103,85 @@ export const imageBuilder = setup({
   },
 }).createMachine({
   id: 'imageBuilder',
+  context: ({ input }) => {
+    return input;
+  },
   on: {
     cancel: {
       target: '.done',
     },
   },
-  initial: 'building',
+  initial: 'gettingWorker',
   states: {
-    building: {
-      invoke: {
-        src: 'imageBuilder',
-        input: ({ event }) => {
-          return event.input;
+    gettingWorker: {
+      entry: [
+        ({
+          event: {
+            input: { imageActor },
+          },
+          self,
+        }) => {
+          imageActor.send({ type: 'getWorker', actor: self });
         },
+      ],
+      on: {
+        worker: {
+          actions: assign({
+            worker: ({ event }) => event.worker,
+          }),
+          target: 'building',
+        },
+      },
+    },
+    building: {
+      entry: [
+        ({ context: { scale, slice, axis, worker } }) => {
+          const normalizedImageBounds = [0, 1, 0, 1, 0, 1] as Bounds;
+          if (axis === Axis.I) {
+            normalizedImageBounds[0] = slice;
+            normalizedImageBounds[1] = slice;
+          } else if (axis === Axis.J) {
+            normalizedImageBounds[2] = slice;
+            normalizedImageBounds[3] = slice;
+          } else if (axis === Axis.K) {
+            normalizedImageBounds[4] = slice;
+            normalizedImageBounds[5] = slice;
+          }
+          worker!.send({
+            type: 'getImageInImageSpace',
+            scale,
+            normalizedImageBounds,
+          });
+        },
+      ],
+      on: {
+        buildImage: {
+          actions: [
+            assign({
+              builtImage: ({ event }) => event.builtImage,
+            }),
+          ],
+          target: 'findingSliceIndex',
+        },
+      },
+    },
+    findingSliceIndex: {
+      invoke: {
+        src: 'findSliceIndex',
+        input: ({ context }) => ({
+          image: context.image,
+          builtImage: context.builtImage!,
+          scale: context.scale,
+          slice: context.slice,
+          axis: context.axis,
+        }),
         onDone: {
           actions: [
-            sendParent(({ event, self }) => {
-              return {
-                type: 'imageBuilt',
-                builtImage: event.output.builtImage,
-                sliceIndex: event.output.sliceIndex,
-                actor: self,
-              };
-            }),
+            sendParent(({ context, event: { output } }) => ({
+              type: 'imageBuilt',
+              builtImage: context.builtImage,
+              sliceIndex: output.sliceIndex,
+            })),
           ],
           target: 'done',
         },
