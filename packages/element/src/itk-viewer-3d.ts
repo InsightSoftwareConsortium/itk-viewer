@@ -28,15 +28,14 @@ export class ItkViewer3d extends LitElement {
 
   static styles = css`
     :host {
-      flex: 1;
+      width: 100%;
+      height: 100%;
       display: flex;
-      flex-direction: column;
     }
 
     .fill {
       flex: 1;
       min-height: 0;
-      overflow: hidden;
       display: flex;
       flex-direction: column;
     }
