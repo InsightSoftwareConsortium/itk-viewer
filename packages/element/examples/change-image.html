@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="itk-viewer-logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>itk-view-3d</title>
+    <link rel="stylesheet" href="index.css" />
+    <script type="module" src="../src/itk-viewer-element.ts"></script>
+    <script type="module" src="../src/itk-viewport.ts"></script>
+    <script type="module" src="../src/itk-view-3d.ts"></script>
+
+    <script type="module" src="./change-image.ts"></script>
+  </head>
+
+  <body>
+    <div>
+      <label for="image-select">Select Image</label>
+      <select type="choice" id="image-select">
+        <option
+          selected
+          value="/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr"
+        >
+          zyx.ome.zarr
+        </option>
+        <option value="/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr">
+          zyx.ome.zarr again
+        </option>
+        <option value="/ome-ngff-prototypes/single_image/v0.4/yx.ome.zarr">
+          yx.ome.zarr
+        </option>
+      </select>
+    </div>
+
+    <itk-viewer class="fill">
+      <itk-viewport class="fill">
+        <itk-view-3d renderer="vtkjs" class="fill"></itk-view-3d>
+      </itk-viewport>
+    </itk-viewer>
+  </body>
+</html>
