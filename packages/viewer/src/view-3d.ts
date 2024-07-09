@@ -21,6 +21,7 @@ const viewContext = {
   spawned: {} as Record<string, AnyActorRef>,
   viewport: undefined as ViewportActor | undefined,
   camera: undefined as Camera | undefined,
+  autoCameraReset: true,
 };
 
 export const view3d = setup({
@@ -33,6 +34,7 @@ export const view3d = setup({
       | { type: 'setViewport'; viewport: ViewportActor }
       | { type: 'setResolution'; resolution: [number, number] }
       | { type: 'setCamera'; camera: Camera }
+      | { type: 'setAutoCameraReset'; enableReset: boolean }
       | CreateChild;
   },
   actors: {
@@ -56,8 +58,10 @@ export const view3d = setup({
         actor.send(event);
       });
     },
-    resetCameraPose: async ({ context: { image, camera, viewport } }) => {
-      if (!image || !camera) return;
+    resetCameraPose: async ({
+      context: { image, camera, viewport, autoCameraReset },
+    }) => {
+      if (!image || !camera || !autoCameraReset) return;
       const aspect = (() => {
         if (!viewport) return 1;
         const { resolution: dims } = viewport.getSnapshot().context;
@@ -148,6 +152,13 @@ export const view3d = setup({
             }),
             'resetCameraPose',
             'forwardToSpawned',
+          ],
+        },
+        setAutoCameraReset: {
+          actions: [
+            assign({
+              autoCameraReset: ({ event: { enableReset } }) => enableReset,
+            }),
           ],
         },
       },
