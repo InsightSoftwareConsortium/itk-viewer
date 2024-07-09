@@ -1,5 +1,6 @@
-import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
+import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
+import { ItkView3d } from '@itk-viewer/element/itk-view-3d.js';
 
 const pipelineWorkerUrl = '/itk/web-workers/itk-wasm-pipeline.min.worker.js';
 setPipelineWorkerUrl(pipelineWorkerUrl);
@@ -15,6 +16,10 @@ async function setImage(imagePath: string) {
   const viewer = viewerElement.getActor();
 
   viewer.send({ type: 'setImage', image, name: 'image' });
+
+  // don't reset on second image load
+  const view3d = document.querySelector<ItkView3d>('itk-view-3d');
+  view3d?.getActor()?.send({ type: 'setAutoCameraReset', enableReset: false });
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
