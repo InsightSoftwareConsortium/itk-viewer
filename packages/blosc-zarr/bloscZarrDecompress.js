@@ -1,11 +1,12 @@
-import {
-  runPipeline,
-  InterfaceTypes,
-  WorkerPool,
-  getPipelinesBaseUrl,
-  getPipelineWorkerUrl,
-} from 'itk-wasm';
+import { runPipeline, InterfaceTypes, WorkerPool } from 'itk-wasm';
 import { getSize } from '@itk-viewer/utils/dtypeUtils.js';
+import { getPipelinesBaseUrl, getPipelineWorkerUrl } from './pipeline-urls.js';
+export {
+  getPipelinesBaseUrl,
+  setPipelinesBaseUrl,
+  getPipelineWorkerUrl,
+  setPipelineWorkerUrl,
+} from './pipeline-urls.js';
 
 const cores = navigator.hardwareConcurrency ? navigator.hardwareConcurrency : 4;
 const numberOfWorkers = cores + Math.floor(Math.sqrt(cores));
