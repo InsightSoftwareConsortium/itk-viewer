@@ -1,5 +1,12 @@
 # @itk-viewer/viewer
 
+## 0.5.1
+
+### Patch Changes
+
+- Updated dependencies [0871fbb]
+  - @itk-viewer/io@0.4.0
+
 ## 0.5.0
 
 ### Minor Changes
