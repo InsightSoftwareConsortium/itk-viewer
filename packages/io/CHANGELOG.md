@@ -1,5 +1,16 @@
 # @itk-viewer/io
 
+## 0.4.0
+
+### Minor Changes
+
+- 0871fbb: Export itk-wasm pipeline url setting functions.
+
+### Patch Changes
+
+- Updated dependencies [0871fbb]
+  - @itk-viewer/blosc-zarr@0.2.0
+
 ## 0.3.0
 
 ### Minor Changes
