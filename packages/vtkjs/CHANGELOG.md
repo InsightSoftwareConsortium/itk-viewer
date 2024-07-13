@@ -1,5 +1,12 @@
 # @itk-viewer/vtkjs
 
+## 0.3.2
+
+### Patch Changes
+
+- @itk-viewer/io@0.4.1
+- @itk-viewer/viewer@0.5.2
+
 ## 0.3.1
 
 ### Patch Changes
