@@ -3,7 +3,8 @@
   "version": "1.7.0",
   "description": "Interface to interactively edit opacity transfer functions",
   "files": [
-    "dist"
+    "dist",
+    "lib"
   ],
   "type": "module",
   "exports": {

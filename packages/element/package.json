@@ -7,7 +7,8 @@
     "./*": "./dist/*"
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "scripts": {
     "dev": "tsc --watch --project tsconfig.build.json & vite",
