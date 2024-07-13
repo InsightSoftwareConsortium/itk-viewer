@@ -1,5 +1,13 @@
 # @itk-viewer/imjoy-api
 
+## 0.0.11
+
+### Patch Changes
+
+- @itk-viewer/io@0.4.2
+- @itk-viewer/element@0.5.3
+- @itk-viewer/viewer@0.5.3
+
 ## 0.0.10
 
 ### Patch Changes

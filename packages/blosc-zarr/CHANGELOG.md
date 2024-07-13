@@ -1,5 +1,11 @@
 # @itk-viewer/blosc-zarr
 
+## 0.2.2
+
+### Patch Changes
+
+- 52178a7: Fix blosc-zarr npm publish by ignoring versions.js and adding .npmignore
+
 ## 0.2.1
 
 ### Patch Changes

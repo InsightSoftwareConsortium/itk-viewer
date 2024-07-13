@@ -1,6 +1,6 @@
 {
   "name": "@itk-viewer/element",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Web Component for multi-dimensional viewer",
   "type": "module",
   "exports": {
