@@ -118,6 +118,7 @@ export class View2dControls implements ReactiveController {
     const { imageActor } = snapshot.context;
     if (this.imageActor !== imageActor) {
       this.imageSubscription?.unsubscribe();
+      this.imageSubscription = undefined;
     }
     this.imageActor = imageActor;
     // If imageActor exists and there's no subscription, subscribe to it.
