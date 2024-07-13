@@ -3,3 +3,4 @@
 /emscripten-build/*
 !emscripten-build/BloscZarr.*
 /emscripten-build/BloscZarr.umd.wasm
+./version.js
