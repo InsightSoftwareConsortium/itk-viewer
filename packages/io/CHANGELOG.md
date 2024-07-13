@@ -1,5 +1,12 @@
 # @itk-viewer/io
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [f1fb689]
+  - @itk-viewer/blosc-zarr@0.2.1
+
 ## 0.4.0
 
 ### Minor Changes

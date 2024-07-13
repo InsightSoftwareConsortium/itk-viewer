@@ -1,5 +1,14 @@
 # @itk-viewer/element
 
+## 0.5.2
+
+### Patch Changes
+
+- @itk-viewer/io@0.4.1
+- @itk-viewer/remote-viewport@0.2.17
+- @itk-viewer/viewer@0.5.2
+- @itk-viewer/vtkjs@0.3.2
+
 ## 0.5.1
 
 ### Patch Changes

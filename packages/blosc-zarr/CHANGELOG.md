@@ -1,5 +1,11 @@
 # @itk-viewer/blosc-zarr
 
+## 0.2.1
+
+### Patch Changes
+
+- f1fb689: Fix default pipeline paths for blosc-zarr
+
 ## 0.2.0
 
 ### Minor Changes
