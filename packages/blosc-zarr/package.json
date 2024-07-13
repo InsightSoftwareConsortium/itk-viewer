@@ -6,7 +6,9 @@
   "scripts": {
     "build:all": "sh ./download-c-blosc.sh && npm run build:emscripten && npm run build:bindgen",
     "build:emscripten": "itk-wasm -i itkwasm/emscripten:latest -s . -b emscripten-build build",
-    "build:bindgen": "itk-wasm -i itkwasm/emscripten:latest -s . -b emscripten-build bindgen --package-name @itk-viewer/blosc-zarr --package-description \"Decompress Blosc compressed Zarr data in WebAssembly.\" --repository 'https://github.com/InsightSoftwareConsortium/itk-viewer'"
+    "build:bindgen": "itk-wasm -i itkwasm/emscripten:latest -s . -b emscripten-build bindgen --package-name @itk-viewer/blosc-zarr --package-description \"Decompress Blosc compressed Zarr data in WebAssembly.\" --repository 'https://github.com/InsightSoftwareConsortium/itk-viewer'",
+    "build": "node -p \"'export const version = ' + JSON.stringify(require('./package.json').version) + ';'\" > version.js",
+    "dev": "node -p \"'export const version = ' + JSON.stringify(require('./package.json').version) + ';'\" > version.js"
   },
   "repository": {
     "type": "git",

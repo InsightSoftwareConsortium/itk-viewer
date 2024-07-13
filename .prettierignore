@@ -6,4 +6,5 @@ micromamba/*
 venv/*
 packages/blosc-zarr/*
 !packages/blosc-zarr/bloscZarrDecompress.js
+!packages/blosc-zarr/pipeline-urls.js
 .changeset/*
