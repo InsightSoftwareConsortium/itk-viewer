@@ -129,6 +129,10 @@ export const view3d = setup({
                   type: 'setImage',
                   image: context.image,
                 });
+                enqueue.sendTo(actor, {
+                  type: 'setImageActor',
+                  image: context.imageActor,
+                });
               });
             }),
           ],

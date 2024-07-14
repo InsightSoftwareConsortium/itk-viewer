@@ -17,6 +17,7 @@ import {
   view3dLogic,
 } from './view-3d-vtkjs.machine.js';
 import { ReadonlyPose, toMat4 } from '@itk-viewer/viewer/camera.js';
+import { ImageSnapshot } from '@itk-viewer/viewer/image.js';
 
 const setupContainer = (
   rendererContainer: vtkGenericRenderWindow,
@@ -101,7 +102,6 @@ const createImplementation = () => {
         renderer = scene.renderer;
         renderWindow = scene.renderWindow;
       },
-
       imageBuilt: ({ event }: { event: AnyEventObject }) => {
         const { image } = event;
         const vtkImage = vtkITKHelper.convertItkToVtkImage(image);
@@ -155,12 +155,20 @@ const createImplementation = () => {
 
         render();
       },
-
       applyCameraPose: (_: unknown, { pose }: { pose: ReadonlyPose }) => {
         const cameraVtk = renderer?.getActiveCamera();
         if (!cameraVtk) return;
         toMat4(viewMat, pose);
         cameraVtk.setViewMatrix(viewMat as mat4);
+        render();
+      },
+      imageSnapshot: (_: unknown, state: ImageSnapshot) => {
+        if (!actor) return;
+        const { colorRanges } = state.context;
+        if (colorRanges.length === 0) return;
+        const range = colorRanges[0];
+        const ct = actor.getProperty().getRGBTransferFunction(0);
+        ct.setMappingRange(...range);
         render();
       },
     },
