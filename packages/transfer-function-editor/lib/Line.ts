@@ -1,5 +1,6 @@
 import { ContainerType } from './Container';
 import { Points, pointsToExtendedPoints } from './Points';
+import { ArrayPoint } from './utils';
 
 const createLine = () => {
   const line = document.createElementNS(
@@ -101,7 +102,10 @@ export class Line {
       return x < 0 || x > 1;
     });
     let clampedMovementX = movementX;
-    if (newlyOutOfBoundPointsX.length === inBoundsPoints.length) {
+    if (
+      newlyOutOfBoundPointsX.length > 0 &&
+      newlyOutOfBoundPointsX.length === inBoundsPoints.length
+    ) {
       const outOfBoundPoint = inBoundsPoints[0];
       if (outOfBoundPoint.x + movementX < 0) {
         clampedMovementX = -outOfBoundPoint.x;
@@ -115,7 +119,10 @@ export class Line {
       return y < 0 || y > 1;
     });
     let clampedMovementY = movementY;
-    if (newlyOutOfBoundPointsY.length === inBoundsPoints.length) {
+    if (
+      newlyOutOfBoundPointsY.length > 0 &&
+      newlyOutOfBoundPointsY.length === inBoundsPoints.length
+    ) {
       const outOfBoundPoint = inBoundsPoints[0];
       if (outOfBoundPoint.y + movementY < 0) {
         clampedMovementY = -outOfBoundPoint.y;
@@ -124,9 +131,13 @@ export class Line {
       }
     }
 
-    this.points.points.forEach((point) => {
-      point.setPosition(point.x + clampedMovementX, point.y + clampedMovementY);
+    const newPositions = this.points.points.map((point) => {
+      return [
+        point.x + clampedMovementX,
+        point.y + clampedMovementY,
+      ] as ArrayPoint;
     });
+    this.points.batchUpdatePoints(newPositions);
   }
 
   startInteraction(event: PointerEvent) {

@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@itk-viewer/io": "workspace:^",
+    "@itk-viewer/transfer-function-editor": "workspace:^",
     "@itk-viewer/viewer": "workspace:^",
     "@kitware/vtk.js": "^30.4.1",
     "gl-matrix": "^3.4.3",

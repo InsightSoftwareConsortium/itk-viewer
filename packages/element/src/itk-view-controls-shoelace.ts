@@ -1,4 +1,4 @@
-import { LitElement, html } from 'lit';
+import { LitElement, PropertyValues, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { ViewControls, ViewActor } from './view-controls-controller.js';
 import { ref } from 'lit/directives/ref.js';
@@ -20,6 +20,12 @@ export class ViewControlsShoelace extends LitElement {
     this.controls.setTransferFunctionContainer(container);
   }
 
+  willUpdate(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has('view')) {
+      this.controls.setView(this.view);
+    }
+  }
+
   render() {
     const slice = this.controls.slice?.value;
     const axis = this.controls.axis?.value;
@@ -33,6 +39,8 @@ export class ViewControlsShoelace extends LitElement {
 
     const threeD = imageDimension >= 3;
     const showScale = scaleCount >= 2;
+    const tfEditorHeight = this.view === '2d' ? '2rem' : '8rem';
+
     return html`
       <sl-card>
         ${threeD && this.view === '2d'
@@ -78,7 +86,7 @@ export class ViewControlsShoelace extends LitElement {
         <div style="padding-top: 0.4rem;">Color Range</div>
         <div
           ${ref(this.transferFunctionContainerChanged)}
-          style="width: 14rem; height: 2rem;"
+          style=${`width: 14rem; height: ${tfEditorHeight};`}
         ></div>
       </sl-card>
     `;

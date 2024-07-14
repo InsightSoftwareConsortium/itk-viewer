@@ -1,4 +1,5 @@
 import { Point } from './Point';
+import { ArrayPoint } from './utils';
 
 // if clampEnds is true, add points at ends with y = 0
 // else extend left and right points to 0 and 1 with left/right y value
@@ -40,8 +41,9 @@ export const pointsToExtendedPoints = (points: Point[]) =>
   extendPoints(points.map(({ x, y }) => [x, y]));
 
 export class Points {
-  private _points: Point[] = [];
   eventTarget = new EventTarget();
+  private _points: Point[] = [];
+  private disableEventDispatch = false;
 
   get points() {
     return [...this._points];
@@ -55,12 +57,11 @@ export class Points {
   }
 
   // does not call this.dispatchUpdatedEvent() assuming setPoints() holds external point state and will update downstream function
-  addPoints(points: [number, number][]) {
-    const pointsMade = points.map(([x, y]) => this.createPoint(x, y));
-    return pointsMade;
+  addPoints(points: ArrayPoint[]) {
+    return points.map(([x, y]) => this.createPoint(x, y));
   }
 
-  setPoints(points: [number, number][]) {
+  setPoints(points: ArrayPoint[]) {
     [...this._points].forEach((point) => this.deletePoint(point));
     return this.addPoints(points);
   }
@@ -71,9 +72,19 @@ export class Points {
   }
 
   dispatchUpdatedEvent() {
+    if (this.disableEventDispatch) return;
     this.eventTarget.dispatchEvent(
       new CustomEvent('updated', { detail: this._points }),
     );
+  }
+
+  batchUpdatePoints(points: ArrayPoint[]) {
+    this.disableEventDispatch = true;
+    this._points.forEach((point, i) => {
+      point.setPosition(points[i][0], points[i][1]);
+    });
+    this.disableEventDispatch = false;
+    this.dispatchUpdatedEvent();
   }
 
   private createPoint(x: number, y: number) {

@@ -6,6 +6,10 @@ import {
 import { Range, Ranges, ReadonlyRange } from '@itk-viewer/io/types.js';
 
 const NORMALIZED_RANGE_DEFAULT = [0.2, 0.8] as const;
+const NORMALIZED_OPACITY_POINTS_DEFAULT = [
+  [0.2, 0.1] as const,
+  [0.8, 0.8] as const,
+];
 
 const computeColorRange = (
   dataRange: ReadonlyRange,
@@ -27,11 +31,35 @@ const computeNormalizedColorRange = (
   }) as Range;
 };
 
+type Point = readonly [number, number];
+
+const computeNormalizedOpacityPoints = (
+  dataRange: ReadonlyRange,
+  opacityPoints: Point[],
+) => {
+  return opacityPoints.map(([x, y]) => {
+    const delta = dataRange[1] - dataRange[0];
+    return [(x - dataRange[0]) / delta, y];
+  }) as Point[];
+};
+
+const computeOpacityPoints = (
+  dataRange: ReadonlyRange,
+  normalizedPoints: Point[],
+) => {
+  const delta = dataRange[1] - dataRange[0];
+  return normalizedPoints.map(([x, y]) => {
+    return [x * delta + dataRange[0], y] as Point;
+  });
+};
+
 type Context = {
   image: MultiscaleSpatialImage;
   dataRanges: Ranges; // by component
   colorRanges: Ranges;
   normalizedColorRanges: Ranges;
+  opacityPoints: Point[][];
+  normalizedOpacityPoints: Point[][];
 };
 
 export const image = setup({
@@ -45,6 +73,11 @@ export const image = setup({
           type: 'normalizedColorRange';
           range: readonly [number, number];
           component: number;
+        }
+      | {
+          type: 'normalizedOpacityPoints';
+          points: [number, number][];
+          component: number;
         };
   },
   actions: {
@@ -52,6 +85,16 @@ export const image = setup({
       colorRanges: ({ context: { dataRanges, normalizedColorRanges } }) => {
         return dataRanges.map((range, component) => {
           return computeColorRange(range, normalizedColorRanges[component]);
+        });
+      },
+    }),
+    updateOpacityPoints: assign({
+      opacityPoints: ({ context: { dataRanges, normalizedOpacityPoints } }) => {
+        return dataRanges.map((range, component) => {
+          return computeOpacityPoints(
+            range,
+            normalizedOpacityPoints[component],
+          );
         });
       },
     }),
@@ -64,6 +107,8 @@ export const image = setup({
     dataRanges: [],
     colorRanges: [],
     normalizedColorRanges: [],
+    opacityPoints: [],
+    normalizedOpacityPoints: [],
   }),
   states: {
     active: {
@@ -100,8 +145,23 @@ export const image = setup({
                   return computeNormalizedColorRange(dataRange, colorRange);
                 });
               },
+              normalizedOpacityPoints: ({ context }) => {
+                return context.dataRanges.map((dataRange, component) => {
+                  if (!context.normalizedOpacityPoints[component])
+                    return NORMALIZED_OPACITY_POINTS_DEFAULT;
+                  // if data range changes
+                  // scale normalizedPoints so opacityPoints doesn't change
+                  const points = context.opacityPoints[component];
+                  const normalized = computeNormalizedOpacityPoints(
+                    dataRange,
+                    points,
+                  );
+                  return normalized;
+                });
+              },
             }),
             'updateColorRanges',
+            'updateOpacityPoints',
           ],
         },
         normalizedColorRange: {
@@ -113,6 +173,17 @@ export const image = setup({
               },
             }),
             'updateColorRanges',
+          ],
+        },
+        normalizedOpacityPoints: {
+          actions: [
+            assign({
+              normalizedOpacityPoints: ({ context, event }) => {
+                context.normalizedOpacityPoints[event.component] = event.points;
+                return context.normalizedOpacityPoints;
+              },
+            }),
+            'updateOpacityPoints',
           ],
         },
       },

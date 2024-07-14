@@ -12,6 +12,8 @@ export type ViewActor = View2dActor | View3dActor;
 
 type ViewSnapshot = ReturnType<ViewActor['getSnapshot']>;
 
+const equalFloats = (a: number, b: number) => Math.abs(a - b) < 1e-6;
+
 export class ViewControls implements ReactiveController {
   host: ReactiveControllerHost;
 
@@ -25,6 +27,7 @@ export class ViewControls implements ReactiveController {
   axis: SelectorController<View2dActor, AxisType> | undefined;
   imageDimension: SelectorController<View2dActor, number> | undefined;
   transferFunctionEditor: TransferFunctionEditor | undefined;
+  view: '2d' | '3d' = '2d';
 
   constructor(host: ReactiveControllerHost) {
     this.host = host;
@@ -104,7 +107,7 @@ export class ViewControls implements ReactiveController {
       this.transferFunctionEditor.setColorTransferFunction(
         new ColorTransferFunction(),
       );
-      this.transferFunctionEditor.setRangeViewOnly(true);
+      this.updateTransferFunctionEditor();
 
       this.transferFunctionEditor.eventTarget.addEventListener(
         'colorRange',
@@ -113,6 +116,18 @@ export class ViewControls implements ReactiveController {
           this.imageActor?.send({
             type: 'normalizedColorRange',
             range,
+            component: 0,
+          });
+        },
+      );
+
+      this.transferFunctionEditor.eventTarget.addEventListener(
+        'updated',
+        (e) => {
+          const points = (<CustomEvent>e).detail as [number, number][];
+          this.imageActor?.send({
+            type: 'normalizedOpacityPoints',
+            points,
             component: 0,
           });
         },
@@ -137,20 +152,45 @@ export class ViewControls implements ReactiveController {
   };
 
   onImageActorSnapshot = (snapshot: ImageSnapshot) => {
+    if (!this.transferFunctionEditor) return;
     const component = 0;
-    const { dataRanges, normalizedColorRanges } = snapshot.context;
-    if (dataRanges.length === 0) return;
-    this.transferFunctionEditor?.setRange(dataRanges[component]);
-    if (normalizedColorRanges.length === 0) return;
-    const currentColorRange = this.transferFunctionEditor?.getColorRange();
-    // avoid infinite loop
-    const noChange = currentColorRange?.every(
-      (v, i) => v === normalizedColorRanges[component][i],
-    );
-    if (noChange) return;
+    const { dataRanges, normalizedColorRanges, normalizedOpacityPoints } =
+      snapshot.context;
+    const componentRange = dataRanges[component];
+    if (componentRange) {
+      this.transferFunctionEditor.setRange(componentRange);
+    }
 
-    this.transferFunctionEditor?.setColorRange(
-      normalizedColorRanges[component],
+    if (normalizedColorRanges.length === 0) return;
+    const currentColorRange = this.transferFunctionEditor.getColorRange();
+    // avoid infinite loop
+    const colorRange = normalizedColorRanges[component];
+    const changed = currentColorRange?.some(
+      (v, i) => !equalFloats(v, colorRange[i]),
     );
+    if (changed) {
+      this.transferFunctionEditor.setColorRange(colorRange);
+    }
+
+    const currentPoints = this.transferFunctionEditor.getPoints();
+    const opacityPoints = normalizedOpacityPoints[component];
+    const pointsChanged = currentPoints?.some(
+      (point, i) =>
+        !equalFloats(point[0], opacityPoints[i][0]) ||
+        !equalFloats(point[1], opacityPoints[i][1]),
+    );
+    if (pointsChanged) {
+      this.transferFunctionEditor.setPoints(opacityPoints);
+    }
   };
+
+  setView(view: '2d' | '3d') {
+    this.view = view;
+    this.updateTransferFunctionEditor();
+  }
+
+  updateTransferFunctionEditor() {
+    const rangeViewOnly = this.view === '2d';
+    this.transferFunctionEditor?.setRangeViewOnly(rangeViewOnly);
+  }
 }
