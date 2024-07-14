@@ -1,18 +1,21 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
+import { AnyActorRef, Subscription } from 'xstate';
 import { SelectorController } from 'xstate-lit';
 import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
+import { View3dActor } from '@itk-viewer/viewer/view-3d.js';
 import { AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { TransferFunctionEditor } from '@itk-viewer/transfer-function-editor/TransferFunctionEditor.js';
 import { ColorTransferFunction } from '@itk-viewer/transfer-function-editor/ColorTransferFunction.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
-import { Subscription } from 'xstate';
 
-type View2dSnapshot = ReturnType<View2dActor['getSnapshot']>;
+export type ViewActor = View2dActor | View3dActor;
 
-export class View2dControls implements ReactiveController {
+type ViewSnapshot = ReturnType<ViewActor['getSnapshot']>;
+
+export class ViewControls implements ReactiveController {
   host: ReactiveControllerHost;
 
-  actor: View2dActor | undefined;
+  actor: ViewActor | undefined;
   viewSubscription: Subscription | undefined;
   imageSubscription: Subscription | undefined;
   imageActor: Image | undefined;
@@ -32,7 +35,7 @@ export class View2dControls implements ReactiveController {
     // no-op
   }
 
-  setActor(actor: View2dActor) {
+  setActor(actor: ViewActor) {
     this.actor = actor;
 
     this.scale = new SelectorController(
@@ -64,14 +67,16 @@ export class View2dControls implements ReactiveController {
 
     // wire up Transfer Function Editor
     if (this.viewSubscription) this.viewSubscription.unsubscribe();
-    this.viewSubscription = this.actor.subscribe(this.onViewSnapshot);
+    this.viewSubscription = (this.actor as AnyActorRef).subscribe(
+      this.onViewSnapshot,
+    );
     this.onViewSnapshot(this.actor.getSnapshot());
   }
 
   onSlice(event: Event) {
     const target = event.target as HTMLInputElement;
     const slice = Number(target.value);
-    this.actor!.send({
+    (this.actor as AnyActorRef).send({
       type: 'setSlice',
       slice,
     });
@@ -80,7 +85,7 @@ export class View2dControls implements ReactiveController {
   onAxis(event: Event) {
     const target = event.target as HTMLInputElement;
     const axis = target.value as AxisType;
-    this.actor!.send({
+    (this.actor as AnyActorRef).send({
       type: 'setAxis',
       axis,
     });
@@ -115,7 +120,7 @@ export class View2dControls implements ReactiveController {
     }
   }
 
-  onViewSnapshot = (snapshot: View2dSnapshot) => {
+  onViewSnapshot = (snapshot: ViewSnapshot) => {
     const { imageActor } = snapshot.context;
     if (this.imageActor !== imageActor) {
       this.imageSubscription?.unsubscribe();

@@ -11,6 +11,7 @@ import {
   MultiscaleSpatialImage,
   BuiltImage,
 } from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import { image, Image } from './image.js';
 import { CreateChild } from './children.js';
 import { Camera, reset3d } from './camera.js';
 import { ViewportActor } from './viewport.js';
@@ -26,7 +27,9 @@ const viewContext = {
 
 export const view3d = setup({
   types: {} as {
-    context: typeof viewContext;
+    context: typeof viewContext & {
+      imageActor?: Image;
+    };
     events:
       | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'setScale'; scale: number }
@@ -38,6 +41,7 @@ export const view3d = setup({
       | CreateChild;
   },
   actors: {
+    image,
     imageBuilder: fromPromise(
       async ({
         input: { image, scale },
@@ -96,7 +100,9 @@ export const view3d = setup({
                 event: { logic, onActor },
               }) => {
                 // @ts-expect-error cannot spawn actor of type that is not in setup()
-                const child = spawn(logic, { input: { viewport } });
+                const child = spawn(logic, {
+                  input: { viewport },
+                }) as AnyActorRef;
                 if (camera) child.send({ type: 'setCamera', camera });
                 const id = Object.keys(spawned).length.toString();
                 onActor(child);
@@ -113,6 +119,8 @@ export const view3d = setup({
             assign({
               image: ({ event }) => event.image,
               scale: ({ event }) => event.image.coarsestScale,
+              imageActor: ({ event, spawn }) =>
+                spawn('image', { input: event.image }),
             }),
             'resetCameraPose',
             enqueueActions(({ context, enqueue }) => {
@@ -184,6 +192,10 @@ export const view3d = setup({
                       type: 'imageBuilt',
                       image: output,
                     });
+                  });
+                  context.imageActor?.send({
+                    type: 'builtImage',
+                    builtImage: output,
                   });
                 }),
               ],

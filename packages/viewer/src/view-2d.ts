@@ -92,6 +92,7 @@ export const view2d = setup({
       | CreateChild;
   },
   actors: {
+    image,
     imageBuilder,
     findDefaultAxis: fromPromise(
       async ({
@@ -112,7 +113,6 @@ export const view2d = setup({
         return computeMinSizeAxis(ijkSpacing, shapeArray);
       },
     ),
-    image,
   },
   actions: {
     forwardToSpawned: ({ context, event }) => {
