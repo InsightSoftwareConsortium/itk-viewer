@@ -1,5 +1,5 @@
 import { View3dActor, view3d } from '@itk-viewer/viewer/view-3d.js';
-import { LitElement, css, html, nothing } from 'lit';
+import { LitElement, css, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { SelectorController } from 'xstate-lit';
 import { dispatchSpawn, handleLogic } from './spawn-controller.js';
@@ -51,7 +51,7 @@ export class ItkView3d extends LitElement {
     this.actor!.send({ type: 'setScale', scale });
   }
 
-  getAttributeRenderer() {
+  getRenderer() {
     if (this.renderer === 'vtkjs') {
       return html`<itk-view-3d-vtkjs></itk-view-3d-vtkjs>`;
     } else if (this.renderer === 'slot') {
@@ -67,40 +67,18 @@ export class ItkView3d extends LitElement {
       this.dispatched = true;
     }
 
-    const scale = this.scale?.value ?? 0;
-    const scaleCount = this.scaleCount?.value ?? 1;
-    const scaleOptions = Array.from(
-      { length: scaleCount },
-      (_, i) => i,
-    ).reverse();
-
     return html`
-      <h1>View 3D</h1>
-      <div>
-        <label for="scale-select">Scale</label>
-        <select value=${scale} @change="${this.onScale}" type="choice">
-          ${scaleOptions.map(
-            (option) =>
-              html`<option selected=${option === scale || nothing}>
-                ${option}
-              </option>`,
-          )}
-        </select>
-      </div>
-      <div class="fill" @renderer=${handleLogic(this.actor)}>
-        <itk-camera .actor=${this.cameraActor?.value} class="fill">
-          ${this.getAttributeRenderer()}
-        </itk-camera>
-      </div>
+      <itk-camera
+        class="fill"
+        .actor=${this.cameraActor?.value}
+        @renderer=${handleLogic(this.actor)}
+      >
+        ${this.getRenderer()}
+      </itk-camera>
     `;
   }
 
   static styles = css`
-    :host {
-      display: flex;
-      flex-direction: column;
-    }
-
     .fill {
       flex: 1;
       min-height: 0;

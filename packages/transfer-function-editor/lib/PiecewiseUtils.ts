@@ -55,7 +55,7 @@ export type ColorTransferFunction = {
     end: number,
     width: number,
     withAlpha: boolean,
-  ) => Uint8Array;
+  ) => Uint8Array | Float32Array;
   getMappingRange: () => [number, number];
   getSize: () => number;
   getColor: (x: number, rgba: Array<number>) => void;
@@ -135,31 +135,37 @@ export function rgbaToHexa(rgba: Array<number>) {
   return `#${hexa.join('')}`;
 }
 
+const findY1Intercepts = (
+  points: Array<readonly [number, number]>,
+): number[] => {
+  const xPositions: number[] = [];
+
+  for (let i = 0; i < points.length - 1; i++) {
+    const point1 = points[i];
+    const point2 = points[i + 1];
+
+    // Check if the line between point1 and point2 intersects y=1
+    if (
+      (point1[1] <= 1 && point2[1] >= 1) ||
+      (point1[1] >= 1 && point2[1] <= 1)
+    ) {
+      // Calculate the x position of the intersection point using linear interpolation
+      const x =
+        point1[0] +
+        ((1 - point1[1]) / (point2[1] - point1[1])) * (point2[0] - point1[0]);
+      xPositions.push(x);
+    }
+  }
+
+  return xPositions;
+};
+
 // Returns vtk.js piecewise function nodes
 // rescaled into data range space.
-export const getNodes = (range: number[], points: Array<[number, number]>) => {
-  const findY1Intercepts = (points: Array<[number, number]>): number[] => {
-    const xPositions: number[] = [];
-
-    for (let i = 0; i < points.length - 1; i++) {
-      const point1 = points[i];
-      const point2 = points[i + 1];
-
-      // Check if the line between point1 and point2 intersects y=1
-      if (
-        (point1[1] <= 1 && point2[1] >= 1) ||
-        (point1[1] >= 1 && point2[1] <= 1)
-      ) {
-        // Calculate the x position of the intersection point using linear interpolation
-        const x =
-          point1[0] +
-          ((1 - point1[1]) / (point2[1] - point1[1])) * (point2[0] - point1[0]);
-        xPositions.push(x);
-      }
-    }
-
-    return xPositions;
-  };
+export const getNodes = (
+  range: readonly number[],
+  points: Array<readonly [number, number]>,
+) => {
   const xPositions = findY1Intercepts(points);
   const withIntercepts = [...points, ...xPositions.map((x) => [x, 1])];
 

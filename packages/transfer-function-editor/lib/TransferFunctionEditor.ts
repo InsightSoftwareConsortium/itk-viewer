@@ -13,7 +13,8 @@ import {
 } from './ColorRange';
 import { AxisLabels } from './AxisLabels';
 import { createDataRange } from './DataRange';
-import { Range } from './utils';
+import { ArrayPoint, Range } from './utils';
+import { Point } from './Point';
 
 export { windowPointsForSort, getNodes } from './PiecewiseUtils';
 
@@ -37,6 +38,8 @@ export class TransferFunctionEditor {
     this.container = container || Container(root);
     WheelZoom(this.container);
 
+    this.axisLabels = AxisLabels(this.container, this.dataRange);
+
     this.points = new Points();
     const startPoints = [
       [0, 0],
@@ -52,8 +55,6 @@ export class TransferFunctionEditor {
       this.dataRange.toDataSpace,
     );
 
-    this.axisLabels = AxisLabels(this.container, this.dataRange);
-
     this.colorRange = ColorRange();
     this.colorRangeController = ColorRangeController(
       this.container,
@@ -63,8 +64,12 @@ export class TransferFunctionEditor {
     this.background = Background(this.container, this.points, this.colorRange);
 
     this.points.eventTarget.addEventListener('updated', (e) => {
+      const points = ((e as CustomEvent).detail as Point[]).map(({ x, y }) => [
+        x,
+        y,
+      ]);
       this.eventTarget.dispatchEvent(
-        new CustomEvent('updated', { detail: (e as CustomEvent).detail }),
+        new CustomEvent('updated', { detail: points }),
       );
     });
     this.colorRange.eventTarget.addEventListener('updated', (e) => {
@@ -102,9 +107,9 @@ export class TransferFunctionEditor {
     return this.points.points.map(({ x, y }) => [x, y]);
   }
 
-  // No Points update event emitted on setPoints event to user code.  Avoids circular
+  // No Points update event emitted on setPoints event to user code.  Avoids circular update.
   // User code responsible for updating downstream piecewise function without update in setPoints case.
-  setPoints(points: [number, number][]) {
+  setPoints(points: ArrayPoint[]) {
     this.points.setPoints(points);
     this.pointController.updatePoints();
     this.line.update();

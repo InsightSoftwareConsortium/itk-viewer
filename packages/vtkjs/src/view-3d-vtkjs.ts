@@ -4,19 +4,22 @@ import { mat4 } from 'gl-matrix';
 import '@kitware/vtk.js/Rendering/Profiles/Volume.js';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume.js';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper.js';
-import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction.js';
+import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkBoundingBox from '@kitware/vtk.js/Common/DataModel/BoundingBox';
 
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
 import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper.js';
 import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 
+import { getNodes } from '@itk-viewer/transfer-function-editor/PiecewiseUtils.js';
 import {
   Context,
   SetContainerEvent,
   view3dLogic,
 } from './view-3d-vtkjs.machine.js';
 import { ReadonlyPose, toMat4 } from '@itk-viewer/viewer/camera.js';
+import { ImageSnapshot } from '@itk-viewer/viewer/image.js';
 
 const setupContainer = (
   rendererContainer: vtkGenericRenderWindow,
@@ -52,14 +55,12 @@ const createImplementation = () => {
   let mapper: vtkVolumeMapper | undefined = undefined;
   let renderer: vtkRenderer | undefined = undefined;
   let renderWindow: vtkRenderWindow | undefined = undefined;
-  let piecewiseFunction: vtkPiecewiseFunction | undefined = undefined;
+  let opacityFunction: vtkPiecewiseFunction | undefined = undefined;
 
   const viewMat = mat4.create();
   let addedActorToRenderer = false;
 
   const cleanupContainer = (rendererContainer: vtkGenericRenderWindow) => {
-    piecewiseFunction?.delete();
-    piecewiseFunction = undefined;
     mapper?.delete();
     mapper = undefined;
     actor?.delete();
@@ -101,7 +102,6 @@ const createImplementation = () => {
         renderer = scene.renderer;
         renderWindow = scene.renderWindow;
       },
-
       imageBuilt: ({ event }: { event: AnyEventObject }) => {
         const { image } = event;
         const vtkImage = vtkITKHelper.convertItkToVtkImage(image);
@@ -125,9 +125,20 @@ const createImplementation = () => {
             vtkImage.getPointData().getScalars() ||
             vtkImage.getPointData().getArrays()[0];
           const [min, max] = dataArray.getRange();
-          piecewiseFunction = vtkPiecewiseFunction.newInstance();
-          piecewiseFunction.addPoint(min, 0.0);
-          piecewiseFunction.addPoint(max, 0.5);
+          opacityFunction = vtkPiecewiseFunction.newInstance();
+          actor.getProperty().setScalarOpacity(0, opacityFunction);
+          opacityFunction.addPoint(min, 0.0);
+          opacityFunction.addPoint(max, 0.5);
+
+          // For better looking volume rendering
+          // - distance in world coordinates a scalar opacity of 1.0
+          actor
+            .getProperty()
+            .setScalarOpacityUnitDistance(
+              0,
+              vtkBoundingBox.getDiagonalLength(vtkImage.getBounds()) /
+                Math.max(...vtkImage.getDimensions()),
+            );
 
           // - control how we emphasize surface boundaries
           //  => max should be around the average gradient magnitude for the
@@ -139,7 +150,6 @@ const createImplementation = () => {
           actor
             .getProperty()
             .setGradientOpacityMaximumValue(0, (max - min) * 0.05);
-          actor.getProperty().setScalarOpacity(0, piecewiseFunction);
 
           // - Use shading based on gradient
           actor.getProperty().setShade(true);
@@ -155,12 +165,29 @@ const createImplementation = () => {
 
         render();
       },
-
       applyCameraPose: (_: unknown, { pose }: { pose: ReadonlyPose }) => {
         const cameraVtk = renderer?.getActiveCamera();
         if (!cameraVtk) return;
         toMat4(viewMat, pose);
         cameraVtk.setViewMatrix(viewMat as mat4);
+        render();
+      },
+      imageSnapshot: (_: unknown, state: ImageSnapshot) => {
+        if (!actor) return;
+        const actorProperty = actor.getProperty();
+        const { colorRanges, normalizedOpacityPoints, dataRanges } =
+          state.context;
+
+        colorRanges.forEach((range, component) => {
+          const ct = actorProperty.getRGBTransferFunction(component);
+          ct.setMappingRange(...range);
+        });
+
+        normalizedOpacityPoints.forEach((points, component) => {
+          const nodes = getNodes(dataRanges[component], points);
+          opacityFunction?.setNodes(nodes);
+        });
+
         render();
       },
     },

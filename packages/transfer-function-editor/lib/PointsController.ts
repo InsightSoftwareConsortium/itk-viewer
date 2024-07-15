@@ -87,6 +87,8 @@ export class PointsController {
     this.points.points
       .filter((pointModel) => !isPointInControlPoints(pointModel))
       .forEach(addNewControlPoint);
+
+    this.updateVisibility();
   }
 
   updateHovered(hovered: boolean) {
@@ -100,8 +102,12 @@ export class PointsController {
     }
   }
 
+  updateVisibility() {
+    this.controlPoints.forEach((cp) => cp.setVisibility(!this.rangeViewOnly));
+  }
+
   setRangeViewOnly(rangeViewOnly: boolean) {
     this.rangeViewOnly = rangeViewOnly;
-    this.controlPoints.forEach((cp) => cp.setVisibility(!rangeViewOnly));
+    this.updateVisibility();
   }
 }

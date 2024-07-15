@@ -7,7 +7,7 @@ export class ColorTransferFunction {
     return this.mappingRange;
   };
 
-  getUint8Table = () => new Uint8Array([255, 255, 255, 255]);
+  getUint8Table = () => new Uint8Array([0, 0, 0, 255, 0, 0, 0, 255]);
 
   getSize = () => 2;
 

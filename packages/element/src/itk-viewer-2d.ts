@@ -4,18 +4,17 @@ import { Ref, createRef, ref } from 'lit/directives/ref.js';
 import './itk-viewer-element.js';
 import { ItkViewer } from './itk-viewer-element.js';
 import './itk-viewport.js';
-import './itk-view-2d.js';
 import { ItkView2d } from './itk-view-2d.js';
+import './itk-view-2d.js';
 import './itk-view-2d-vtkjs.js';
-import { View2dControlsShoelace } from './itk-view-2d-controls-shoelace.js';
-import './itk-view-2d-controls-shoelace.js';
-// import './itk-view-2d-controls-material.js';
+import { ViewControlsShoelace } from './itk-view-controls-shoelace.js';
+import './itk-view-controls-shoelace.js';
 
 @customElement('itk-viewer-2d')
 export class ItkViewer2d extends LitElement {
   viewer: Ref<ItkViewer> = createRef();
   view: Ref<ItkView2d> = createRef();
-  controls: Ref<View2dControlsShoelace> = createRef();
+  controls: Ref<ViewControlsShoelace> = createRef();
 
   getActor() {
     return this.viewer.value?.getActor();
@@ -27,12 +26,10 @@ export class ItkViewer2d extends LitElement {
         <itk-viewport class="fill">
           <div style="position: relative" class="fill">
             <div style="position: absolute; top: 0.25rem; left: 0.25rem">
-              <itk-view-2d-controls-shoelace
+              <itk-view-controls-shoelace
+                view="2d"
                 ${ref(this.controls)}
-              ></itk-view-2d-controls-shoelace>
-              <!-- <itk-view-2d-controls-material
-                ${ref(this.controls)}
-              ></itk-view-2d-controls-material> -->
+              ></itk-view-controls-shoelace>
             </div>
             <itk-view-2d ${ref(this.view)} class="fill">
               <itk-view-2d-vtkjs></itk-view-2d-vtkjs>
@@ -44,7 +41,8 @@ export class ItkViewer2d extends LitElement {
   }
 
   protected async firstUpdated() {
-    await this.updateComplete; // Wait for view to render
+    // Wait for view to render so view actor is created
+    await this.updateComplete;
     const viewActor = this.view.value!.getActor()!;
     const controls = this.controls.value!;
     controls.setActor(viewActor);

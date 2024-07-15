@@ -5,19 +5,22 @@
     <link rel="icon" type="image/svg+xml" href="itk-viewer-logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>itk-view-3d</title>
-    <link rel="stylesheet" href="index.css" />
-    <script type="module" src="../src/itk-viewer-element.ts"></script>
-    <script type="module" src="../src/itk-viewport.ts"></script>
-    <script type="module" src="../src/itk-view-3d.ts"></script>
 
-    <script type="module" src="./view-3d.ts"></script>
+    <script type="module" src="../src/itk-viewer-3d.ts"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.13.1/cdn/themes/light.css"
+    />
+    <script
+      type="module"
+      src="https://cdn.jsdelivr.net/npm/@shoelace-style/shoelace@2.13.1/cdn/shoelace.js"
+    ></script>
+
+    <script type="module" src="view-3d.ts"></script>
+    <link rel="stylesheet" href="index.css" />
   </head>
 
   <body>
-    <itk-viewer class="fill">
-      <itk-viewport class="fill">
-        <itk-view-3d renderer="vtkjs" class="fill"></itk-view-3d>
-      </itk-viewport>
-    </itk-viewer>
+    <itk-viewer-3d id="viewer"></itk-viewer-3d>
   </body>
 </html>

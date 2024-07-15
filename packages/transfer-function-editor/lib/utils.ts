@@ -19,3 +19,5 @@ export const createOrGates = (gatedFunc: (on: boolean) => void) => {
 };
 
 export type Range = readonly [number, number];
+
+export type ArrayPoint = readonly [number, number];

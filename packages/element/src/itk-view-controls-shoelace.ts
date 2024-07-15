@@ -1,21 +1,29 @@
-import { LitElement, html } from 'lit';
-import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
-import { customElement } from 'lit/decorators.js';
-import { View2dControls } from './view-2d-controls-controller.js';
+import { LitElement, PropertyValues, html } from 'lit';
+import { customElement, property } from 'lit/decorators.js';
+import { ViewControls, ViewActor } from './view-controls-controller.js';
 import { ref } from 'lit/directives/ref.js';
 
-@customElement('itk-view-2d-controls-shoelace')
-export class View2dControlsShoelace extends LitElement {
-  actor: View2dActor | undefined;
-  private controls = new View2dControls(this);
+@customElement('itk-view-controls-shoelace')
+export class ViewControlsShoelace extends LitElement {
+  @property({ type: String })
+  view: '2d' | '3d' = '2d';
 
-  setActor(actor: View2dActor) {
+  actor: ViewActor | undefined;
+  private controls = new ViewControls(this);
+
+  setActor(actor: ViewActor) {
     this.actor = actor;
     this.controls.setActor(actor);
   }
 
   transferFunctionContainerChanged(container: Element | undefined) {
     this.controls.setTransferFunctionContainer(container);
+  }
+
+  willUpdate(changedProperties: PropertyValues<this>) {
+    if (changedProperties.has('view')) {
+      this.controls.setView(this.view);
+    }
   }
 
   render() {
@@ -31,12 +39,11 @@ export class View2dControlsShoelace extends LitElement {
 
     const threeD = imageDimension >= 3;
     const showScale = scaleCount >= 2;
-    if (!threeD && !showScale) {
-      return '';
-    }
+    const tfEditorHeight = this.view === '2d' ? '2rem' : '8rem';
+
     return html`
       <sl-card>
-        ${threeD
+        ${threeD && this.view === '2d'
           ? html`
               <label>
                 <sl-range
@@ -79,7 +86,7 @@ export class View2dControlsShoelace extends LitElement {
         <div style="padding-top: 0.4rem;">Color Range</div>
         <div
           ${ref(this.transferFunctionContainerChanged)}
-          style="width: 14rem; height: 2rem;"
+          style=${`width: 14rem; height: ${tfEditorHeight};`}
         ></div>
       </sl-card>
     `;
@@ -88,6 +95,6 @@ export class View2dControlsShoelace extends LitElement {
 
 declare global {
   interface HTMLElementTagNameMap {
-    'itk-view-2d-controls-shoelace': View2dControlsShoelace;
+    'itk-view-2d-controls-shoelace': ViewControlsShoelace;
   }
 }

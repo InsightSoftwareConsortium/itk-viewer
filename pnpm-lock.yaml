@@ -316,6 +316,9 @@ importers:
       '@itk-viewer/io':
         specifier: workspace:^
         version: link:../io
+      '@itk-viewer/transfer-function-editor':
+        specifier: workspace:^
+        version: link:../transfer-function-editor
       '@itk-viewer/viewer':
         specifier: workspace:^
         version: link:../viewer

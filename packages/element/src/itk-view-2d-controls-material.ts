@@ -1,7 +1,7 @@
 import { LitElement, css, html, nothing } from 'lit';
 import { View2dActor } from '@itk-viewer/viewer/view-2d.js';
 import { customElement } from 'lit/decorators.js';
-import { View2dControls } from './view-2d-controls-controller.js';
+import { ViewControls } from './view-controls-controller.js';
 import '@material/web/slider/slider.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
@@ -9,7 +9,7 @@ import '@material/web/select/select-option.js';
 @customElement('itk-view-2d-controls-material')
 export class View2dControlsMaterial extends LitElement {
   actor: View2dActor | undefined;
-  private controls = new View2dControls(this);
+  private controls = new ViewControls(this);
 
   setActor(actor: View2dActor) {
     this.actor = actor;
