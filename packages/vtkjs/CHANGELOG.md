@@ -1,5 +1,17 @@
 # @itk-viewer/vtkjs
 
+## 0.4.0
+
+### Minor Changes
+
+- dae0e89: Add opacity function editor to View 3D.
+
+### Patch Changes
+
+- Updated dependencies [dae0e89]
+  - @itk-viewer/transfer-function-editor@1.8.0
+  - @itk-viewer/viewer@0.6.0
+
 ## 0.3.3
 
 ### Patch Changes
