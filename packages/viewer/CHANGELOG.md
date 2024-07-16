@@ -1,5 +1,11 @@
 # @itk-viewer/viewer
 
+## 0.6.0
+
+### Minor Changes
+
+- dae0e89: Add opacity function editor to View 3D.
+
 ## 0.5.3
 
 ### Patch Changes
