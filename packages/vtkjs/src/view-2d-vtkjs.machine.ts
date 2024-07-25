@@ -1,17 +1,23 @@
-import { AnyActorRef, Subscription, assign, sendTo, setup } from 'xstate';
-import GenericRenderWindow, {
-  vtkGenericRenderWindow,
-} from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
+import {
+  AnyActorRef,
+  Subscription,
+  assign,
+  enqueueActions,
+  sendTo,
+  setup,
+} from 'xstate';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera, Pose } from '@itk-viewer/viewer/camera.js';
 import { Axis, AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
 
 export type Context = {
-  rendererContainer: vtkGenericRenderWindow;
   camera: Camera | undefined;
   parent: AnyActorRef;
   axis: AxisType;
+  builtImage?: BuiltImage;
+  sliceIndex?: number;
+  imageActor?: Image;
   imageSubscription?: Subscription;
 };
 
@@ -27,7 +33,7 @@ export const view2dLogic = setup({
     events:
       | SetContainerEvent
       | { type: 'setResolution'; resolution: [number, number] }
-      | { type: 'imageBuilt'; image: BuiltImage }
+      | { type: 'imageBuilt'; image: BuiltImage; sliceIndex: number }
       | { type: 'setImageActor'; image: Image }
       | { type: 'imageSnapshot'; state: ImageSnapshot }
       | { type: 'setAxis'; axis: AxisType }
@@ -38,7 +44,15 @@ export const view2dLogic = setup({
     setContainer: () => {
       throw new Error('Function not implemented.');
     },
-    imageBuilt: () => {
+    applyBuiltImage: (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      __: {
+        image: BuiltImage;
+        sliceIndex: number;
+      },
+    ) => {
       throw new Error('Function not implemented.');
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -63,9 +77,6 @@ export const view2dLogic = setup({
 }).createMachine({
   context: ({ input: { parent } }) => {
     return {
-      rendererContainer: GenericRenderWindow.newInstance({
-        listenWindowResize: false,
-      }),
       camera: undefined,
       axis: Axis.K,
       parent,
@@ -85,13 +96,48 @@ export const view2dLogic = setup({
                 axis,
               }),
             },
+            enqueueActions(({ context, enqueue, self }) => {
+              const { builtImage: image, sliceIndex } = context;
+              if (image && sliceIndex !== undefined) {
+                enqueue({
+                  type: 'applyBuiltImage',
+                  params: { image, sliceIndex },
+                });
+              }
+              if (context.imageActor) {
+                enqueue({
+                  type: 'imageSnapshot',
+                  params: context.imageActor.getSnapshot(),
+                });
+              }
+              if (context.camera) {
+                // get latest camera params
+                self.send({
+                  type: 'setCamera',
+                  camera: context.camera,
+                });
+              }
+            }),
           ],
         },
         setResolution: {
           actions: ['forwardToParent'],
         },
         imageBuilt: {
-          actions: [{ type: 'imageBuilt' }],
+          actions: [
+            assign({
+              builtImage: ({ event }) => event.image,
+              sliceIndex: ({ event }) => event.sliceIndex,
+            }),
+            {
+              type: 'applyBuiltImage',
+              params: ({ context: { builtImage, sliceIndex, camera } }) => ({
+                image: builtImage!,
+                sliceIndex: sliceIndex!,
+                cameraPose: camera?.getSnapshot().context.pose,
+              }),
+            },
+          ],
         },
         setImageActor: {
           actions: [
@@ -99,8 +145,11 @@ export const view2dLogic = setup({
               context.imageSubscription?.unsubscribe();
             },
             assign({
-              imageSubscription: ({ event: { image }, self }) =>
-                image.subscribe((state) =>
+              imageActor: ({ event: { image } }) => image,
+            }),
+            assign({
+              imageSubscription: ({ context: { imageActor }, self }) =>
+                imageActor!.subscribe((state) =>
                   self.send({ type: 'imageSnapshot', state }),
                 ),
             }),
