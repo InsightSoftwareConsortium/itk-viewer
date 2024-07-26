@@ -132,6 +132,9 @@ export class ViewControls implements ReactiveController {
           });
         },
       );
+    } else {
+      this.transferFunctionEditor?.remove();
+      this.transferFunctionEditor = undefined;
     }
   }
 
@@ -192,5 +195,9 @@ export class ViewControls implements ReactiveController {
   updateTransferFunctionEditor() {
     const rangeViewOnly = this.view === '2d';
     this.transferFunctionEditor?.setRangeViewOnly(rangeViewOnly);
+
+    if (this.imageActor) {
+      this.onImageActorSnapshot(this.imageActor.getSnapshot());
+    }
   }
 }
