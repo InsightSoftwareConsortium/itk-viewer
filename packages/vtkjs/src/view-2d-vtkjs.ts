@@ -71,7 +71,6 @@ const createImplementation = () => {
   let resizer: ResizeObserver | undefined = undefined;
 
   const viewMat = mat4.create();
-  let addedActorToRenderer = false;
 
   const cleanupContainer = () => {
     resizer?.disconnect();
@@ -86,7 +85,6 @@ const createImplementation = () => {
     renderWindow = undefined;
     rendererContainer?.delete();
     rendererContainer = undefined;
-    addedActorToRenderer = false;
   };
 
   const render = () => {
@@ -137,9 +135,8 @@ const createImplementation = () => {
         mapper.setSlice(sliceIndex);
 
         // add actor to renderer after mapper has data to avoid vtkjs message
-        if (!addedActorToRenderer) {
-          addedActorToRenderer = true;
-          renderer!.addActor(actor!);
+        if (actor && !renderer.getActors().includes(actor)) {
+          renderer.addActor(actor!);
         }
         render();
       },
