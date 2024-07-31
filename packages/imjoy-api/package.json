@@ -1,6 +1,6 @@
 {
   "name": "@itk-viewer/imjoy-api",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Imjoy plugin wrappers",
   "type": "module",
   "exports": {
