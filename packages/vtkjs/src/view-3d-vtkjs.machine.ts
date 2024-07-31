@@ -1,16 +1,14 @@
-import { assign, setup, Subscription } from 'xstate';
-import GenericRenderWindow, {
-  vtkGenericRenderWindow,
-} from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
+import { assign, setup, Subscription, enqueueActions } from 'xstate';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera, ReadonlyPose } from '@itk-viewer/viewer/camera.js';
 import { ViewportActor } from '@itk-viewer/viewer/viewport.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
 
 export type Context = {
-  rendererContainer: vtkGenericRenderWindow;
-  camera: Camera | undefined;
   viewport: ViewportActor;
+  camera?: Camera;
+  builtImage?: BuiltImage;
+  imageActor?: Image;
   imageSubscription?: Subscription;
 };
 
@@ -37,7 +35,14 @@ export const view3dLogic = setup({
     setContainer: () => {
       throw new Error('Function not implemented.');
     },
-    imageBuilt: () => {
+    applyBuiltImage: (
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      _,
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      __: {
+        image: BuiltImage;
+      },
+    ) => {
       throw new Error('Function not implemented.');
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -61,9 +66,6 @@ export const view3dLogic = setup({
 }).createMachine({
   context: ({ input: { viewport } }) => {
     return {
-      rendererContainer: GenericRenderWindow.newInstance({
-        listenWindowResize: false,
-      }),
       camera: undefined,
       viewport,
     };
@@ -74,7 +76,31 @@ export const view3dLogic = setup({
     active: {
       on: {
         setContainer: {
-          actions: [{ type: 'setContainer' }],
+          actions: [
+            { type: 'setContainer' },
+            enqueueActions(({ context, enqueue, self }) => {
+              const { builtImage: image } = context;
+              if (image) {
+                enqueue({
+                  type: 'applyBuiltImage',
+                  params: { image },
+                });
+              }
+              if (context.imageActor) {
+                enqueue({
+                  type: 'imageSnapshot',
+                  params: context.imageActor.getSnapshot(),
+                });
+              }
+              if (context.camera) {
+                // get latest camera params
+                self.send({
+                  type: 'setCamera',
+                  camera: context.camera,
+                });
+              }
+            }),
+          ],
         },
         setResolution: {
           actions: [
@@ -88,7 +114,18 @@ export const view3dLogic = setup({
           ],
         },
         imageBuilt: {
-          actions: [{ type: 'imageBuilt' }],
+          actions: [
+            assign({
+              builtImage: ({ event }) => event.image,
+            }),
+            {
+              type: 'applyBuiltImage',
+              params: ({ context: { builtImage, camera } }) => ({
+                image: builtImage!,
+                cameraPose: camera?.getSnapshot().context.pose,
+              }),
+            },
+          ],
         },
         setImageActor: {
           actions: [
@@ -96,8 +133,11 @@ export const view3dLogic = setup({
               context.imageSubscription?.unsubscribe();
             },
             assign({
-              imageSubscription: ({ event: { image }, self }) =>
-                image.subscribe((state) =>
+              imageActor: ({ event: { image } }) => image,
+            }),
+            assign({
+              imageSubscription: ({ context: { imageActor }, self }) =>
+                imageActor!.subscribe((state) =>
                   self.send({ type: 'imageSnapshot', state }),
                 ),
             }),

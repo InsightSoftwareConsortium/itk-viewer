@@ -10,22 +10,23 @@ import vtkBoundingBox from '@kitware/vtk.js/Common/DataModel/BoundingBox';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
 import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper.js';
-import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
+import GenericRenderWindow, {
+  vtkGenericRenderWindow,
+} from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 
 import { getNodes } from '@itk-viewer/transfer-function-editor/PiecewiseUtils.js';
-import {
-  Context,
-  SetContainerEvent,
-  view3dLogic,
-} from './view-3d-vtkjs.machine.js';
+import { SetContainerEvent, view3dLogic } from './view-3d-vtkjs.machine.js';
 import { ReadonlyPose, toMat4 } from '@itk-viewer/viewer/camera.js';
 import { ImageSnapshot } from '@itk-viewer/viewer/image.js';
+import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 const setupContainer = (
-  rendererContainer: vtkGenericRenderWindow,
   container: HTMLElement,
   self: Actor<typeof view3dLogic>,
 ) => {
+  const rendererContainer = GenericRenderWindow.newInstance({
+    listenWindowResize: false,
+  });
   rendererContainer.setContainer(container as HTMLElement);
   rendererContainer.resize();
 
@@ -47,20 +48,21 @@ const setupContainer = (
   const actor = vtkVolume.newInstance();
   actor.setMapper(mapper);
 
-  return { actor, mapper, renderer, renderWindow };
+  return { actor, mapper, renderer, renderWindow, rendererContainer, resizer };
 };
 
 const createImplementation = () => {
+  let opacityFunction: vtkPiecewiseFunction | undefined = undefined;
   let actor: vtkVolume | undefined = undefined;
   let mapper: vtkVolumeMapper | undefined = undefined;
   let renderer: vtkRenderer | undefined = undefined;
   let renderWindow: vtkRenderWindow | undefined = undefined;
-  let opacityFunction: vtkPiecewiseFunction | undefined = undefined;
+  let rendererContainer: vtkGenericRenderWindow | undefined = undefined;
+  let resizer: ResizeObserver | undefined = undefined;
 
   const viewMat = mat4.create();
-  let addedActorToRenderer = false;
 
-  const cleanupContainer = (rendererContainer: vtkGenericRenderWindow) => {
+  const cleanupContainer = () => {
     mapper?.delete();
     mapper = undefined;
     actor?.delete();
@@ -69,7 +71,10 @@ const createImplementation = () => {
     renderer = undefined;
     renderWindow?.delete();
     renderWindow = undefined;
-    rendererContainer.setContainer(undefined as unknown as HTMLElement);
+    resizer?.disconnect();
+    resizer = undefined;
+    rendererContainer?.delete();
+    rendererContainer = undefined;
   };
 
   const render = () => {
@@ -81,19 +86,16 @@ const createImplementation = () => {
     actions: {
       setContainer: ({
         event,
-        context: { rendererContainer },
         self,
       }: {
         event: AnyEventObject;
-        context: Context;
         self: unknown; // Actor<typeof view3dLogic>
       }) => {
         const { container } = event as SetContainerEvent;
         if (!container) {
-          return cleanupContainer(rendererContainer);
+          return cleanupContainer();
         }
         const scene = setupContainer(
-          rendererContainer,
           container,
           self as Actor<typeof view3dLogic>,
         );
@@ -101,16 +103,24 @@ const createImplementation = () => {
         mapper = scene.mapper;
         renderer = scene.renderer;
         renderWindow = scene.renderWindow;
+        rendererContainer = scene.rendererContainer;
+        resizer = scene.resizer;
       },
-      imageBuilt: ({ event }: { event: AnyEventObject }) => {
-        const { image } = event;
+      applyBuiltImage: (
+        _: unknown,
+        {
+          image,
+        }: {
+          image: BuiltImage;
+        },
+      ) => {
+        if (!mapper || !renderer) return; // have not set container yet
         const vtkImage = vtkITKHelper.convertItkToVtkImage(image);
-        mapper!.setInputData(vtkImage);
+        mapper.setInputData(vtkImage);
 
         // add actor to renderer after mapper has data to avoid vtk.js warning message
-        if (!addedActorToRenderer && mapper && actor) {
-          addedActorToRenderer = true;
-          renderer!.addVolume(actor!);
+        if (actor && !renderer.getActors().includes(actor)) {
+          renderer.addVolume(actor);
           const sampleDistance =
             0.7 *
             Math.sqrt(

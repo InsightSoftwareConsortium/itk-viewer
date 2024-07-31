@@ -2,7 +2,9 @@ import { Actor, AnyEventObject } from 'xstate';
 import { mat4, vec3 } from 'gl-matrix';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume.js';
-import { vtkGenericRenderWindow } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
+import GenericRenderWindow, {
+  vtkGenericRenderWindow,
+} from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper.js';
 import { SlicingMode } from '@kitware/vtk.js/Rendering/Core/ImageMapper/Constants.js';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice.js';
@@ -18,6 +20,7 @@ import {
 } from './view-2d-vtkjs.machine.js';
 import { AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { ImageSnapshot } from '@itk-viewer/viewer/image.js';
+import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 const axisToSliceMode = {
   I: SlicingMode.I,
@@ -26,10 +29,12 @@ const axisToSliceMode = {
 } as const;
 
 const setupContainer = (
-  rendererContainer: vtkGenericRenderWindow,
   container: HTMLElement,
   self: Actor<typeof view2dLogic>,
 ) => {
+  const rendererContainer = GenericRenderWindow.newInstance({
+    listenWindowResize: false,
+  });
   rendererContainer.setContainer(container as HTMLElement);
   rendererContainer.resize();
 
@@ -54,7 +59,7 @@ const setupContainer = (
   const camera = renderer!.getActiveCamera();
   camera.setParallelProjection(true);
 
-  return { actor, mapper, renderer, renderWindow };
+  return { actor, mapper, renderer, renderWindow, rendererContainer, resizer };
 };
 
 const createImplementation = () => {
@@ -62,11 +67,14 @@ const createImplementation = () => {
   let mapper: vtkImageMapper | undefined = undefined;
   let renderer: vtkRenderer | undefined = undefined;
   let renderWindow: vtkRenderWindow | undefined = undefined;
+  let rendererContainer: vtkGenericRenderWindow | undefined = undefined;
+  let resizer: ResizeObserver | undefined = undefined;
 
   const viewMat = mat4.create();
-  let addedActorToRenderer = false;
 
-  const cleanupContainer = (rendererContainer: vtkGenericRenderWindow) => {
+  const cleanupContainer = () => {
+    resizer?.disconnect();
+    resizer = undefined;
     actor?.delete();
     actor = undefined;
     mapper?.delete();
@@ -75,7 +83,8 @@ const createImplementation = () => {
     renderer = undefined;
     renderWindow?.delete();
     renderWindow = undefined;
-    rendererContainer.setContainer(undefined as unknown as HTMLElement);
+    rendererContainer?.delete();
+    rendererContainer = undefined;
   };
 
   const render = () => {
@@ -87,52 +96,47 @@ const createImplementation = () => {
     actions: {
       setContainer: ({
         event,
-        context: { rendererContainer },
         self,
       }: {
         event: AnyEventObject;
         context: Context;
         self: unknown; // Actor<typeof view2dLogic>
       }) => {
+        cleanupContainer();
+
         const { container } = event as SetContainerEvent;
-        if (!container) {
-          return cleanupContainer(rendererContainer);
-        }
+        if (!container) return;
+
         const scene = setupContainer(
-          rendererContainer,
           container,
           self as Actor<typeof view2dLogic>,
         );
+
         actor = scene.actor;
         mapper = scene.mapper;
         renderer = scene.renderer;
         renderWindow = scene.renderWindow;
+        rendererContainer = scene.rendererContainer;
+        resizer = scene.resizer;
       },
-      imageBuilt: ({
-        event,
-        context,
-      }: {
-        event: AnyEventObject;
-        context: Context;
-      }) => {
-        const { image, sliceIndex } = event;
+      applyBuiltImage: (
+        _: unknown,
+        {
+          image,
+          sliceIndex,
+        }: {
+          image: BuiltImage;
+          sliceIndex: number;
+        },
+      ) => {
+        if (!mapper || !renderer) return;
         const vtkImage = vtkITKHelper.convertItkToVtkImage(image);
-        mapper!.setInputData(vtkImage);
-        mapper!.setSlice(sliceIndex);
+        mapper.setInputData(vtkImage);
+        mapper.setSlice(sliceIndex);
 
         // add actor to renderer after mapper has data to avoid vtkjs message
-        if (!addedActorToRenderer) {
-          addedActorToRenderer = true;
-          renderer!.addActor(actor!);
-
-          const snap = context.camera?.getSnapshot();
-          if (snap) {
-            toMat4(viewMat, snap.context.pose);
-            const cameraVtk = renderer!.getActiveCamera();
-            cameraVtk.setViewMatrix(viewMat as mat4);
-          } else {
-            renderer!.resetCamera();
-          }
+        if (actor && !renderer.getActors().includes(actor)) {
+          renderer.addActor(actor!);
         }
         render();
       },

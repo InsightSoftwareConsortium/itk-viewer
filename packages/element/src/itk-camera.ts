@@ -140,7 +140,8 @@ export class ItkCamera extends LitElement {
     );
   }
 
-  firstUpdated(): void {
+  connectedCallback(): void {
+    super.connectedCallback();
     this.unBind = bindCamera(
       this.cameraController,
       this,

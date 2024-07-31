@@ -19,7 +19,7 @@ async function setImage(imagePath: string) {
 
   // don't reset on second image load
   const view3d = document.querySelector<ItkView3d>('itk-view-3d');
-  view3d?.getActor()?.send({ type: 'setAutoCameraReset', enableReset: false });
+  view3d!.getActor()!.send({ type: 'setAutoCameraReset', enableReset: false });
 }
 
 document.addEventListener('DOMContentLoaded', async function () {

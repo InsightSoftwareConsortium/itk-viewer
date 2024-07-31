@@ -1,4 +1,4 @@
-import { mount } from 'cypress-lit';
+import { mount } from 'cypress-ct-lit';
 
 Cypress.Commands.add('mount', mount);
 
