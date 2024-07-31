@@ -1,5 +1,13 @@
 # @itk-viewer/element
 
+## 0.6.1
+
+### Patch Changes
+
+- 8fb3817: Fix VTK.js renderers DOM mount lifecycle.
+- Updated dependencies [8fb3817]
+  - @itk-viewer/vtkjs@0.4.1
+
 ## 0.6.0
 
 ### Minor Changes
