@@ -5,6 +5,7 @@ import '@kitware/vtk.js/Rendering/Profiles/Volume.js';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume.js';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper.js';
 import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
+import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
 import vtkBoundingBox from '@kitware/vtk.js/Common/DataModel/BoundingBox';
 
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
@@ -185,12 +186,21 @@ const createImplementation = () => {
       imageSnapshot: (_: unknown, state: ImageSnapshot) => {
         if (!actor) return;
         const actorProperty = actor.getProperty();
-        const { colorRanges, normalizedOpacityPoints, dataRanges } =
+        const { colorRanges, colorMaps, normalizedOpacityPoints, dataRanges } =
           state.context;
 
+        colorMaps.forEach((colorMap, component) => {
+          const ct = actorProperty.getRGBTransferFunction(component);
+          const preset = vtkColorMaps.getPresetByName(colorMap);
+          if (!preset) throw new Error(`Color map '${colorMap}' not found`);
+          ct.applyColorMap(preset);
+          ct.modified(); // applyColorMap does not always trigger modified()
+        });
+
+        // setMappingRange after color map for vtk.js reasons
         colorRanges.forEach((range, component) => {
           const ct = actorProperty.getRGBTransferFunction(component);
-          ct.setMappingRange(...range);
+          ct.setMappingRange(range[0], range[1]);
         });
 
         normalizedOpacityPoints.forEach((points, component) => {

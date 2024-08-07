@@ -1,5 +1,6 @@
 import {
   AnyActorRef,
+  ActorRefFrom,
   Subscription,
   assign,
   enqueueActions,
@@ -11,6 +12,8 @@ import { Camera, Pose } from '@itk-viewer/viewer/camera.js';
 import { Axis, AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
 
+import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
+
 export type Context = {
   camera: Camera | undefined;
   parent: AnyActorRef;
@@ -19,6 +22,7 @@ export type Context = {
   sliceIndex?: number;
   imageActor?: Image;
   imageSubscription?: Subscription;
+  colorMapOptions: string[];
 };
 
 export type SetContainerEvent = {
@@ -80,6 +84,7 @@ export const view2dLogic = setup({
       camera: undefined,
       axis: Axis.K,
       parent,
+      colorMapOptions: vtkColorMaps.rgbPresetNames,
     };
   },
   id: 'view2dVtkjs',
@@ -201,3 +206,5 @@ export const view2dLogic = setup({
     },
   },
 });
+
+export type View2dVtkjs = ActorRefFrom<typeof view2dLogic>;

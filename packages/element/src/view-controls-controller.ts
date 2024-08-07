@@ -7,8 +7,11 @@ import { AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { TransferFunctionEditor } from '@itk-viewer/transfer-function-editor/TransferFunctionEditor.js';
 import { ColorTransferFunction } from '@itk-viewer/transfer-function-editor/ColorTransferFunction.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
+import { View2dVtkjs } from '@itk-viewer/vtkjs/view-2d-vtkjs.machine.js';
+import { View3dVtkjs } from '@itk-viewer/vtkjs/view-3d-vtkjs.machine.js';
 
 export type ViewActor = View2dActor | View3dActor;
+export type RenderingActor = View3dVtkjs | View2dVtkjs;
 
 type ViewSnapshot = ReturnType<ViewActor['getSnapshot']>;
 
@@ -26,6 +29,8 @@ export class ViewControls implements ReactiveController {
   slice: SelectorController<View2dActor, number> | undefined;
   axis: SelectorController<View2dActor, AxisType> | undefined;
   imageDimension: SelectorController<View2dActor, number> | undefined;
+  colorMapsOptions: SelectorController<RenderingActor, string[]> | undefined;
+  colorMaps: SelectorController<Image, string[]> | undefined;
   transferFunctionEditor: TransferFunctionEditor | undefined;
   view: '2d' | '3d' = '2d';
 
@@ -100,6 +105,14 @@ export class ViewControls implements ReactiveController {
     this.actor!.send({ type: 'setScale', scale });
   }
 
+  onColorMap = (colorMap: string) => {
+    this.imageActor?.send({
+      type: 'colorMap',
+      component: 0,
+      colorMap,
+    });
+  };
+
   setTransferFunctionContainer(container: Element | undefined) {
     if (container) {
       this.transferFunctionEditor = new TransferFunctionEditor(container);
@@ -139,7 +152,7 @@ export class ViewControls implements ReactiveController {
   }
 
   onViewSnapshot = (snapshot: ViewSnapshot) => {
-    const { imageActor } = snapshot.context;
+    const { imageActor, spawned } = snapshot.context;
     if (this.imageActor !== imageActor) {
       this.imageSubscription?.unsubscribe();
       this.imageSubscription = undefined;
@@ -151,6 +164,20 @@ export class ViewControls implements ReactiveController {
         this.onImageActorSnapshot,
       );
       this.onImageActorSnapshot(this.imageActor.getSnapshot());
+      this.colorMaps = new SelectorController(
+        this.host,
+        this.imageActor,
+        (state) => state.context.colorMaps,
+      );
+    }
+
+    const renderer = Object.values(spawned)?.[0];
+    if (renderer) {
+      this.colorMapsOptions = new SelectorController(
+        this.host,
+        renderer,
+        (state) => state.context.colorMapOptions ?? [],
+      );
     }
   };
 

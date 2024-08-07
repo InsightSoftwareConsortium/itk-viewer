@@ -58,6 +58,7 @@ type Context = {
   dataRanges: Ranges; // by component
   colorRanges: Ranges;
   normalizedColorRanges: Ranges;
+  colorMaps: string[];
   opacityPoints: Point[][];
   normalizedOpacityPoints: Point[][];
 };
@@ -78,7 +79,8 @@ export const image = setup({
           type: 'normalizedOpacityPoints';
           points: [number, number][];
           component: number;
-        };
+        }
+      | { type: 'colorMap'; colorMap: string; component: number };
   },
   actions: {
     updateColorRanges: assign({
@@ -98,15 +100,29 @@ export const image = setup({
         });
       },
     }),
+    ensureComponentDefaults: assign({
+      colorMaps: ({ context: { dataRanges, colorMaps } }) => {
+        const components = Array.from(
+          { length: dataRanges.length },
+          (_, index) => index,
+        );
+        return components.map((component) => {
+          const colorMap = colorMaps[component];
+          if (colorMap) return colorMap;
+          return 'Viridis (matplotlib)';
+        });
+      },
+    }),
   },
 }).createMachine({
   id: 'image',
   initial: 'active',
   context: ({ input: image }) => ({
     image,
-    dataRanges: [],
+    dataRanges: [], // by component
     colorRanges: [],
     normalizedColorRanges: [],
+    colorMaps: [],
     opacityPoints: [],
     normalizedOpacityPoints: [],
   }),
@@ -162,6 +178,7 @@ export const image = setup({
             }),
             'updateColorRanges',
             'updateOpacityPoints',
+            'ensureComponentDefaults',
           ],
         },
         normalizedColorRange: {
@@ -184,6 +201,16 @@ export const image = setup({
               },
             }),
             'updateOpacityPoints',
+          ],
+        },
+        colorMap: {
+          actions: [
+            assign({
+              colorMaps: ({ context, event }) => {
+                context.colorMaps[event.component] = event.colorMap;
+                return context.colorMaps;
+              },
+            }),
           ],
         },
       },

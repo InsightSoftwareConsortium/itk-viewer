@@ -1,8 +1,16 @@
-import { assign, setup, Subscription, enqueueActions } from 'xstate';
+import {
+  assign,
+  setup,
+  Subscription,
+  enqueueActions,
+  ActorRefFrom,
+} from 'xstate';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera, ReadonlyPose } from '@itk-viewer/viewer/camera.js';
 import { ViewportActor } from '@itk-viewer/viewer/viewport.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
+
+import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
 
 export type Context = {
   viewport: ViewportActor;
@@ -10,6 +18,7 @@ export type Context = {
   builtImage?: BuiltImage;
   imageActor?: Image;
   imageSubscription?: Subscription;
+  colorMapOptions: string[];
 };
 
 export type SetContainerEvent = {
@@ -68,6 +77,7 @@ export const view3dLogic = setup({
     return {
       camera: undefined,
       viewport,
+      colorMapOptions: vtkColorMaps.rgbPresetNames,
     };
   },
   id: 'view3dVtkjs',
@@ -173,3 +183,5 @@ export const view3dLogic = setup({
     },
   },
 });
+
+export type View3dVtkjs = ActorRefFrom<typeof view3dLogic>;

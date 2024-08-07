@@ -16,4 +16,10 @@ document.addEventListener('DOMContentLoaded', async function () {
   const zarrImage = await ZarrMultiscaleSpatialImage.fromUrl(url);
 
   viewer!.send({ type: 'setImage', image: zarrImage, name: 'image' });
+
+  const snap = viewer!.getSnapshot();
+  const imageActor = snap.context.spawned[0]
+    .getSnapshot()
+    .context.spawned[0].getSnapshot().context.imageActor;
+  imageActor.send({ type: 'colorMap', colorMap: '2hot', component: 0 });
 });

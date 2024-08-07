@@ -3,6 +3,8 @@ import { customElement, property } from 'lit/decorators.js';
 import { ViewControls, ViewActor } from './view-controls-controller.js';
 import { ref } from 'lit/directives/ref.js';
 
+const spacesToUnderscores = (s: string) => s.replace(/\s/g, '_');
+
 @customElement('itk-view-controls-shoelace')
 export class ViewControlsShoelace extends LitElement {
   @property({ type: String })
@@ -36,26 +38,32 @@ export class ViewControlsShoelace extends LitElement {
       { length: scaleCount },
       (_, i) => i,
     ).reverse();
+    const colorMapOptions = this.controls.colorMapsOptions?.value ?? [];
+    const colorMapValuesToOptions = Object.fromEntries(
+      colorMapOptions?.map((option) => [spacesToUnderscores(option), option]) ??
+        [],
+    );
 
-    const threeD = imageDimension >= 3;
+    const component = 0; // for now
+    const colorMap = this.controls.colorMaps?.value[component] ?? '';
+
+    const isImage3D = imageDimension >= 3;
     const showScale = scaleCount >= 2;
     const tfEditorHeight = this.view === '2d' ? '2rem' : '8rem';
 
     return html`
       <sl-card>
-        ${threeD && this.view === '2d'
+        ${isImage3D && this.view === '2d'
           ? html`
-              <label>
-                <sl-range
-                  value=${Number(slice)}
-                  @sl-change="${this.controls.onSlice}"
-                  min="0"
-                  max="1"
-                  step=".01"
-                  label="Slice"
-                  style="min-width: 8rem;"
-                ></sl-range
-              ></label>
+              <sl-range
+                value=${Number(slice)}
+                @sl-change="${this.controls.onSlice}"
+                min="0"
+                max="1"
+                step=".01"
+                label="Slice"
+                style="min-width: 8rem;"
+              ></sl-range>
               <sl-radio-group
                 label="Slice Axis"
                 value=${axis}
@@ -64,7 +72,7 @@ export class ViewControlsShoelace extends LitElement {
                 <sl-radio-button value="I">X</sl-radio-button>
                 <sl-radio-button value="J">Y</sl-radio-button>
                 <sl-radio-button value="K">Z</sl-radio-button>
-              </sl-select>
+              </sl-radio-group>
             `
           : ''}
         ${showScale
@@ -76,17 +84,32 @@ export class ViewControlsShoelace extends LitElement {
               >
                 ${scaleOptions.map(
                   (option) =>
-                    html`<sl-radio-button value=${option}
-                      >${option}</sl-radio-button
-                    >`,
+                    html`<sl-radio-button value=${option}>
+                      ${option}
+                    </sl-radio-button>`,
                 )}
               </sl-radio-group>
             `
           : ''}
-        <div style="padding-top: 0.4rem;">Color Range</div>
+        <sl-select
+          label="Color Map"
+          value=${spacesToUnderscores(colorMap)}
+          @sl-input=${(e: InputEvent) =>
+            this.controls.onColorMap(
+              colorMapValuesToOptions[(e.target as HTMLInputElement).value],
+            )}
+        >
+          ${Object.entries(colorMapValuesToOptions).map(
+            ([value, readable]) =>
+              html`<sl-option value=${value}>${readable}</sl-option>`,
+          )}
+        </sl-select>
+        <div style="padding-top: 0.4rem;">
+          ${this.view === '2d' ? 'Color Range' : 'Opacity and Color'}
+        </div>
         <div
           ${ref(this.transferFunctionContainerChanged)}
-          style=${`width: 14rem; height: ${tfEditorHeight};`}
+          style=${`width: 100%; min-width: 14rem; height: ${tfEditorHeight};`}
         ></div>
       </sl-card>
     `;

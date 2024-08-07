@@ -8,6 +8,8 @@ import GenericRenderWindow, {
 import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper.js';
 import { SlicingMode } from '@kitware/vtk.js/Rendering/Core/ImageMapper/Constants.js';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice.js';
+import vtkImageProperty from '@kitware/vtk.js/Rendering/Core/ImageProperty.js';
+import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
 import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper.js';
@@ -21,12 +23,28 @@ import {
 import { AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { ImageSnapshot } from '@itk-viewer/viewer/image.js';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction.js';
 
 const axisToSliceMode = {
   I: SlicingMode.I,
   J: SlicingMode.J,
   K: SlicingMode.K,
 } as const;
+
+const ensureRGBTransferFunction = (
+  actorProperty: vtkImageProperty,
+  componentCount: number,
+) => {
+  Array.from({ length: componentCount }, (_, index) => index).forEach(
+    (component) => {
+      if (!actorProperty.getRGBTransferFunction(component))
+        actorProperty.setRGBTransferFunction(
+          component,
+          vtkColorTransferFunction.newInstance(),
+        );
+    },
+  );
+};
 
 const setupContainer = (
   container: HTMLElement,
@@ -51,6 +69,8 @@ const setupContainer = (
 
   const mapper = vtkImageMapper.newInstance();
   const actor = vtkImageSlice.newInstance();
+  const actorProperty = actor.getProperty();
+  actorProperty.setUseLookupTableScalarRange(true);
 
   actor!.setMapper(mapper!);
 
@@ -190,14 +210,24 @@ const createImplementation = () => {
       },
       imageSnapshot: (_: unknown, state: ImageSnapshot) => {
         if (!actor) return;
-        const { colorRanges } = state.context;
-        if (colorRanges.length === 0) return;
-        const range = colorRanges[0];
-        const window = Math.abs(range[1] - range[0]);
-        const level = range[0] + window / 2;
-        const property = actor.getProperty();
-        property.setColorWindow(window);
-        property.setColorLevel(level);
+        const actorProperty = actor.getProperty();
+        const { colorRanges, colorMaps } = state.context;
+        ensureRGBTransferFunction(actorProperty, colorRanges.length);
+
+        colorMaps.forEach((colorMap, component) => {
+          const ct = actorProperty.getRGBTransferFunction(component);
+          const preset = vtkColorMaps.getPresetByName(colorMap);
+          if (!preset) throw new Error(`Color map '${colorMap}' not found`);
+          ct.applyColorMap(preset);
+          ct.modified(); // applyColorMap does not always trigger modified()
+        });
+
+        // setMappingRange after color map for vtk.js reasons
+        colorRanges.forEach((range, component) => {
+          const ct = actorProperty.getRGBTransferFunction(component);
+          ct.setMappingRange(range[0], range[1]);
+        });
+
         render();
       },
     },
