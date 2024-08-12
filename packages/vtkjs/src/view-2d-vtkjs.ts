@@ -1,4 +1,4 @@
-import { Actor, AnyEventObject } from 'xstate';
+import { Actor, ActorRefFrom, AnyEventObject } from 'xstate';
 import { mat4, vec3 } from 'gl-matrix';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume.js';
@@ -208,7 +208,13 @@ const createImplementation = () => {
       applyAxis: (_: unknown, { axis }: { axis: AxisType }) => {
         mapper?.setSlicingMode(axisToSliceMode[axis]);
       },
-      imageSnapshot: (_: unknown, state: ImageSnapshot) => {
+      imageSnapshot: (
+        _: unknown,
+        {
+          state,
+          self,
+        }: { state: ImageSnapshot; self: ActorRefFrom<typeof view2dLogic> },
+      ) => {
         if (!actor) return;
         const actorProperty = actor.getProperty();
         const { colorRanges, colorMaps } = state.context;
@@ -220,12 +226,17 @@ const createImplementation = () => {
           if (!preset) throw new Error(`Color map '${colorMap}' not found`);
           ct.applyColorMap(preset);
           ct.modified(); // applyColorMap does not always trigger modified()
+          self.send({
+            type: 'colorTransferFunctionApplied',
+            component,
+            colorTransferFunction: ct,
+          });
         });
 
         // setMappingRange after color map for vtk.js reasons
         colorRanges.forEach((range, component) => {
           const ct = actorProperty.getRGBTransferFunction(component);
-          ct.setMappingRange(range[0], range[1]);
+          ct.setMappingRange(...range);
         });
 
         render();

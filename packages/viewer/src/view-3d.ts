@@ -1,5 +1,5 @@
 import {
-  Actor,
+  ActorRefFrom,
   AnyActorLogic,
   AnyActorRef,
   assign,
@@ -207,4 +207,4 @@ export const view3d = setup({
   },
 });
 
-export type View3dActor = Actor<typeof view3d>;
+export type View3dActor = ActorRefFrom<typeof view3d>;

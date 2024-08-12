@@ -24,6 +24,8 @@ export class ViewControls implements ReactiveController {
   viewSubscription: Subscription | undefined;
   imageSubscription: Subscription | undefined;
   imageActor: Image | undefined;
+  renderer: RenderingActor | undefined;
+  rendererSubscription: Subscription | undefined;
   scale: SelectorController<View2dActor, number> | undefined;
   scaleCount: SelectorController<View2dActor, number> | undefined;
   slice: SelectorController<View2dActor, number> | undefined;
@@ -172,11 +174,20 @@ export class ViewControls implements ReactiveController {
     }
 
     const renderer = Object.values(spawned)?.[0];
-    if (renderer) {
+    if (this.renderer !== renderer) {
+      this.rendererSubscription?.unsubscribe();
+      this.rendererSubscription = undefined;
+    }
+    this.renderer = renderer;
+    if (this.renderer && !this.rendererSubscription) {
       this.colorMapsOptions = new SelectorController(
         this.host,
         renderer,
         (state) => state.context.colorMapOptions ?? [],
+      );
+      this.rendererSubscription = renderer.on(
+        'colorTransferFunctionApplied',
+        this.onColorTransferFunction,
       );
     }
   };
@@ -227,4 +238,12 @@ export class ViewControls implements ReactiveController {
       this.onImageActorSnapshot(this.imageActor.getSnapshot());
     }
   }
+
+  onColorTransferFunction = (event: {
+    colorTransferFunction: ColorTransferFunction;
+  }) => {
+    this.transferFunctionEditor?.setColorTransferFunction(
+      event.colorTransferFunction,
+    );
+  };
 }

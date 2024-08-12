@@ -1,5 +1,5 @@
 import {
-  Actor,
+  ActorRefFrom,
   AnyActorRef,
   assign,
   enqueueActions,
@@ -422,4 +422,4 @@ export const view2d = setup({
   },
 });
 
-export type View2dActor = Actor<typeof view2d>;
+export type View2dActor = ActorRefFrom<typeof view2d>;

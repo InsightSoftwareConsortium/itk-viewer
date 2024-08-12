@@ -1,4 +1,4 @@
-import { Actor, AnyEventObject } from 'xstate';
+import { ActorRefFrom, AnyEventObject } from 'xstate';
 import { mat4 } from 'gl-matrix';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume.js';
@@ -23,7 +23,7 @@ import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 const setupContainer = (
   container: HTMLElement,
-  self: Actor<typeof view3dLogic>,
+  self: ActorRefFrom<typeof view3dLogic>,
 ) => {
   const rendererContainer = GenericRenderWindow.newInstance({
     listenWindowResize: false,
@@ -98,7 +98,7 @@ const createImplementation = () => {
         }
         const scene = setupContainer(
           container,
-          self as Actor<typeof view3dLogic>,
+          self as ActorRefFrom<typeof view3dLogic>,
         );
         actor = scene.actor;
         mapper = scene.mapper;
@@ -183,7 +183,13 @@ const createImplementation = () => {
         cameraVtk.setViewMatrix(viewMat as mat4);
         render();
       },
-      imageSnapshot: (_: unknown, state: ImageSnapshot) => {
+      imageSnapshot: (
+        _: unknown,
+        {
+          state,
+          self,
+        }: { state: ImageSnapshot; self: ActorRefFrom<typeof view3dLogic> },
+      ) => {
         if (!actor) return;
         const actorProperty = actor.getProperty();
         const { colorRanges, colorMaps, normalizedOpacityPoints, dataRanges } =
@@ -195,12 +201,17 @@ const createImplementation = () => {
           if (!preset) throw new Error(`Color map '${colorMap}' not found`);
           ct.applyColorMap(preset);
           ct.modified(); // applyColorMap does not always trigger modified()
+          self.send({
+            type: 'colorTransferFunctionApplied',
+            component,
+            colorTransferFunction: ct,
+          });
         });
 
         // setMappingRange after color map for vtk.js reasons
         colorRanges.forEach((range, component) => {
           const ct = actorProperty.getRGBTransferFunction(component);
-          ct.setMappingRange(range[0], range[1]);
+          ct.setMappingRange(...range);
         });
 
         normalizedOpacityPoints.forEach((points, component) => {
