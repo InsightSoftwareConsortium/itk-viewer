@@ -16,20 +16,19 @@ import { CreateChild } from './children.js';
 import { Camera, reset3d } from './camera.js';
 import { ViewportActor } from './viewport.js';
 
-const viewContext = {
-  scale: 0,
-  image: undefined as MultiscaleSpatialImage | undefined,
-  spawned: {} as Record<string, AnyActorRef>,
-  viewport: undefined as ViewportActor | undefined,
-  camera: undefined as Camera | undefined,
-  autoCameraReset: true,
+type Context = {
+  spawned: AnyActorRef[];
+  scale: number;
+  image?: MultiscaleSpatialImage;
+  imageActor?: Image;
+  viewport?: ViewportActor;
+  camera?: Camera;
+  autoCameraReset: boolean;
 };
 
 export const view3d = setup({
   types: {} as {
-    context: typeof viewContext & {
-      imageActor?: Image;
-    };
+    context: Context;
     events:
       | { type: 'setImage'; image: MultiscaleSpatialImage }
       | { type: 'setScale'; scale: number }
@@ -58,7 +57,7 @@ export const view3d = setup({
   },
   actions: {
     forwardToSpawned: ({ context, event }) => {
-      Object.values(context.spawned).forEach((actor) => {
+      context.spawned.forEach((actor) => {
         actor.send(event);
       });
     },
@@ -83,9 +82,11 @@ export const view3d = setup({
     },
   },
 }).createMachine({
-  context: () => {
-    return JSON.parse(JSON.stringify(viewContext));
-  },
+  context: () => ({
+    scale: 0,
+    spawned: [],
+    autoCameraReset: true,
+  }),
   id: 'view3d',
   initial: 'active',
   states: {
@@ -104,12 +105,8 @@ export const view3d = setup({
                   input: { viewport },
                 }) as AnyActorRef;
                 if (camera) child.send({ type: 'setCamera', camera });
-                const id = Object.keys(spawned).length.toString();
                 onActor(child);
-                return {
-                  ...spawned,
-                  [id]: child,
-                };
+                return [...spawned, child];
               },
             }),
           ],
@@ -124,7 +121,7 @@ export const view3d = setup({
             }),
             'resetCameraPose',
             enqueueActions(({ context, enqueue }) => {
-              Object.values(context.spawned).forEach((actor) => {
+              context.spawned.forEach((actor) => {
                 enqueue.sendTo(actor, {
                   type: 'setImage',
                   image: context.image,
@@ -191,7 +188,7 @@ export const view3d = setup({
             onDone: {
               actions: [
                 enqueueActions(({ context, enqueue, event: { output } }) => {
-                  Object.values(context.spawned).forEach((actor) => {
+                  context.spawned.forEach((actor) => {
                     enqueue.sendTo(actor, {
                       type: 'imageBuilt',
                       image: output,

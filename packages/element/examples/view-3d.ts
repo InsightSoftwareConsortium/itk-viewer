@@ -18,8 +18,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   viewer!.send({ type: 'setImage', image: zarrImage, name: 'image' });
 
   const snap = viewer!.getSnapshot();
-  const imageActor = snap.context.spawned[0]
+  const imageActor = snap.context.viewports[0]
     .getSnapshot()
-    .context.spawned[0].getSnapshot().context.imageActor;
+    .context.views[0].getSnapshot().context.imageActor;
   imageActor.send({ type: 'colorMap', colorMap: '2hot', component: 0 });
 });

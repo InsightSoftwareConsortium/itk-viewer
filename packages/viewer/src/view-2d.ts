@@ -69,7 +69,7 @@ export const view2d = setup({
       axis: AxisType;
       scale: number;
       image?: MultiscaleSpatialImage;
-      spawned: Record<string, AnyActorRef>;
+      spawned: AnyActorRef[]; // renderers
       viewport?: ViewportActor;
       camera?: Camera;
       imageActor?: Image;
@@ -116,7 +116,7 @@ export const view2d = setup({
   },
   actions: {
     forwardToSpawned: ({ context, event }) => {
-      Object.values(context.spawned).forEach((actor) => {
+      context.spawned.forEach((actor) => {
         actor.send(event);
       });
     },
@@ -167,7 +167,7 @@ export const view2d = setup({
       slice: 0.5,
       axis: Axis.K,
       scale: 0,
-      spawned: {},
+      spawned: [],
       imageBuilders: [],
     };
   },
@@ -191,12 +191,8 @@ export const view2d = setup({
                 }) as AnyActorRef;
                 if (camera) child.send({ type: 'setCamera', camera });
                 child.send({ type: 'axis', axis });
-                const id = Object.keys(spawned).length.toString();
                 onActor(child);
-                return {
-                  ...spawned,
-                  [id]: child,
-                };
+                return [...spawned, child];
               },
             }),
           ],
@@ -211,7 +207,7 @@ export const view2d = setup({
                 spawn('image', { input: event.image }),
             }),
             enqueueActions(({ context, enqueue }) => {
-              Object.values(context.spawned).forEach((actor) => {
+              context.spawned.forEach((actor) => {
                 enqueue.sendTo(actor, {
                   type: 'setImage',
                   image: context.image,
@@ -314,7 +310,7 @@ export const view2d = setup({
                   axis: ({ event }) => event.output,
                 }),
                 enqueueActions(({ context, enqueue }) => {
-                  Object.values(context.spawned).forEach((actor) => {
+                  context.spawned.forEach((actor) => {
                     enqueue.sendTo(actor, {
                       type: 'setAxis',
                       axis: context.axis,
@@ -384,7 +380,7 @@ export const view2d = setup({
                     const isStale = actorIndex === -1;
                     if (isStale) return;
 
-                    Object.values(spawned).forEach((actor) => {
+                    spawned.forEach((actor) => {
                       enqueue.sendTo(actor, {
                         type: 'imageBuilt',
                         image: builtImage,
