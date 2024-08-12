@@ -130,6 +130,9 @@ export const imageBuilder = setup({
           axis: AxisType;
         };
       }) => {
+        if (builtImage.imageType.dimension === 2) {
+          return { builtImage, sliceIndex: 0 };
+        }
         // builtImage could be larger than slice if cached so
         // find index of slice in builtImage
         const indexToWorld = await image.scaleIndexToWorld(scale);
