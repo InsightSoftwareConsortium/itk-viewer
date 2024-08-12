@@ -49,12 +49,15 @@ export const viewportMachine = setup({
       });
     },
   },
+  actors: {
+    camera: cameraMachine,
+  },
 }).createMachine({
   id: 'viewport',
   context: ({ spawn }) => ({
     resolution: [0, 0],
     views: [],
-    camera: spawn(cameraMachine, { id: 'camera' }),
+    camera: spawn('camera', { id: 'camera' }),
   }),
   initial: 'active',
   states: {

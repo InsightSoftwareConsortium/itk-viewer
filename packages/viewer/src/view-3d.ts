@@ -100,7 +100,6 @@ export const view3d = setup({
                 context: { spawned, camera, viewport },
                 event: { logic, onActor },
               }) => {
-                // @ts-expect-error cannot spawn actor of type that is not in setup()
                 const child = spawn(logic, {
                   input: { viewport },
                 }) as AnyActorRef;

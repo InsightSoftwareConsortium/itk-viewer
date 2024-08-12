@@ -185,10 +185,9 @@ export const view2d = setup({
                 self,
               }) => {
                 // view-2d-vtkjs could be a child actor
-                // @ts-expect-error cannot spawn actor of type that is not in setup()
                 const child = spawn(logic, {
                   input: { parent: self },
-                }) as AnyActorRef;
+                });
                 if (camera) child.send({ type: 'setCamera', camera });
                 child.send({ type: 'axis', axis });
                 onActor(child);
@@ -224,6 +223,7 @@ export const view2d = setup({
         setSlice: [
           // if buildingImage, rebuild image
           {
+            // @ts-expect-error something about not stateIn having 2 unrelated types
             guard: stateIn('view2d.buildingImage'),
             target: '.buildingImage',
             actions: [assign({ slice: ({ event }) => event.slice })],
@@ -236,6 +236,7 @@ export const view2d = setup({
         setAxis: [
           // if buildingImage, rebuild image
           {
+            // @ts-expect-error something about not stateIn having 2 unrelated types
             guard: stateIn('view2d.buildingImage'),
             target: '.buildingImage',
             actions: [
