@@ -71,6 +71,7 @@ const setupContainer = (
   const actor = vtkImageSlice.newInstance();
   const actorProperty = actor.getProperty();
   actorProperty.setUseLookupTableScalarRange(true);
+  actorProperty.setIndependentComponents(true);
 
   actor!.setMapper(mapper!);
 

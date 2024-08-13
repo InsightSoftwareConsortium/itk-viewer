@@ -4,7 +4,6 @@ import { mat4 } from 'gl-matrix';
 import '@kitware/vtk.js/Rendering/Profiles/Volume.js';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume.js';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper.js';
-import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
 import vtkBoundingBox from '@kitware/vtk.js/Common/DataModel/BoundingBox';
 
@@ -53,7 +52,6 @@ const setupContainer = (
 };
 
 const createImplementation = () => {
-  let opacityFunction: vtkPiecewiseFunction | undefined = undefined;
   let actor: vtkVolume | undefined = undefined;
   let mapper: vtkVolumeMapper | undefined = undefined;
   let renderer: vtkRenderer | undefined = undefined;
@@ -132,46 +130,49 @@ const createImplementation = () => {
             );
           mapper.setSampleDistance(sampleDistance);
 
-          const dataArray =
-            vtkImage.getPointData().getScalars() ||
-            vtkImage.getPointData().getArrays()[0];
-          const [min, max] = dataArray.getRange();
-          opacityFunction = vtkPiecewiseFunction.newInstance();
-          actor.getProperty().setScalarOpacity(0, opacityFunction);
-          opacityFunction.addPoint(min, 0.0);
-          opacityFunction.addPoint(max, 0.5);
+          const actorProperty = actor.getProperty();
+          actorProperty.setAmbient(0.2);
+          actorProperty.setDiffuse(0.7);
+          actorProperty.setSpecular(0.3);
+          actorProperty.setSpecularPower(8.0);
+          actorProperty.setShade(true);
+          actorProperty.setIndependentComponents(true);
 
-          // For better looking volume rendering
-          // - distance in world coordinates a scalar opacity of 1.0
-          actor
-            .getProperty()
-            .setScalarOpacityUnitDistance(
-              0,
+          Array.from(
+            { length: image.imageType.components },
+            (_, index) => index,
+          ).forEach((component) => {
+            // For better looking volume rendering
+            // - distance in world coordinates a scalar opacity of 1.0
+            actorProperty.setScalarOpacityUnitDistance(
+              component,
               vtkBoundingBox.getDiagonalLength(vtkImage.getBounds()) /
                 Math.max(...vtkImage.getDimensions()),
             );
 
-          // - control how we emphasize surface boundaries
-          //  => max should be around the average gradient magnitude for the
-          //     volume or maybe average plus one std dev of the gradient magnitude
-          //     (adjusted for spacing, this is a world coordinate gradient, not a
-          //     pixel gradient)
-          //  => max hack: (dataRange[1] - dataRange[0]) * 0.05
-          actor.getProperty().setGradientOpacityMinimumValue(0, 0);
-          actor
-            .getProperty()
-            .setGradientOpacityMaximumValue(0, (max - min) * 0.05);
+            // - control how we emphasize surface boundaries
+            //  => max should be around the average gradient magnitude for the
+            //     volume or maybe average plus one std dev of the gradient magnitude
+            //     (adjusted for spacing, this is a world coordinate gradient, not a
+            //     pixel gradient)
+            //  => max hack: (dataRange[1] - dataRange[0]) * 0.05
+            const dataArray =
+              vtkImage.getPointData().getScalars() ||
+              vtkImage.getPointData().getArrays()[0];
+            const [min, max] = dataArray.getRange(component);
+            actorProperty.setGradientOpacityMinimumValue(component, 0);
+            actorProperty.setGradientOpacityMaximumValue(
+              component,
+              (max - min) * 0.05,
+            );
 
-          // - Use shading based on gradient
-          actor.getProperty().setShade(true);
-          actor.getProperty().setUseGradientOpacity(0, true);
-          // - generic good default
-          actor.getProperty().setGradientOpacityMinimumOpacity(0, 0.0);
-          actor.getProperty().setGradientOpacityMaximumOpacity(0, 1.0);
-          actor.getProperty().setAmbient(0.2);
-          actor.getProperty().setDiffuse(0.7);
-          actor.getProperty().setSpecular(0.3);
-          actor.getProperty().setSpecularPower(8.0);
+            // - Use shading based on gradient
+            actorProperty.setUseGradientOpacity(component, true);
+
+            // - generic good default
+            actorProperty.setGradientOpacityMinimumOpacity(component, 0.0);
+            actorProperty.setGradientOpacityMaximumOpacity(component, 1.0);
+          });
         }
 
         render();
@@ -196,15 +197,15 @@ const createImplementation = () => {
           state.context;
 
         colorMaps.forEach((colorMap, component) => {
-          const ct = actorProperty.getRGBTransferFunction(component);
+          const colorFunc = actorProperty.getRGBTransferFunction(component);
           const preset = vtkColorMaps.getPresetByName(colorMap);
           if (!preset) throw new Error(`Color map '${colorMap}' not found`);
-          ct.applyColorMap(preset);
-          ct.modified(); // applyColorMap does not always trigger modified()
+          colorFunc.applyColorMap(preset);
+          colorFunc.modified(); // applyColorMap does not always trigger modified()
           self.send({
             type: 'colorTransferFunctionApplied',
             component,
-            colorTransferFunction: ct,
+            colorTransferFunction: colorFunc,
           });
         });
 
@@ -215,8 +216,9 @@ const createImplementation = () => {
         });
 
         normalizedOpacityPoints.forEach((points, component) => {
+          const opacityFunc = actorProperty.getScalarOpacity(component);
           const nodes = getNodes(dataRanges[component], points);
-          opacityFunction?.setNodes(nodes);
+          opacityFunc.setNodes(nodes);
         });
 
         render();
