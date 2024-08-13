@@ -44,8 +44,11 @@ export class ViewControlsShoelace extends LitElement {
         [],
     );
 
-    const component = 0; // for now
-    const colorMap = this.controls.colorMaps?.value[component] ?? '';
+    const componentCount = this.controls.componentCount?.value ?? 1;
+    const showComponentSelector = componentCount > 1;
+    const components = Array.from({ length: componentCount }, (_, i) => i);
+    const colorMap =
+      this.controls.colorMaps?.value[this.controls.selectedComponent] ?? '';
 
     const isImage3D = imageDimension >= 3;
     const showScale = scaleCount >= 2;
@@ -91,7 +94,27 @@ export class ViewControlsShoelace extends LitElement {
               </sl-radio-group>
             `
           : ''}
+        ${showComponentSelector
+          ? html`
+              <sl-tab-group
+                style="max-width: 18rem"
+                value=${this.controls.selectedComponent}
+                @sl-tab-show="${(e: CustomEvent) => {
+                  this.controls.onSelectedComponent(Number(e.detail.name));
+                  this.requestUpdate(); // trigger re-render to update color map value
+                }}"
+              >
+                ${components.map(
+                  (option) =>
+                    html`<sl-tab panel="${option}" slot="nav">
+                      Component ${option}
+                    </sl-tab>`,
+                )}
+              </sl-tab-group>
+            `
+          : ''}
         <sl-select
+          style="padding-top: .4rem;"
           label="Color Map"
           value=${spacesToUnderscores(colorMap)}
           @sl-input=${(e: InputEvent) =>
@@ -109,7 +132,7 @@ export class ViewControlsShoelace extends LitElement {
         </div>
         <div
           ${ref(this.transferFunctionContainerChanged)}
-          style=${`width: 100%; min-width: 14rem; height: ${tfEditorHeight};`}
+          style=${`width: 100%; min-width: 12rem; height: ${tfEditorHeight};`}
         ></div>
       </sl-card>
     `;

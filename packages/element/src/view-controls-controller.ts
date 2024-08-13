@@ -26,6 +26,7 @@ export class ViewControls implements ReactiveController {
   imageActor: Image | undefined;
   renderer: RenderingActor | undefined;
   rendererSubscription: Subscription | undefined;
+
   scale: SelectorController<View2dActor, number> | undefined;
   scaleCount: SelectorController<View2dActor, number> | undefined;
   slice: SelectorController<View2dActor, number> | undefined;
@@ -33,8 +34,12 @@ export class ViewControls implements ReactiveController {
   imageDimension: SelectorController<View2dActor, number> | undefined;
   colorMapsOptions: SelectorController<RenderingActor, string[]> | undefined;
   colorMaps: SelectorController<Image, string[]> | undefined;
+  componentCount: SelectorController<Image, number> | undefined;
+
   transferFunctionEditor: TransferFunctionEditor | undefined;
   view: '2d' | '3d' = '2d';
+  selectedComponent = 0;
+  colorTransferFunctions = new Map<number, ColorTransferFunction>(); // component -> colorTransferFunction
 
   constructor(host: ReactiveControllerHost) {
     this.host = host;
@@ -68,49 +73,49 @@ export class ViewControls implements ReactiveController {
       this.actor,
       (state) => state.context.axis,
     );
-    this.imageDimension = new SelectorController(
-      this.host,
-      this.actor,
-      (state) => state.context.image?.imageType.dimension ?? 0,
-    );
     this.host.requestUpdate(); // trigger render with selected state
 
     // wire up Transfer Function Editor
     if (this.viewSubscription) this.viewSubscription.unsubscribe();
     this.viewSubscription = (this.actor as AnyActorRef).subscribe(
-      this.onViewSnapshot,
+      this.onViewSnapshot.bind(this),
     );
     this.onViewSnapshot(this.actor.getSnapshot());
   }
 
-  onSlice(event: Event) {
+  onSlice = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const slice = Number(target.value);
     (this.actor as AnyActorRef).send({
       type: 'setSlice',
       slice,
     });
-  }
+  };
 
-  onAxis(event: Event) {
+  onAxis = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const axis = target.value as AxisType;
     (this.actor as AnyActorRef).send({
       type: 'setAxis',
       axis,
     });
-  }
+  };
 
-  onScale(event: Event) {
+  onScale = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const scale = Number(target.value);
     this.actor!.send({ type: 'setScale', scale });
-  }
+  };
+
+  onSelectedComponent = (component: number) => {
+    this.selectedComponent = component;
+    this.updateTransferFunctionEditor();
+  };
 
   onColorMap = (colorMap: string) => {
     this.imageActor?.send({
       type: 'colorMap',
-      component: 0,
+      component: this.selectedComponent,
       colorMap,
     });
   };
@@ -131,7 +136,7 @@ export class ViewControls implements ReactiveController {
           this.imageActor?.send({
             type: 'normalizedColorRange',
             range,
-            component: 0,
+            component: this.selectedComponent,
           });
         },
       );
@@ -143,7 +148,7 @@ export class ViewControls implements ReactiveController {
           this.imageActor?.send({
             type: 'normalizedOpacityPoints',
             points,
-            component: 0,
+            component: this.selectedComponent,
           });
         },
       );
@@ -153,7 +158,7 @@ export class ViewControls implements ReactiveController {
     }
   }
 
-  onViewSnapshot = (snapshot: ViewSnapshot) => {
+  onViewSnapshot(snapshot: ViewSnapshot) {
     const { imageActor, spawned } = snapshot.context;
     if (this.imageActor !== imageActor) {
       this.imageSubscription?.unsubscribe();
@@ -163,13 +168,24 @@ export class ViewControls implements ReactiveController {
     // If imageActor exists and there's no subscription, subscribe to it.
     if (this.imageActor && !this.imageSubscription) {
       this.imageSubscription = this.imageActor.subscribe(
-        this.onImageActorSnapshot,
+        this.onImageActorSnapshot.bind(this),
       );
       this.onImageActorSnapshot(this.imageActor.getSnapshot());
+
+      this.imageDimension = new SelectorController(
+        this.host,
+        this.imageActor,
+        (state) => state.context.image?.imageType.dimension ?? 0,
+      );
       this.colorMaps = new SelectorController(
         this.host,
         this.imageActor,
         (state) => state.context.colorMaps,
+      );
+      this.componentCount = new SelectorController(
+        this.host,
+        this.imageActor,
+        (state) => state.context.image?.imageType.components ?? 1,
       );
     }
 
@@ -187,14 +203,14 @@ export class ViewControls implements ReactiveController {
       );
       this.rendererSubscription = renderer.on(
         'colorTransferFunctionApplied',
-        this.onColorTransferFunction,
+        this.onColorTransferFunction.bind(this),
       );
     }
-  };
+  }
 
-  onImageActorSnapshot = (snapshot: ImageSnapshot) => {
+  onImageActorSnapshot(snapshot: ImageSnapshot) {
     if (!this.transferFunctionEditor) return;
-    const component = 0;
+    const component = this.selectedComponent;
     const { dataRanges, normalizedColorRanges, normalizedOpacityPoints } =
       snapshot.context;
     const componentRange = dataRanges[component];
@@ -223,7 +239,9 @@ export class ViewControls implements ReactiveController {
     if (pointsChanged) {
       this.transferFunctionEditor.setPoints(opacityPoints);
     }
-  };
+
+    this.updateColorTransferFunction();
+  }
 
   setView(view: '2d' | '3d') {
     this.view = view;
@@ -239,11 +257,20 @@ export class ViewControls implements ReactiveController {
     }
   }
 
-  onColorTransferFunction = (event: {
+  updateColorTransferFunction() {
+    const ct = this.colorTransferFunctions.get(this.selectedComponent);
+    if (!ct) return;
+    this.transferFunctionEditor?.setColorTransferFunction(ct);
+  }
+
+  onColorTransferFunction({
+    colorTransferFunction,
+    component,
+  }: {
     colorTransferFunction: ColorTransferFunction;
-  }) => {
-    this.transferFunctionEditor?.setColorTransferFunction(
-      event.colorTransferFunction,
-    );
-  };
+    component: number;
+  }) {
+    this.colorTransferFunctions.set(component, colorTransferFunction);
+    this.updateColorTransferFunction();
+  }
 }

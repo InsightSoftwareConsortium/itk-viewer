@@ -31,19 +31,15 @@ const axisToSliceMode = {
   K: SlicingMode.K,
 } as const;
 
-const ensureRGBTransferFunction = (
+const getRGBTransferFunction = (
   actorProperty: vtkImageProperty,
-  componentCount: number,
+  component: number,
 ) => {
-  Array.from({ length: componentCount }, (_, index) => index).forEach(
-    (component) => {
-      if (!actorProperty.getRGBTransferFunction(component))
-        actorProperty.setRGBTransferFunction(
-          component,
-          vtkColorTransferFunction.newInstance(),
-        );
-    },
-  );
+  const func = actorProperty.getRGBTransferFunction(component);
+  if (func) return func;
+  const newFunc = vtkColorTransferFunction.newInstance();
+  actorProperty.setRGBTransferFunction(component, newFunc);
+  return newFunc;
 };
 
 const setupContainer = (
@@ -216,28 +212,27 @@ const createImplementation = () => {
           self,
         }: { state: ImageSnapshot; self: ActorRefFrom<typeof view2dLogic> },
       ) => {
-        if (!actor) return;
+        if (!actor) throw new Error('Vtkjs actor not created');
         const actorProperty = actor.getProperty();
         const { colorRanges, colorMaps } = state.context;
-        ensureRGBTransferFunction(actorProperty, colorRanges.length);
 
         colorMaps.forEach((colorMap, component) => {
-          const ct = actorProperty.getRGBTransferFunction(component);
+          const colorFunc = getRGBTransferFunction(actorProperty, component);
           const preset = vtkColorMaps.getPresetByName(colorMap);
           if (!preset) throw new Error(`Color map '${colorMap}' not found`);
-          ct.applyColorMap(preset);
-          ct.modified(); // applyColorMap does not always trigger modified()
+          colorFunc.applyColorMap(preset);
+          colorFunc.modified(); // applyColorMap does not always trigger modified()
           self.send({
             type: 'colorTransferFunctionApplied',
             component,
-            colorTransferFunction: ct,
+            colorTransferFunction: colorFunc,
           });
         });
 
         // setMappingRange after color map for vtk.js reasons
         colorRanges.forEach((range, component) => {
-          const ct = actorProperty.getRGBTransferFunction(component);
-          ct.setMappingRange(...range);
+          const colorFunc = getRGBTransferFunction(actorProperty, component);
+          colorFunc.setMappingRange(...range);
         });
 
         render();

@@ -8,13 +8,12 @@ const pipelineBaseUrl = '/itk/pipelines';
 setPipelinesBaseUrl(pipelineBaseUrl);
 
 document.addEventListener('DOMContentLoaded', async function () {
-  const viewerElement = document.querySelector('#viewer')! as ItkViewer3d;
-  const viewer = viewerElement.getActor();
-
-  const imagePath = '/ome-ngff-prototypes/single_image/v0.4/tczyx.ome.zarr';
+  const imagePath = '/ome-ngff-prototypes/single_image/v0.4/zyx.ome.zarr';
   const url = new URL(imagePath, document.location.origin);
   const zarrImage = await ZarrMultiscaleSpatialImage.fromUrl(url);
 
+  const viewerElement = document.querySelector('#viewer')! as ItkViewer3d;
+  const viewer = viewerElement.getActor();
   viewer!.send({ type: 'setImage', image: zarrImage, name: 'image' });
 
   const imageActor = viewer!
