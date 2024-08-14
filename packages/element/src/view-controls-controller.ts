@@ -120,7 +120,7 @@ export class ViewControls implements ReactiveController {
     });
   };
 
-  setTransferFunctionContainer(container: Element | undefined) {
+  setTransferFunctionContainer = (container: Element | undefined) => {
     if (container) {
       this.transferFunctionEditor = new TransferFunctionEditor(container);
 
@@ -156,9 +156,9 @@ export class ViewControls implements ReactiveController {
       this.transferFunctionEditor?.remove();
       this.transferFunctionEditor = undefined;
     }
-  }
+  };
 
-  onViewSnapshot(snapshot: ViewSnapshot) {
+  onViewSnapshot = (snapshot: ViewSnapshot) => {
     const { imageActor, spawned } = snapshot.context;
     if (this.imageActor !== imageActor) {
       this.imageSubscription?.unsubscribe();
@@ -206,9 +206,9 @@ export class ViewControls implements ReactiveController {
         this.onColorTransferFunction.bind(this),
       );
     }
-  }
+  };
 
-  onImageActorSnapshot(snapshot: ImageSnapshot) {
+  onImageActorSnapshot = (snapshot: ImageSnapshot) => {
     if (!this.transferFunctionEditor) return;
     const component = this.selectedComponent;
     const { dataRanges, normalizedColorRanges, normalizedOpacityPoints } =
@@ -241,36 +241,36 @@ export class ViewControls implements ReactiveController {
     }
 
     this.updateColorTransferFunction();
-  }
+  };
 
-  setView(view: '2d' | '3d') {
+  setView = (view: '2d' | '3d') => {
     this.view = view;
     this.updateTransferFunctionEditor();
-  }
+  };
 
-  updateTransferFunctionEditor() {
+  updateTransferFunctionEditor = () => {
     const rangeViewOnly = this.view === '2d';
     this.transferFunctionEditor?.setRangeViewOnly(rangeViewOnly);
 
     if (this.imageActor) {
       this.onImageActorSnapshot(this.imageActor.getSnapshot());
     }
-  }
+  };
 
-  updateColorTransferFunction() {
+  updateColorTransferFunction = () => {
     const ct = this.colorTransferFunctions.get(this.selectedComponent);
     if (!ct) return;
     this.transferFunctionEditor?.setColorTransferFunction(ct);
-  }
+  };
 
-  onColorTransferFunction({
+  onColorTransferFunction = ({
     colorTransferFunction,
     component,
   }: {
     colorTransferFunction: ColorTransferFunction;
     component: number;
-  }) {
+  }) => {
     this.colorTransferFunctions.set(component, colorTransferFunction);
     this.updateColorTransferFunction();
-  }
+  };
 }
