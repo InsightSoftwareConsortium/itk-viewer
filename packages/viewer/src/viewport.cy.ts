@@ -17,7 +17,7 @@ const createViewport = () =>
 
 describe('Viewport', () => {
   it('constructs', () => {
-    expect(createViewport()).to.be.ok;
+    createViewport();
   });
 
   it('accepts an image', async () => {

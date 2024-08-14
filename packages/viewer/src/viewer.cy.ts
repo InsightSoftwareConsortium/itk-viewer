@@ -9,7 +9,7 @@ export const createViewer = () => {
 
 describe('Viewer', () => {
   it('constructs', () => {
-    expect(createViewer()).to.be.ok;
+    expect(createViewer().getSnapshot()).to.be.ok;
   });
 
   it('spawns viewport actors that get setImage events', async () => {

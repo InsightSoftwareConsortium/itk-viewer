@@ -4,7 +4,9 @@ import { view2d } from './view-2d.js';
 
 describe('view 2d', () => {
   it('constructs', () => {
-    expect(createActor(view2d).start()).to.be.ok;
+    const actor = createActor(view2d);
+    actor.start();
+    expect(actor.getSnapshot()).to.be.ok;
   });
 
   it('spawns renderer actors and forwards them setImage', async () => {
