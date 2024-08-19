@@ -325,6 +325,9 @@ importers:
       gl-matrix:
         specifier: ^3.4.3
         version: 3.4.3
+      itk-viewer-color-maps:
+        specifier: ^1.2.0
+        version: 1.2.0
       xstate:
         specifier: 5.17.1
         version: 5.17.1
@@ -3470,6 +3473,9 @@ packages:
   it-stream-types@2.0.1:
     resolution: {integrity: sha512-6DmOs5r7ERDbvS4q8yLKENcj6Yecr7QQTqWApbZdfAUTEC947d+PEha7PCqhm//9oxaLYL7TWRekwhoXl2s6fg==}
     engines: {node: '>=16.0.0', npm: '>=7.0.0'}
+
+  itk-viewer-color-maps@1.2.0:
+    resolution: {integrity: sha512-Ny4LLvVtR2T0c6L9wT+R1MLO4YgsSUWjJZwfHmINiiNTQ5yMR+1tFLLXK5yI4rOudVUS+DoVXd5qAKFOZHRniw==}
 
   itk-wasm@1.0.0-b.160:
     resolution: {integrity: sha512-yrt0uRukqI9Q5s9HhzArxMNYvyU5CMbI1ddGzH0A4O3JWscnJug7J0RtY+RTl6nTHcqdrppNH7IRbnTXLZ79Rg==}
@@ -9161,6 +9167,8 @@ snapshots:
       p-defer: 4.0.1
 
   it-stream-types@2.0.1: {}
+
+  itk-viewer-color-maps@1.2.0: {}
 
   itk-wasm@1.0.0-b.160:
     dependencies:

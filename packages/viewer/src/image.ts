@@ -207,8 +207,11 @@ export const image = setup({
           actions: [
             assign({
               colorMaps: ({ context, event }) => {
-                context.colorMaps[event.component] = event.colorMap;
-                return context.colorMaps;
+                return [
+                  ...context.colorMaps.slice(0, event.component),
+                  event.colorMap,
+                  ...context.colorMaps.slice(event.component + 1),
+                ];
               },
             }),
           ],

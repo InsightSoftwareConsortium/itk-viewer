@@ -12,7 +12,7 @@ import { Camera, ReadonlyPose } from '@itk-viewer/viewer/camera.js';
 import { ViewportActor } from '@itk-viewer/viewer/viewport.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
 
-import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
+import { ColorMapIcons } from 'itk-viewer-color-maps';
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 
 export type Context = {
@@ -21,7 +21,7 @@ export type Context = {
   builtImage?: BuiltImage;
   imageActor?: Image;
   imageSubscription?: Subscription;
-  colorMapOptions: string[];
+  colorMapOptions: Record<string, string>;
 };
 
 export type SetContainerEvent = {
@@ -90,7 +90,7 @@ export const view3dLogic = setup({
     return {
       camera: undefined,
       viewport,
-      colorMapOptions: vtkColorMaps.rgbPresetNames,
+      colorMapOptions: Object.fromEntries(ColorMapIcons.entries()),
     };
   },
   id: 'view3dVtkjs',

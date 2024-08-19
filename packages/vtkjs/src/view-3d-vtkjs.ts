@@ -4,7 +4,6 @@ import { mat4 } from 'gl-matrix';
 import '@kitware/vtk.js/Rendering/Profiles/Volume.js';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume.js';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper.js';
-import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
 import vtkBoundingBox from '@kitware/vtk.js/Common/DataModel/BoundingBox';
 
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
@@ -13,6 +12,8 @@ import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper.js';
 import GenericRenderWindow, {
   vtkGenericRenderWindow,
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
+
+import { getColorMap } from 'itk-viewer-color-maps';
 
 import { getNodes } from '@itk-viewer/transfer-function-editor/PiecewiseUtils.js';
 import { SetContainerEvent, view3dLogic } from './view-3d-vtkjs.machine.js';
@@ -198,7 +199,7 @@ const createImplementation = () => {
 
         colorMaps.forEach((colorMap, component) => {
           const colorFunc = actorProperty.getRGBTransferFunction(component);
-          const preset = vtkColorMaps.getPresetByName(colorMap);
+          const preset = getColorMap(colorMap, component);
           if (!preset) throw new Error(`Color map '${colorMap}' not found`);
           colorFunc.applyColorMap(preset);
           colorFunc.modified(); // applyColorMap does not always trigger modified()

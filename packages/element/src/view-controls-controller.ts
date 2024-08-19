@@ -32,13 +32,16 @@ export class ViewControls implements ReactiveController {
   slice: SelectorController<View2dActor, number> | undefined;
   axis: SelectorController<View2dActor, AxisType> | undefined;
   imageDimension: SelectorController<View2dActor, number> | undefined;
-  colorMapsOptions: SelectorController<RenderingActor, string[]> | undefined;
+  colorMapsOptions:
+    | SelectorController<RenderingActor, Record<string, string>>
+    | undefined;
   colorMaps: SelectorController<Image, string[]> | undefined;
   componentCount: SelectorController<Image, number> | undefined;
 
+  selectedComponent = 0;
+
   transferFunctionEditor: TransferFunctionEditor | undefined;
   view: '2d' | '3d' = '2d';
-  selectedComponent = 0;
   colorTransferFunctions = new Map<number, ColorTransferFunction>(); // component -> colorTransferFunction
 
   constructor(host: ReactiveControllerHost) {
@@ -199,11 +202,11 @@ export class ViewControls implements ReactiveController {
       this.colorMapsOptions = new SelectorController(
         this.host,
         renderer,
-        (state) => state.context.colorMapOptions ?? [],
+        (state) => state.context.colorMapOptions ?? {},
       );
       this.rendererSubscription = renderer.on(
         'colorTransferFunctionApplied',
-        this.onColorTransferFunction.bind(this),
+        this.onColorTransferFunction,
       );
     }
   };

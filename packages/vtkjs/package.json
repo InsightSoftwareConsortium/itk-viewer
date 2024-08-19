@@ -30,6 +30,7 @@
     "@itk-viewer/viewer": "workspace:^",
     "@kitware/vtk.js": "^30.4.1",
     "gl-matrix": "^3.4.3",
+    "itk-viewer-color-maps": "^1.2.0",
     "xstate": "5.17.1"
   }
 }

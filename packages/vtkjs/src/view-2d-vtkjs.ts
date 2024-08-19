@@ -9,10 +9,11 @@ import vtkImageMapper from '@kitware/vtk.js/Rendering/Core/ImageMapper.js';
 import { SlicingMode } from '@kitware/vtk.js/Rendering/Core/ImageMapper/Constants.js';
 import vtkImageSlice from '@kitware/vtk.js/Rendering/Core/ImageSlice.js';
 import vtkImageProperty from '@kitware/vtk.js/Rendering/Core/ImageProperty.js';
-import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
 import vtkRenderWindow from '@kitware/vtk.js/Rendering/Core/RenderWindow.js';
 import vtkITKHelper from '@kitware/vtk.js/Common/DataModel/ITKHelper.js';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction.js';
+import { getColorMap } from 'itk-viewer-color-maps';
 
 import { Pose, toMat4 } from '@itk-viewer/viewer/camera.js';
 import {
@@ -23,7 +24,6 @@ import {
 import { AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { ImageSnapshot } from '@itk-viewer/viewer/image.js';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
-import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction.js';
 
 const axisToSliceMode = {
   I: SlicingMode.I,
@@ -218,7 +218,7 @@ const createImplementation = () => {
 
         colorMaps.forEach((colorMap, component) => {
           const colorFunc = getRGBTransferFunction(actorProperty, component);
-          const preset = vtkColorMaps.getPresetByName(colorMap);
+          const preset = getColorMap(colorMap, component);
           if (!preset) throw new Error(`Color map '${colorMap}' not found`);
           colorFunc.applyColorMap(preset);
           colorFunc.modified(); // applyColorMap does not always trigger modified()

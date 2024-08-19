@@ -13,7 +13,7 @@ import { Camera, Pose } from '@itk-viewer/viewer/camera.js';
 import { Axis, AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
 
-import vtkColorMaps from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction/ColorMaps';
+import { ColorMapIcons } from 'itk-viewer-color-maps';
 import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 
 export type Context = {
@@ -24,7 +24,7 @@ export type Context = {
   sliceIndex?: number;
   imageActor?: Image;
   imageSubscription?: Subscription;
-  colorMapOptions: string[];
+  colorMapOptions: Record<string, string>;
 };
 
 export type SetContainerEvent = {
@@ -96,7 +96,7 @@ export const view2dLogic = setup({
       camera: undefined,
       axis: Axis.K,
       parent,
-      colorMapOptions: vtkColorMaps.rgbPresetNames,
+      colorMapOptions: Object.fromEntries(ColorMapIcons.entries()),
     };
   },
   id: 'view2dVtkjs',

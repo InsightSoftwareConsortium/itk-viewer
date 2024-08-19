@@ -38,8 +38,6 @@ const bindCamera = (
   let scale = false;
 
   const onPointerDown = (e: PointerEvent) => {
-    e.preventDefault();
-
     if (e.button === 0) {
       rotate = true;
     } else if (e.button === 1) {
@@ -51,7 +49,6 @@ const bindCamera = (
   viewport.addEventListener('pointerdown', onPointerDown);
 
   const onPointerUp = (e: PointerEvent) => {
-    e.preventDefault();
     if (e.button === 0) {
       rotate = false;
     } else if (e.button === 1) {
@@ -98,8 +95,6 @@ const bindCamera = (
   viewport.addEventListener('pointermove', onPointerMove);
 
   const onWheel = (e: WheelEvent) => {
-    e.preventDefault();
-
     camera.zoom(ZOOM_SPEED * camera.distance * e.deltaY);
     updateView();
   };
