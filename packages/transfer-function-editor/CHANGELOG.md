@@ -1,5 +1,11 @@
 # @itk-viewer/transfer-function-editor
 
+## 1.8.1
+
+### Patch Changes
+
+- e96dbc0: Add color transfer function selection.
+
 ## 1.8.0
 
 ### Minor Changes

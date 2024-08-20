@@ -1,5 +1,14 @@
 # @itk-viewer/viewer
 
+## 0.6.1
+
+### Patch Changes
+
+- e96dbc0: Add color transfer function selection.
+- Updated dependencies [e96dbc0]
+  - @itk-viewer/utils@0.1.4
+  - @itk-viewer/io@0.4.3
+
 ## 0.6.0
 
 ### Minor Changes

@@ -1,5 +1,15 @@
 # @itk-viewer/imjoy-api
 
+## 0.0.14
+
+### Patch Changes
+
+- e96dbc0: Add color transfer function selection.
+- Updated dependencies [e96dbc0]
+  - @itk-viewer/element@0.6.2
+  - @itk-viewer/viewer@0.6.1
+  - @itk-viewer/io@0.4.3
+
 ## 0.0.13
 
 ### Patch Changes

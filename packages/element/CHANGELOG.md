@@ -1,5 +1,18 @@
 # @itk-viewer/element
 
+## 0.6.2
+
+### Patch Changes
+
+- e96dbc0: Add color transfer function selection.
+- Updated dependencies [e96dbc0]
+  - @itk-viewer/transfer-function-editor@1.8.1
+  - @itk-viewer/remote-viewport@0.2.20
+  - @itk-viewer/viewer@0.6.1
+  - @itk-viewer/utils@0.1.4
+  - @itk-viewer/vtkjs@0.4.2
+  - @itk-viewer/io@0.4.3
+
 ## 0.6.1
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @itk-viewer/remote-viewport
 
+## 0.2.20
+
+### Patch Changes
+
+- e96dbc0: Add color transfer function selection.
+- Updated dependencies [e96dbc0]
+  - @itk-viewer/viewer@0.6.1
+  - @itk-viewer/utils@0.1.4
+  - @itk-viewer/io@0.4.3
+
 ## 0.2.19
 
 ### Patch Changes
