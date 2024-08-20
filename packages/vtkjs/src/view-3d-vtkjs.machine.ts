@@ -1,8 +1,19 @@
-import { assign, setup, Subscription, enqueueActions } from 'xstate';
+import {
+  assign,
+  setup,
+  Subscription,
+  enqueueActions,
+  ActorRefFrom,
+  AnyActorRef,
+  emit,
+} from 'xstate';
 import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { Camera, ReadonlyPose } from '@itk-viewer/viewer/camera.js';
 import { ViewportActor } from '@itk-viewer/viewer/viewport.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
+
+import { ColorMapIcons } from 'itk-viewer-color-maps';
+import vtkColorTransferFunction from '@kitware/vtk.js/Rendering/Core/ColorTransferFunction';
 
 export type Context = {
   viewport: ViewportActor;
@@ -10,6 +21,7 @@ export type Context = {
   builtImage?: BuiltImage;
   imageActor?: Image;
   imageSubscription?: Subscription;
+  colorMapOptions: Record<string, string>;
 };
 
 export type SetContainerEvent = {
@@ -29,7 +41,17 @@ export const view3dLogic = setup({
       | { type: 'imageSnapshot'; state: ImageSnapshot }
       | { type: 'setSlice'; slice: number }
       | { type: 'setCameraPose'; pose: ReadonlyPose }
-      | { type: 'setCamera'; camera: Camera };
+      | { type: 'setCamera'; camera: Camera }
+      | {
+          type: 'colorTransferFunctionApplied';
+          component: number;
+          colorTransferFunction: vtkColorTransferFunction;
+        };
+    emitted: {
+      type: 'colorTransferFunctionApplied';
+      component: number;
+      colorTransferFunction: unknown;
+    };
   },
   actions: {
     setContainer: () => {
@@ -46,7 +68,7 @@ export const view3dLogic = setup({
       throw new Error('Function not implemented.');
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    imageSnapshot: (_, __: ImageSnapshot) => {
+    imageSnapshot: (_, __: { state: ImageSnapshot; self: AnyActorRef }) => {
       throw new Error('Function not implemented.');
     },
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -68,6 +90,7 @@ export const view3dLogic = setup({
     return {
       camera: undefined,
       viewport,
+      colorMapOptions: Object.fromEntries(ColorMapIcons.entries()),
     };
   },
   id: 'view3dVtkjs',
@@ -89,7 +112,7 @@ export const view3dLogic = setup({
               if (context.imageActor) {
                 enqueue({
                   type: 'imageSnapshot',
-                  params: context.imageActor.getSnapshot(),
+                  params: { state: context.imageActor.getSnapshot(), self },
                 });
               }
               if (context.camera) {
@@ -145,8 +168,16 @@ export const view3dLogic = setup({
         },
         imageSnapshot: {
           actions: [
-            { type: 'imageSnapshot', params: ({ event }) => event.state },
+            enqueueActions(({ enqueue, self, event }) => {
+              enqueue({
+                type: 'imageSnapshot',
+                params: { state: event.state, self },
+              });
+            }),
           ],
+        },
+        colorTransferFunctionApplied: {
+          actions: [emit(({ event }) => event)],
         },
         setCamera: {
           actions: [
@@ -173,3 +204,5 @@ export const view3dLogic = setup({
     },
   },
 });
+
+export type View3dVtkjs = ActorRefFrom<typeof view3dLogic>;

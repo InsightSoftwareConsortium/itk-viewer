@@ -1,13 +1,7 @@
-import {
-  ActorRefFrom,
-  AnyActorRef,
-  assign,
-  createActor,
-  raise,
-  setup,
-} from 'xstate';
+import { ActorRefFrom, assign, createActor, raise, setup } from 'xstate';
 import MultiscaleSpatialImage from '@itk-viewer/io/MultiscaleSpatialImage.js';
 import { CreateChild } from './children.js';
+import { ViewportActor } from './viewport.js';
 
 type SetImageEvent = {
   type: 'setImage';
@@ -21,7 +15,7 @@ type SendImageToViewports = {
 };
 
 type Context = {
-  spawned: Record<string, AnyActorRef>;
+  viewports: ViewportActor[];
   images: Record<string, MultiscaleSpatialImage>;
 };
 
@@ -34,7 +28,7 @@ export const viewerMachine = setup({
   id: 'viewer',
   initial: 'active',
   context: {
-    spawned: {},
+    viewports: [],
     images: {},
   },
   states: {
@@ -43,18 +37,14 @@ export const viewerMachine = setup({
         createChild: {
           actions: [
             assign({
-              spawned: ({
+              viewports: ({
                 spawn,
-                context: { spawned },
+                context: { viewports },
                 event: { logic, onActor },
               }) => {
-                const child = spawn(logic);
-                const id = Object.keys(spawned).length.toString();
+                const child = spawn(logic) as ViewportActor;
                 onActor(child);
-                return {
-                  ...spawned,
-                  [id]: child,
-                };
+                return [...viewports, child];
               },
             }),
           ],
@@ -76,7 +66,7 @@ export const viewerMachine = setup({
         sendImageToViewports: {
           actions: [
             ({ context, event: { image } }) => {
-              Object.values(context.spawned).forEach((viewport) => {
+              Object.values(context.viewports).forEach((viewport) => {
                 viewport.send({
                   type: 'setImage',
                   image,

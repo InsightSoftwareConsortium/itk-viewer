@@ -41,13 +41,13 @@
   },
   "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
-    "typescript": "^5.3.3",
+    "typescript": "^5.5.4",
     "vite": "^5.0.10"
   },
   "dependencies": {
     "@itk-viewer/io": "workspace:^",
     "@itk-viewer/utils": "workspace:^",
     "gl-matrix": "^3.4.3",
-    "xstate": "5.5.2"
+    "xstate": "5.17.1"
   }
 }

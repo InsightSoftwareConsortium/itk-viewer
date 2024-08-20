@@ -7,8 +7,11 @@ import { AxisType } from '@itk-viewer/viewer/slice-utils.js';
 import { TransferFunctionEditor } from '@itk-viewer/transfer-function-editor/TransferFunctionEditor.js';
 import { ColorTransferFunction } from '@itk-viewer/transfer-function-editor/ColorTransferFunction.js';
 import { Image, ImageSnapshot } from '@itk-viewer/viewer/image.js';
+import { View2dVtkjs } from '@itk-viewer/vtkjs/view-2d-vtkjs.machine.js';
+import { View3dVtkjs } from '@itk-viewer/vtkjs/view-3d-vtkjs.machine.js';
 
 export type ViewActor = View2dActor | View3dActor;
+export type RenderingActor = View3dVtkjs | View2dVtkjs;
 
 type ViewSnapshot = ReturnType<ViewActor['getSnapshot']>;
 
@@ -21,13 +24,25 @@ export class ViewControls implements ReactiveController {
   viewSubscription: Subscription | undefined;
   imageSubscription: Subscription | undefined;
   imageActor: Image | undefined;
+  renderer: RenderingActor | undefined;
+  rendererSubscription: Subscription | undefined;
+
   scale: SelectorController<View2dActor, number> | undefined;
   scaleCount: SelectorController<View2dActor, number> | undefined;
   slice: SelectorController<View2dActor, number> | undefined;
   axis: SelectorController<View2dActor, AxisType> | undefined;
   imageDimension: SelectorController<View2dActor, number> | undefined;
+  colorMapsOptions:
+    | SelectorController<RenderingActor, Record<string, string>>
+    | undefined;
+  colorMaps: SelectorController<Image, string[]> | undefined;
+  componentCount: SelectorController<Image, number> | undefined;
+
+  selectedComponent = 0;
+
   transferFunctionEditor: TransferFunctionEditor | undefined;
   view: '2d' | '3d' = '2d';
+  colorTransferFunctions = new Map<number, ColorTransferFunction>(); // component -> colorTransferFunction
 
   constructor(host: ReactiveControllerHost) {
     this.host = host;
@@ -61,46 +76,54 @@ export class ViewControls implements ReactiveController {
       this.actor,
       (state) => state.context.axis,
     );
-    this.imageDimension = new SelectorController(
-      this.host,
-      this.actor,
-      (state) => state.context.image?.imageType.dimension ?? 0,
-    );
     this.host.requestUpdate(); // trigger render with selected state
 
     // wire up Transfer Function Editor
     if (this.viewSubscription) this.viewSubscription.unsubscribe();
     this.viewSubscription = (this.actor as AnyActorRef).subscribe(
-      this.onViewSnapshot,
+      this.onViewSnapshot.bind(this),
     );
     this.onViewSnapshot(this.actor.getSnapshot());
   }
 
-  onSlice(event: Event) {
+  onSlice = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const slice = Number(target.value);
     (this.actor as AnyActorRef).send({
       type: 'setSlice',
       slice,
     });
-  }
+  };
 
-  onAxis(event: Event) {
+  onAxis = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const axis = target.value as AxisType;
     (this.actor as AnyActorRef).send({
       type: 'setAxis',
       axis,
     });
-  }
+  };
 
-  onScale(event: Event) {
+  onScale = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const scale = Number(target.value);
     this.actor!.send({ type: 'setScale', scale });
-  }
+  };
 
-  setTransferFunctionContainer(container: Element | undefined) {
+  onSelectedComponent = (component: number) => {
+    this.selectedComponent = component;
+    this.updateTransferFunctionEditor();
+  };
+
+  onColorMap = (colorMap: string) => {
+    this.imageActor?.send({
+      type: 'colorMap',
+      component: this.selectedComponent,
+      colorMap,
+    });
+  };
+
+  setTransferFunctionContainer = (container: Element | undefined) => {
     if (container) {
       this.transferFunctionEditor = new TransferFunctionEditor(container);
 
@@ -116,7 +139,7 @@ export class ViewControls implements ReactiveController {
           this.imageActor?.send({
             type: 'normalizedColorRange',
             range,
-            component: 0,
+            component: this.selectedComponent,
           });
         },
       );
@@ -128,7 +151,7 @@ export class ViewControls implements ReactiveController {
           this.imageActor?.send({
             type: 'normalizedOpacityPoints',
             points,
-            component: 0,
+            component: this.selectedComponent,
           });
         },
       );
@@ -136,10 +159,10 @@ export class ViewControls implements ReactiveController {
       this.transferFunctionEditor?.remove();
       this.transferFunctionEditor = undefined;
     }
-  }
+  };
 
   onViewSnapshot = (snapshot: ViewSnapshot) => {
-    const { imageActor } = snapshot.context;
+    const { imageActor, spawned } = snapshot.context;
     if (this.imageActor !== imageActor) {
       this.imageSubscription?.unsubscribe();
       this.imageSubscription = undefined;
@@ -148,15 +171,49 @@ export class ViewControls implements ReactiveController {
     // If imageActor exists and there's no subscription, subscribe to it.
     if (this.imageActor && !this.imageSubscription) {
       this.imageSubscription = this.imageActor.subscribe(
-        this.onImageActorSnapshot,
+        this.onImageActorSnapshot.bind(this),
       );
       this.onImageActorSnapshot(this.imageActor.getSnapshot());
+
+      this.imageDimension = new SelectorController(
+        this.host,
+        this.imageActor,
+        (state) => state.context.image?.imageType.dimension ?? 0,
+      );
+      this.colorMaps = new SelectorController(
+        this.host,
+        this.imageActor,
+        (state) => state.context.colorMaps,
+      );
+      this.componentCount = new SelectorController(
+        this.host,
+        this.imageActor,
+        (state) => state.context.image?.imageType.components ?? 1,
+      );
+    }
+
+    const renderer = Object.values(spawned)?.[0];
+    if (this.renderer !== renderer) {
+      this.rendererSubscription?.unsubscribe();
+      this.rendererSubscription = undefined;
+    }
+    this.renderer = renderer;
+    if (this.renderer && !this.rendererSubscription) {
+      this.colorMapsOptions = new SelectorController(
+        this.host,
+        renderer,
+        (state) => state.context.colorMapOptions ?? {},
+      );
+      this.rendererSubscription = renderer.on(
+        'colorTransferFunctionApplied',
+        this.onColorTransferFunction,
+      );
     }
   };
 
   onImageActorSnapshot = (snapshot: ImageSnapshot) => {
     if (!this.transferFunctionEditor) return;
-    const component = 0;
+    const component = this.selectedComponent;
     const { dataRanges, normalizedColorRanges, normalizedOpacityPoints } =
       snapshot.context;
     const componentRange = dataRanges[component];
@@ -185,19 +242,38 @@ export class ViewControls implements ReactiveController {
     if (pointsChanged) {
       this.transferFunctionEditor.setPoints(opacityPoints);
     }
+
+    this.updateColorTransferFunction();
   };
 
-  setView(view: '2d' | '3d') {
+  setView = (view: '2d' | '3d') => {
     this.view = view;
     this.updateTransferFunctionEditor();
-  }
+  };
 
-  updateTransferFunctionEditor() {
+  updateTransferFunctionEditor = () => {
     const rangeViewOnly = this.view === '2d';
     this.transferFunctionEditor?.setRangeViewOnly(rangeViewOnly);
 
     if (this.imageActor) {
       this.onImageActorSnapshot(this.imageActor.getSnapshot());
     }
-  }
+  };
+
+  updateColorTransferFunction = () => {
+    const ct = this.colorTransferFunctions.get(this.selectedComponent);
+    if (!ct) return;
+    this.transferFunctionEditor?.setColorTransferFunction(ct);
+  };
+
+  onColorTransferFunction = ({
+    colorTransferFunction,
+    component,
+  }: {
+    colorTransferFunction: ColorTransferFunction;
+    component: number;
+  }) => {
+    this.colorTransferFunctions.set(component, colorTransferFunction);
+    this.updateColorTransferFunction();
+  };
 }

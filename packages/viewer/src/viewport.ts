@@ -1,4 +1,4 @@
-import { Actor, AnyActorRef, assign, sendParent, setup } from 'xstate';
+import { ActorRefFrom, AnyActorRef, assign, sendParent, setup } from 'xstate';
 import { ReadonlyMat4 } from 'gl-matrix';
 
 import { MultiscaleSpatialImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
@@ -9,7 +9,7 @@ type Context = {
   image?: MultiscaleSpatialImage;
   camera: Camera;
   resolution: [number, number];
-  spawned: Record<string, AnyActorRef>;
+  views: AnyActorRef[];
 };
 
 type SetImageEvent = {
@@ -43,18 +43,21 @@ export const viewportMachine = setup({
     forwardToParent: sendParent(({ event }) => {
       return event;
     }),
-    forwardToSpawned: ({ context, event }) => {
-      Object.values(context.spawned).forEach((actor) => {
+    forwardToViews: ({ context, event }) => {
+      context.views.forEach((actor) => {
         actor.send(event);
       });
     },
+  },
+  actors: {
+    camera: cameraMachine,
   },
 }).createMachine({
   id: 'viewport',
   context: ({ spawn }) => ({
     resolution: [0, 0],
-    spawned: {},
-    camera: spawn(cameraMachine, { id: 'camera' }),
+    views: [],
+    camera: spawn('camera', { id: 'camera' }),
   }),
   initial: 'active',
   states: {
@@ -63,9 +66,9 @@ export const viewportMachine = setup({
         createChild: {
           actions: [
             assign({
-              spawned: ({
+              views: ({
                 spawn,
-                context: { spawned },
+                context: { views },
                 event: { logic, onActor },
                 self,
               }) => {
@@ -73,12 +76,8 @@ export const viewportMachine = setup({
                 child.send({ type: 'setViewport', viewport: self });
                 const { camera } = self.getSnapshot().children;
                 child.send({ type: 'setCamera', camera });
-                const id = Object.keys(spawned).length.toString();
                 onActor(child);
-                return {
-                  ...spawned,
-                  [id]: child,
-                };
+                return [...views, child];
               },
             }),
           ],
@@ -88,7 +87,7 @@ export const viewportMachine = setup({
             assign({
               image: ({ event: { image } }: { event: SetImageEvent }) => image,
             }),
-            'forwardToSpawned',
+            'forwardToViews',
           ],
         },
         setCamera: {
@@ -97,7 +96,7 @@ export const viewportMachine = setup({
               camera: ({ event: { camera } }: { event: SetCameraEvent }) =>
                 camera,
             }),
-            'forwardToSpawned',
+            'forwardToViews',
           ],
         },
         setResolution: {
@@ -113,4 +112,4 @@ export const viewportMachine = setup({
   },
 });
 
-export type ViewportActor = Actor<typeof viewportMachine>;
+export type ViewportActor = ActorRefFrom<typeof viewportMachine>;

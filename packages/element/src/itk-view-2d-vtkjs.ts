@@ -2,14 +2,14 @@ import { LitElement, css, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { ref } from 'lit/directives/ref.js';
 import { SelectorController } from 'xstate-lit';
-import { Actor } from 'xstate';
+import { ActorRefFrom } from 'xstate';
 
 import { createLogic } from '@itk-viewer/vtkjs/view-2d-vtkjs.js';
 import { dispatchSpawn } from './spawn-controller.js';
 import { Camera } from '@itk-viewer/viewer/camera.js';
 import './itk-camera.js';
 
-type ComponentActor = Actor<ReturnType<typeof createLogic>>;
+type ComponentActor = ActorRefFrom<ReturnType<typeof createLogic>>;
 
 @customElement('itk-view-2d-vtkjs')
 export class ItkView2dVtkjs extends LitElement {
@@ -21,7 +21,7 @@ export class ItkView2dVtkjs extends LitElement {
     | SelectorController<ComponentActor, Camera | undefined>
     | undefined;
 
-  getActor() {
+  getActor(): ComponentActor | undefined {
     return this.actor;
   }
 

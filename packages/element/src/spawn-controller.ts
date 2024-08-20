@@ -1,5 +1,5 @@
 import { LitElement } from 'lit';
-import { Actor, AnyActor, AnyActorLogic } from 'xstate';
+import { Actor, AnyActorLogic, AnyActorRef } from 'xstate';
 
 export const dispatchSpawn = <TLogic extends AnyActorLogic>(
   host: LitElement,
@@ -18,7 +18,7 @@ export const dispatchSpawn = <TLogic extends AnyActorLogic>(
   host.dispatchEvent(event);
 };
 
-export const handleLogic = <TActor extends AnyActor>(
+export const handleLogic = <TActor extends AnyActorRef>(
   parentActor: TActor | undefined,
 ) => {
   return (e: Event) => {
@@ -27,7 +27,6 @@ export const handleLogic = <TActor extends AnyActor>(
     const logic = (e as CustomEvent).detail.logic;
     parentActor.send({
       type: 'createChild',
-      //@ts-expect-error childType not expected on EventObject
       childType: e.type,
       logic,
       onActor: (e as CustomEvent).detail.onActor,

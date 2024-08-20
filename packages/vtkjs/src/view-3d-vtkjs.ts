@@ -1,10 +1,9 @@
-import { Actor, AnyEventObject } from 'xstate';
+import { ActorRefFrom, AnyEventObject } from 'xstate';
 import { mat4 } from 'gl-matrix';
 
 import '@kitware/vtk.js/Rendering/Profiles/Volume.js';
 import vtkVolume from '@kitware/vtk.js/Rendering/Core/Volume.js';
 import vtkVolumeMapper from '@kitware/vtk.js/Rendering/Core/VolumeMapper.js';
-import vtkPiecewiseFunction from '@kitware/vtk.js/Common/DataModel/PiecewiseFunction';
 import vtkBoundingBox from '@kitware/vtk.js/Common/DataModel/BoundingBox';
 
 import vtkRenderer from '@kitware/vtk.js/Rendering/Core/Renderer.js';
@@ -14,6 +13,8 @@ import GenericRenderWindow, {
   vtkGenericRenderWindow,
 } from '@kitware/vtk.js/Rendering/Misc/GenericRenderWindow.js';
 
+import { getColorMap } from 'itk-viewer-color-maps';
+
 import { getNodes } from '@itk-viewer/transfer-function-editor/PiecewiseUtils.js';
 import { SetContainerEvent, view3dLogic } from './view-3d-vtkjs.machine.js';
 import { ReadonlyPose, toMat4 } from '@itk-viewer/viewer/camera.js';
@@ -22,7 +23,7 @@ import { BuiltImage } from '@itk-viewer/io/MultiscaleSpatialImage.js';
 
 const setupContainer = (
   container: HTMLElement,
-  self: Actor<typeof view3dLogic>,
+  self: ActorRefFrom<typeof view3dLogic>,
 ) => {
   const rendererContainer = GenericRenderWindow.newInstance({
     listenWindowResize: false,
@@ -52,7 +53,6 @@ const setupContainer = (
 };
 
 const createImplementation = () => {
-  let opacityFunction: vtkPiecewiseFunction | undefined = undefined;
   let actor: vtkVolume | undefined = undefined;
   let mapper: vtkVolumeMapper | undefined = undefined;
   let renderer: vtkRenderer | undefined = undefined;
@@ -97,7 +97,7 @@ const createImplementation = () => {
         }
         const scene = setupContainer(
           container,
-          self as Actor<typeof view3dLogic>,
+          self as ActorRefFrom<typeof view3dLogic>,
         );
         actor = scene.actor;
         mapper = scene.mapper;
@@ -131,46 +131,49 @@ const createImplementation = () => {
             );
           mapper.setSampleDistance(sampleDistance);
 
-          const dataArray =
-            vtkImage.getPointData().getScalars() ||
-            vtkImage.getPointData().getArrays()[0];
-          const [min, max] = dataArray.getRange();
-          opacityFunction = vtkPiecewiseFunction.newInstance();
-          actor.getProperty().setScalarOpacity(0, opacityFunction);
-          opacityFunction.addPoint(min, 0.0);
-          opacityFunction.addPoint(max, 0.5);
+          const actorProperty = actor.getProperty();
+          actorProperty.setAmbient(0.2);
+          actorProperty.setDiffuse(0.7);
+          actorProperty.setSpecular(0.3);
+          actorProperty.setSpecularPower(8.0);
+          actorProperty.setShade(true);
+          actorProperty.setIndependentComponents(true);
 
-          // For better looking volume rendering
-          // - distance in world coordinates a scalar opacity of 1.0
-          actor
-            .getProperty()
-            .setScalarOpacityUnitDistance(
-              0,
+          Array.from(
+            { length: image.imageType.components },
+            (_, index) => index,
+          ).forEach((component) => {
+            // For better looking volume rendering
+            // - distance in world coordinates a scalar opacity of 1.0
+            actorProperty.setScalarOpacityUnitDistance(
+              component,
               vtkBoundingBox.getDiagonalLength(vtkImage.getBounds()) /
                 Math.max(...vtkImage.getDimensions()),
             );
 
-          // - control how we emphasize surface boundaries
-          //  => max should be around the average gradient magnitude for the
-          //     volume or maybe average plus one std dev of the gradient magnitude
-          //     (adjusted for spacing, this is a world coordinate gradient, not a
-          //     pixel gradient)
-          //  => max hack: (dataRange[1] - dataRange[0]) * 0.05
-          actor.getProperty().setGradientOpacityMinimumValue(0, 0);
-          actor
-            .getProperty()
-            .setGradientOpacityMaximumValue(0, (max - min) * 0.05);
+            // - control how we emphasize surface boundaries
+            //  => max should be around the average gradient magnitude for the
+            //     volume or maybe average plus one std dev of the gradient magnitude
+            //     (adjusted for spacing, this is a world coordinate gradient, not a
+            //     pixel gradient)
+            //  => max hack: (dataRange[1] - dataRange[0]) * 0.05
+            const dataArray =
+              vtkImage.getPointData().getScalars() ||
+              vtkImage.getPointData().getArrays()[0];
+            const [min, max] = dataArray.getRange(component);
+            actorProperty.setGradientOpacityMinimumValue(component, 0);
+            actorProperty.setGradientOpacityMaximumValue(
+              component,
+              (max - min) * 0.05,
+            );
 
-          // - Use shading based on gradient
-          actor.getProperty().setShade(true);
-          actor.getProperty().setUseGradientOpacity(0, true);
-          // - generic good default
-          actor.getProperty().setGradientOpacityMinimumOpacity(0, 0.0);
-          actor.getProperty().setGradientOpacityMaximumOpacity(0, 1.0);
-          actor.getProperty().setAmbient(0.2);
-          actor.getProperty().setDiffuse(0.7);
-          actor.getProperty().setSpecular(0.3);
-          actor.getProperty().setSpecularPower(8.0);
+            // - Use shading based on gradient
+            actorProperty.setUseGradientOpacity(component, true);
+
+            // - generic good default
+            actorProperty.setGradientOpacityMinimumOpacity(component, 0.0);
+            actorProperty.setGradientOpacityMaximumOpacity(component, 1.0);
+          });
         }
 
         render();
@@ -182,20 +185,41 @@ const createImplementation = () => {
         cameraVtk.setViewMatrix(viewMat as mat4);
         render();
       },
-      imageSnapshot: (_: unknown, state: ImageSnapshot) => {
+      imageSnapshot: (
+        _: unknown,
+        {
+          state,
+          self,
+        }: { state: ImageSnapshot; self: ActorRefFrom<typeof view3dLogic> },
+      ) => {
         if (!actor) return;
         const actorProperty = actor.getProperty();
-        const { colorRanges, normalizedOpacityPoints, dataRanges } =
+        const { colorRanges, colorMaps, normalizedOpacityPoints, dataRanges } =
           state.context;
 
+        colorMaps.forEach((colorMap, component) => {
+          const colorFunc = actorProperty.getRGBTransferFunction(component);
+          const preset = getColorMap(colorMap, component);
+          if (!preset) throw new Error(`Color map '${colorMap}' not found`);
+          colorFunc.applyColorMap(preset);
+          colorFunc.modified(); // applyColorMap does not always trigger modified()
+          self.send({
+            type: 'colorTransferFunctionApplied',
+            component,
+            colorTransferFunction: colorFunc,
+          });
+        });
+
+        // setMappingRange after color map for vtk.js reasons
         colorRanges.forEach((range, component) => {
           const ct = actorProperty.getRGBTransferFunction(component);
           ct.setMappingRange(...range);
         });
 
         normalizedOpacityPoints.forEach((points, component) => {
+          const opacityFunc = actorProperty.getScalarOpacity(component);
           const nodes = getNodes(dataRanges[component], points);
-          opacityFunction?.setNodes(nodes);
+          opacityFunc.setNodes(nodes);
         });
 
         render();
