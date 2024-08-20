@@ -1,5 +1,15 @@
 # @itk-viewer/vtkjs
 
+## 0.4.2
+
+### Patch Changes
+
+- e96dbc0: Add color transfer function selection.
+- Updated dependencies [e96dbc0]
+  - @itk-viewer/transfer-function-editor@1.8.1
+  - @itk-viewer/viewer@0.6.1
+  - @itk-viewer/io@0.4.3
+
 ## 0.4.1
 
 ### Patch Changes

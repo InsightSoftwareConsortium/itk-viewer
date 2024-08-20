@@ -1,5 +1,14 @@
 # @itk-viewer/io
 
+## 0.4.3
+
+### Patch Changes
+
+- e96dbc0: Add color transfer function selection.
+- Updated dependencies [e96dbc0]
+  - @itk-viewer/blosc-zarr@0.2.3
+  - @itk-viewer/utils@0.1.4
+
 ## 0.4.2
 
 ### Patch Changes

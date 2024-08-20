@@ -1,5 +1,11 @@
 # @itk-viewer/wasm-utils
 
+## 0.1.4
+
+### Patch Changes
+
+- e96dbc0: Add color transfer function selection.
+
 ## 0.1.3
 
 ### Patch Changes
