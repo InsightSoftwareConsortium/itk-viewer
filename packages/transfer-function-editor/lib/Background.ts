@@ -16,7 +16,11 @@ export const Background = (
 ) => {
   const canvas = document.createElement('canvas');
   container.root.appendChild(canvas);
-  canvas.setAttribute('style', 'width: 100%; height: 100%; ');
+  // position: absolute to keep canvas from infinitely growing container
+  canvas.setAttribute(
+    'style',
+    'position: absolute; top: 0; left: 0; width: 100%; height: 100%; ',
+  );
   const ctx = canvas.getContext('2d');
 
   let colorTransferFunction: ColorTransferFunction;
