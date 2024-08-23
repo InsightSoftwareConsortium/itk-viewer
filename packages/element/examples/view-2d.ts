@@ -1,11 +1,6 @@
-import { setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
+import './assetPathSetup.js';
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
 import { ItkViewer2d } from '../src/itk-viewer-2d.js';
-
-const pipelineWorkerUrl = '/itk/web-workers/itk-wasm-pipeline.min.worker.js';
-setPipelineWorkerUrl(pipelineWorkerUrl);
-const pipelineBaseUrl = '/itk/pipelines';
-setPipelinesBaseUrl(pipelineBaseUrl);
 
 document.addEventListener('DOMContentLoaded', async function () {
   const imagePath = '/ome-ngff-prototypes/single_image/v0.4/tczyx.ome.zarr';

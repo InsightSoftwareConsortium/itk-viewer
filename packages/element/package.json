@@ -47,6 +47,7 @@
   "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
     "@itk-wasm/image-io": "^1.1.1",
+    "@shoelace-style/shoelace": "^2.16.0",
     "typescript": "^5.5.4",
     "vite": "^4.4.11",
     "vite-plugin-static-copy": "^0.17.0"
@@ -67,8 +68,11 @@
     "xstate-lit": "^2.0.4"
   },
   "peerDependenciesMeta": {
-    "@material/web": {
+    "@shoelace-style/shoelace": {
       "optional": true
     }
+  },
+  "peerDependencies": {
+    "@shoelace-style/shoelace": "^2.16.0"
   }
 }

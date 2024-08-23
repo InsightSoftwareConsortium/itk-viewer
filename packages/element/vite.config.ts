@@ -45,6 +45,10 @@ export default defineConfig({
           src: '../blosc-zarr/emscripten-build/*',
           dest: 'itk/pipelines',
         },
+        {
+          src: './node_modules/@shoelace-style/shoelace/dist/assets',
+          dest: 'dist/shoelace',
+        },
       ],
     }),
   ],
