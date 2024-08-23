@@ -192,7 +192,7 @@ const createImplementation = () => {
           self,
         }: { state: ImageSnapshot; self: ActorRefFrom<typeof view3dLogic> },
       ) => {
-        if (!actor) return;
+        if (!actor) return; // setContainer not called yet.  Thats OK because setContainer event will trigger imageSnapshot.
         const actorProperty = actor.getProperty();
         const { colorRanges, colorMaps, normalizedOpacityPoints, dataRanges } =
           state.context;
