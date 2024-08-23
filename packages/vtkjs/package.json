@@ -1,6 +1,6 @@
 {
   "name": "@itk-viewer/vtkjs",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "VTK.js renderers",
   "type": "module",
   "exports": {
