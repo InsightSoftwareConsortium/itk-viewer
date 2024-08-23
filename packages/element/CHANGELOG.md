@@ -1,5 +1,14 @@
 # @itk-viewer/element
 
+## 0.6.3
+
+### Patch Changes
+
+- 1cf5204: Max height on color map selector.
+- Updated dependencies [8d8ccb4]
+  - @itk-viewer/transfer-function-editor@1.8.2
+  - @itk-viewer/vtkjs@0.4.3
+
 ## 0.6.2
 
 ### Patch Changes

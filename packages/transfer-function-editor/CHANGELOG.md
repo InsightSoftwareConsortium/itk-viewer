@@ -1,5 +1,11 @@
 # @itk-viewer/transfer-function-editor
 
+## 1.8.2
+
+### Patch Changes
+
+- 8d8ccb4: Fix infinite growth of width in Transfer Function Editor.
+
 ## 1.8.1
 
 ### Patch Changes

@@ -1,5 +1,12 @@
 # @itk-viewer/vtkjs
 
+## 0.4.3
+
+### Patch Changes
+
+- Updated dependencies [8d8ccb4]
+  - @itk-viewer/transfer-function-editor@1.8.2
+
 ## 0.4.2
 
 ### Patch Changes
