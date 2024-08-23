@@ -1,5 +1,13 @@
 # @itk-viewer/vtkjs
 
+## 0.4.4
+
+### Patch Changes
+
+- d4f0ce0: Fix error when unmounting renderer by calling setContainer(undefined) and imageSnapshot happens.
+- Updated dependencies [d4f0ce0]
+  - @itk-viewer/transfer-function-editor@1.8.3
+
 ## 0.4.3
 
 ### Patch Changes
