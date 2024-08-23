@@ -212,7 +212,7 @@ const createImplementation = () => {
           self,
         }: { state: ImageSnapshot; self: ActorRefFrom<typeof view2dLogic> },
       ) => {
-        if (!actor) throw new Error('Vtkjs actor not created');
+        if (!actor) return; // setContainer not called yet.  Thats OK because setContainer event will trigger imageSnapshot.
         const actorProperty = actor.getProperty();
         const { colorRanges, colorMaps } = state.context;
 
