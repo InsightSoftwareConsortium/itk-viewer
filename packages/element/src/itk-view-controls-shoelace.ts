@@ -3,6 +3,18 @@ import { customElement, property, state } from 'lit/decorators.js';
 import { ViewControls, ViewActor } from './view-controls-controller.js';
 import { ref } from 'lit/directives/ref.js';
 
+import '@shoelace-style/shoelace/dist/components/card/card.js';
+import '@shoelace-style/shoelace/dist/components/range/range.js';
+import '@shoelace-style/shoelace/dist/components/radio-group/radio-group.js';
+import '@shoelace-style/shoelace/dist/components/radio-button/radio-button.js';
+import '@shoelace-style/shoelace/dist/components/tab-group/tab-group.js';
+import '@shoelace-style/shoelace/dist/components/tab/tab.js';
+import '@shoelace-style/shoelace/dist/components/tab-panel/tab-panel.js'; // not used, but needed for selected tab underline to appear at the start
+import '@shoelace-style/shoelace/dist/components/dropdown/dropdown.js';
+import '@shoelace-style/shoelace/dist/components/button/button.js';
+import '@shoelace-style/shoelace/dist/components/menu/menu.js';
+import '@shoelace-style/shoelace/dist/components/menu-item/menu-item.js';
+
 @customElement('itk-view-controls-shoelace')
 export class ViewControlsShoelace extends LitElement {
   @property({ type: String })
@@ -118,13 +130,13 @@ export class ViewControlsShoelace extends LitElement {
               `
             : ''
         }
-      
-        <sl-dropdown
-          style="padding-top: .4rem; width: 100%"
-        >
+
+        <sl-dropdown style="padding-top: .4rem; width: 100%">
           <sl-button slot="trigger" caret class="color-button">
             <sl-tooltip  content=${colorMap}>
-              <img src=${colorMapOptions[colorMap] ?? ''} class='selected-swatch'></img>
+              <img src=${
+                colorMapOptions[colorMap] ?? ''
+              } class='selected-swatch'></img>
             </sl-tooltip>
           </sl-button>
           <sl-menu
@@ -160,6 +172,7 @@ export class ViewControlsShoelace extends LitElement {
 
     .color-button::part(label) {
       width: 100%;
+      max-height: var(--sl-input-height-medium);
       padding: 0;
       padding-right: var(--sl-spacing-medium);
     }

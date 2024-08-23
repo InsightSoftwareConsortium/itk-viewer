@@ -1,10 +1,5 @@
+import './assetPathSetup.js';
 import { ZarrMultiscaleSpatialImage } from '@itk-viewer/io/ZarrMultiscaleSpatialImage.js';
-import { setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
-
-const pipelineWorkerUrl = '/itk/web-workers/itk-wasm-pipeline.min.worker.js';
-setPipelineWorkerUrl(pipelineWorkerUrl);
-const pipelineBaseUrl = '/itk/pipelines';
-setPipelinesBaseUrl(pipelineBaseUrl);
 
 const makeZarrImage = (imagePath: string) => {
   const url = new URL(imagePath, document.location.origin);

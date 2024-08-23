@@ -1,12 +1,7 @@
+import './assetPathSetup.js';
 import { readImage } from '@itk-wasm/image-io';
-import { setPipelineWorkerUrl, setPipelinesBaseUrl } from 'itk-wasm';
 import { ItkWasmMultiscaleSpatialImage } from '@itk-viewer/io/ItkWasmMultiscaleSpatialImage.js';
 import { ItkViewer2d } from '../src/itk-viewer-2d.js';
-
-const pipelineWorkerUrl = '/itk/web-workers/itk-wasm-pipeline.min.worker.js';
-setPipelineWorkerUrl(pipelineWorkerUrl);
-const pipelineBaseUrl = '/itk/pipelines';
-setPipelinesBaseUrl(pipelineBaseUrl);
 
 document.addEventListener('DOMContentLoaded', async function () {
   const viewerElement = document.querySelector('#viewer')! as ItkViewer2d;
