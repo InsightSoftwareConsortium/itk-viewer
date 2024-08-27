@@ -71,13 +71,23 @@ export const image = setup({
       | { type: 'getWorker'; receiver: AnyActorRef }
       | { type: 'builtImage'; builtImage: BuiltImage }
       | {
+          type: 'colorRange';
+          range: readonly [number, number];
+          component: number;
+        }
+      | {
           type: 'normalizedColorRange';
           range: readonly [number, number];
           component: number;
         }
       | {
+          type: 'opacityPoints';
+          points: Point[];
+          component: number;
+        }
+      | {
           type: 'normalizedOpacityPoints';
-          points: [number, number][];
+          points: Point[];
           component: number;
         }
       | { type: 'colorMap'; colorMap: string; component: number };
@@ -90,12 +100,32 @@ export const image = setup({
         });
       },
     }),
+    updateNormalizedColorRanges: assign({
+      normalizedColorRanges: ({ context }) => {
+        return context.dataRanges.map((dataRange, component) => {
+          return computeNormalizedColorRange(
+            dataRange,
+            context.colorRanges[component],
+          );
+        });
+      },
+    }),
     updateOpacityPoints: assign({
       opacityPoints: ({ context: { dataRanges, normalizedOpacityPoints } }) => {
         return dataRanges.map((range, component) => {
           return computeOpacityPoints(
             range,
             normalizedOpacityPoints[component],
+          );
+        });
+      },
+    }),
+    updateNormalizedOpacityPoints: assign({
+      normalizedOpacityPoints: ({ context }) => {
+        return context.dataRanges.map((dataRange, component) => {
+          return computeNormalizedOpacityPoints(
+            dataRange,
+            context.opacityPoints[component],
           );
         });
       },
@@ -151,34 +181,40 @@ export const image = setup({
               },
             }),
             assign({
-              normalizedColorRanges: ({ context }) => {
+              colorRanges: ({ context }) => {
+                // init color ranges if not set
                 return context.dataRanges.map((dataRange, component) => {
-                  if (!context.normalizedColorRanges[component])
-                    return NORMALIZED_RANGE_DEFAULT;
-                  // if data range changes
-                  // scale normalizedColorRange so colorRanges doesn't change
-                  const colorRange = context.colorRanges[component];
-                  return computeNormalizedColorRange(dataRange, colorRange);
+                  if (context.colorRanges[component])
+                    return context.colorRanges[component];
+                  return computeColorRange(dataRange, NORMALIZED_RANGE_DEFAULT);
                 });
               },
-              normalizedOpacityPoints: ({ context }) => {
+              opacityPoints: ({ context }) => {
+                // init opacity points if not set
                 return context.dataRanges.map((dataRange, component) => {
-                  if (!context.normalizedOpacityPoints[component])
-                    return NORMALIZED_OPACITY_POINTS_DEFAULT;
-                  // if data range changes
-                  // scale normalizedPoints so opacityPoints doesn't change
-                  const points = context.opacityPoints[component];
-                  const normalized = computeNormalizedOpacityPoints(
+                  if (context.opacityPoints[component])
+                    return context.opacityPoints[component];
+                  return computeOpacityPoints(
                     dataRange,
-                    points,
+                    NORMALIZED_OPACITY_POINTS_DEFAULT,
                   );
-                  return normalized;
                 });
               },
             }),
-            'updateColorRanges',
-            'updateOpacityPoints',
+            'updateNormalizedColorRanges',
+            'updateNormalizedOpacityPoints',
             'ensureComponentDefaults',
+          ],
+        },
+        colorRange: {
+          actions: [
+            assign({
+              colorRanges: ({ context, event }) => {
+                context.colorRanges[event.component] = event.range;
+                return [...context.colorRanges];
+              },
+            }),
+            'updateNormalizedColorRanges',
           ],
         },
         normalizedColorRange: {
@@ -190,6 +226,17 @@ export const image = setup({
               },
             }),
             'updateColorRanges',
+          ],
+        },
+        opacityPoints: {
+          actions: [
+            assign({
+              opacityPoints: ({ context, event }) => {
+                context.opacityPoints[event.component] = event.points;
+                return [...context.opacityPoints];
+              },
+            }),
+            'updateNormalizedOpacityPoints',
           ],
         },
         normalizedOpacityPoints: {

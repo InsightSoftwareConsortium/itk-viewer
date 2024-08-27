@@ -4,7 +4,6 @@ import {
   TransferFunctionEditor,
   getNodes,
 } from '../../lib/TransferFunctionEditor';
-import { Point } from '../../lib/Point';
 
 const UPDATE_TF_DELAY = 50;
 const DATA_RANGE = [0, 255];
@@ -33,10 +32,7 @@ if (editorHome) {
   editor.eventTarget.addEventListener(
     'updated',
     throttle((e) => {
-      const points = (<CustomEvent>e).detail as Point[];
-      const arrayPoints = points.map((p) => [p.x, p.y]) as Array<
-        [number, number]
-      >;
+      const arrayPoints = (<CustomEvent>e).detail as Array<[number, number]>;
       const nodes = getNodes(DATA_RANGE, arrayPoints);
       opacityFunction.setNodes(nodes);
 

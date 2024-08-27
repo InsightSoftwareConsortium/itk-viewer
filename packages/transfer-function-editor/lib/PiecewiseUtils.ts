@@ -1,5 +1,7 @@
 import { extendPoints } from './Points';
 
+type ReadOnlyPoints = Array<readonly [number, number]>;
+
 export type ChartStyle = {
   lineWidth: number;
   strokeStyle: string;
@@ -101,11 +103,16 @@ export const updateColorCanvas = (
   return workCanvas;
 };
 
-export const windowPointsForSort = (points: [number, number][]) => {
+export const windowPointsForSort = (points: ReadOnlyPoints) => {
   const windowedPoints = extendPoints(points);
   // avoid unstable Array.sort issues
-  windowedPoints[0][0] -= 1e-8;
-  windowedPoints[windowedPoints.length - 1][0] += 1e-8;
+  const firstPoint = windowedPoints[0];
+  windowedPoints[0] = [firstPoint[0] - 1e-8, firstPoint[1]];
+  const lastPoint = windowedPoints[windowedPoints.length - 1];
+  windowedPoints[windowedPoints.length - 1] = [
+    lastPoint[0] + 1e-8,
+    lastPoint[1],
+  ];
   return windowedPoints;
 };
 
@@ -135,9 +142,7 @@ export function rgbaToHexa(rgba: Array<number>) {
   return `#${hexa.join('')}`;
 }
 
-const findY1Intercepts = (
-  points: Array<readonly [number, number]>,
-): number[] => {
+const findY1Intercepts = (points: ReadOnlyPoints): number[] => {
   const xPositions: number[] = [];
 
   for (let i = 0; i < points.length - 1; i++) {
@@ -162,11 +167,10 @@ const findY1Intercepts = (
 
 // Returns vtk.js piecewise function nodes
 // rescaled into data range space.
-export const getNodes = (
-  range: readonly number[],
-  points: Array<readonly [number, number]>,
-) => {
+export const getNodes = (range: readonly number[], points: ReadOnlyPoints) => {
   const xPositions = findY1Intercepts(points);
+  // vtk.js volume voxels get 0 opacity if y > 1
+  // So insert y=1 intercept points
   const withIntercepts = [...points, ...xPositions.map((x) => [x, 1])];
 
   const windowedPoints = windowPointsForSort(

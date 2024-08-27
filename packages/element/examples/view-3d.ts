@@ -15,5 +15,21 @@ document.addEventListener('DOMContentLoaded', async function () {
     .getSnapshot()
     .context.viewports[0].getSnapshot()
     .context.views[0].getSnapshot().context.imageActor;
+
   imageActor.send({ type: 'colorMap', colorMap: '2hot', component: 0 });
+
+  imageActor.send({
+    type: 'opacityPoints',
+    points: [
+      [60, 0.1],
+      [100, 0.9],
+      [220, 0.2],
+    ],
+    component: 0,
+  });
+  imageActor.send({
+    type: 'colorRange',
+    range: [60, 220],
+    component: 0,
+  });
 });
