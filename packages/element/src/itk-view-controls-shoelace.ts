@@ -63,6 +63,10 @@ export class ViewControlsShoelace extends LitElement {
     const showScale = scaleCount >= 2;
     const tfEditorHeight = this.view === '2d' ? '2rem' : '8rem';
 
+    if (imageDimension === 0) {
+      return '';
+    }
+
     return html`
       <sl-card>
         ${

@@ -124,6 +124,9 @@ importers:
         specifier: ^2.0.4
         version: 2.0.5(@lit/context@1.1.2)(lit@3.1.4)(xstate@5.17.1)
     devDependencies:
+      '@itk-wasm/dicom':
+        specifier: ^7.2.0
+        version: 7.2.0
       '@itk-wasm/image-io':
         specifier: ^1.1.1
         version: 1.2.1
@@ -1412,6 +1415,9 @@ packages:
   '@itk-wasm/dam@1.1.1':
     resolution: {integrity: sha512-7+9L3lrLMKF4y6B6qjs8GqfbpxT0waOJUM14NdMNEA6M+BoBS8fdHREhQHo2s7QMA5O7I+Jv7m+dyqlisGnbdQ==}
     hasBin: true
+
+  '@itk-wasm/dicom@7.2.0':
+    resolution: {integrity: sha512-ynCYdrkoTIJVYGlLZyKumhPd6LqJ3Dx9iDG9KGNfN3lMNCSwZNMbMXsnzyICu0EtnEevhDUijV0r8VjZrgVnaQ==}
 
   '@itk-wasm/htj2k@2.1.0':
     resolution: {integrity: sha512-22+mWgXr/LYRCqzzfIJ5il5bgYdJjPD5jiP4XXPvSgCjp48bui5zvZSkvMmXy89bJbVinUB1O6KHuB3K0MUong==}
@@ -3526,6 +3532,10 @@ packages:
 
   itk-wasm@1.0.0-b.176:
     resolution: {integrity: sha512-ukJY3fDHFNIWA3eSk70jo8UuFqerxzn+WcpjaDW4YcOb515CEUDdRlm4vpiZbeLNjo8NJyyh1JAVEFEg7nmH4Q==}
+    hasBin: true
+
+  itk-wasm@1.0.0-b.178:
+    resolution: {integrity: sha512-kW8sP2+6CwLL7VUC7jjRBnDjqsDLl/ZjRSwdcIj1XJ3I/JvFLIkLfPjsdaOlcG4VpKsi+LBQWpvpEb99iR9aWw==}
     hasBin: true
 
   jackspeak@3.4.0:
@@ -6807,6 +6817,12 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
+  '@itk-wasm/dicom@7.2.0':
+    dependencies:
+      itk-wasm: 1.0.0-b.178
+    transitivePeerDependencies:
+      - debug
+
   '@itk-wasm/htj2k@2.1.0':
     dependencies:
       itk-wasm: 1.0.0-b.160
@@ -9277,6 +9293,23 @@ snapshots:
       - debug
 
   itk-wasm@1.0.0-b.176:
+    dependencies:
+      '@itk-wasm/dam': 1.1.1
+      '@thewtex/zstddec': 0.2.1
+      '@types/emscripten': 1.39.13
+      axios: 1.7.2
+      chalk: 5.3.0
+      comlink: 4.4.1
+      commander: 11.1.0
+      fs-extra: 11.2.0
+      glob: 8.1.0
+      markdown-table: 3.0.3
+      mime-types: 2.1.35
+      wasm-feature-detect: 1.6.1
+    transitivePeerDependencies:
+      - debug
+
+  itk-wasm@1.0.0-b.178:
     dependencies:
       '@itk-wasm/dam': 1.1.1
       '@thewtex/zstddec': 0.2.1
