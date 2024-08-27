@@ -1,5 +1,16 @@
 # @itk-viewer/vtkjs
 
+## 0.4.5
+
+### Patch Changes
+
+- d9bdc59: Fix error when unmounting renderer by calling setContainer(undefined) and imageSnapshot happens.
+
+  Don't show viewer GUI controls when no image is loaded.
+
+- Updated dependencies [d9bdc59]
+  - @itk-viewer/transfer-function-editor@1.8.4
+
 ## 0.4.4
 
 ### Patch Changes
