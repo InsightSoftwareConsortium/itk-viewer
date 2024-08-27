@@ -1,5 +1,13 @@
 # @itk-viewer/transfer-function-editor
 
+## 1.8.4
+
+### Patch Changes
+
+- d9bdc59: Fix error when unmounting renderer by calling setContainer(undefined) and imageSnapshot happens.
+
+  Don't show viewer GUI controls when no image is loaded.
+
 ## 1.8.3
 
 ### Patch Changes
