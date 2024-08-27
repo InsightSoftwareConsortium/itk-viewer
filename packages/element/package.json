@@ -46,6 +46,7 @@
   },
   "homepage": "https://github.com/InsightSoftwareConsortium/itk-viewer#readme",
   "devDependencies": {
+    "@itk-wasm/dicom": "^7.2.0",
     "@itk-wasm/image-io": "^1.1.1",
     "@shoelace-style/shoelace": "^2.16.0",
     "typescript": "^5.5.4",
