@@ -1,5 +1,11 @@
 # @itk-viewer/transfer-function-editor
 
+## 1.8.5
+
+### Patch Changes
+
+- 41362e3: Add opacityPoints event to image actor
+
 ## 1.8.4
 
 ### Patch Changes

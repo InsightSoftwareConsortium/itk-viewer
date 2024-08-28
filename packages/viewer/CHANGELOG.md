@@ -1,5 +1,11 @@
 # @itk-viewer/viewer
 
+## 0.6.2
+
+### Patch Changes
+
+- 41362e3: Add opacityPoints event to image actor
+
 ## 0.6.1
 
 ### Patch Changes
