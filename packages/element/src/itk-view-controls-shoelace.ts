@@ -20,6 +20,18 @@ export class ViewControlsShoelace extends LitElement {
   @property({ type: String })
   view: '2d' | '3d' = '2d';
 
+  @property({ type: Boolean })
+  hideSliceUi: boolean = false;
+
+  @property({ type: Boolean })
+  hideScaleUi: boolean = false;
+
+  @property({ type: Boolean })
+  hideColorUi: boolean = false;
+
+  @property({ type: Boolean })
+  hideTransferFunctionUi: boolean = false;
+
   actor: ViewActor | undefined;
   private controls = new ViewControls(this);
 
@@ -54,87 +66,80 @@ export class ViewControlsShoelace extends LitElement {
     const colorMapOptions = this.controls.colorMapsOptions?.value ?? {};
 
     const componentCount = this.controls.componentCount?.value ?? 1;
-    const showComponentSelector = componentCount > 1;
+    const showComponentSelector =
+      !(this.hideColorUi && this.hideTransferFunctionUi) && componentCount > 1;
     const components = Array.from({ length: componentCount }, (_, i) => i);
     const colorMap =
       this.controls.colorMaps?.value[this.selectedComponent] ?? '';
 
     const isImage3D = imageDimension >= 3;
-    const showScale = scaleCount >= 2;
+    const showScale = !this.hideScaleUi && scaleCount >= 2;
     const tfEditorHeight = this.view === '2d' ? '2rem' : '8rem';
-
-    if (imageDimension === 0) {
-      return '';
-    }
 
     return html`
       <sl-card>
-        ${
-          isImage3D && this.view === '2d'
-            ? html`
-                <sl-range
-                  value=${Number(slice)}
-                  @sl-change="${this.controls.onSlice}"
-                  min="0"
-                  max="1"
-                  step=".01"
-                  label="Slice"
-                  style="min-width: 8rem;"
-                ></sl-range>
-                <sl-radio-group
-                  label="Slice Axis"
-                  value=${axis}
-                  @sl-change="${this.controls.onAxis}"
-                >
-                  <sl-radio-button value="I">X</sl-radio-button>
-                  <sl-radio-button value="J">Y</sl-radio-button>
-                  <sl-radio-button value="K">Z</sl-radio-button>
-                </sl-radio-group>
-              `
-            : ''
-        }
-        ${
-          showScale
-            ? html`
-                <sl-radio-group
-                  label="Image Scale"
-                  value=${scale}
-                  @sl-change="${this.controls.onScale}"
-                >
-                  ${scaleOptions.map(
-                    (option) =>
-                      html`<sl-radio-button value=${option}>
-                        ${option}
-                      </sl-radio-button>`,
-                  )}
-                </sl-radio-group>
-              `
-            : ''
-        }
-        ${
-          showComponentSelector
-            ? html`
-                <sl-tab-group
-                  style="max-width: 18rem"
-                  value=${this.controls.selectedComponent}
-                  @sl-tab-show="${(e: CustomEvent) => {
-                    const component = Number(e.detail.name);
-                    this.controls.onSelectedComponent(component);
-                    // trigger re-render to update color map value
-                    this.selectedComponent = Number(e.detail.name);
-                  }}"
-                >
-                  ${components.map(
-                    (option) =>
-                      html`<sl-tab panel="${option}" slot="nav">
-                        Component ${option}
-                      </sl-tab>`,
-                  )}
-                </sl-tab-group>
-              `
-            : ''
-        }
-
+        ${isImage3D && this.view === '2d' && !this.hideSliceUi
+          ? html`
+              <sl-range
+                value=${Number(slice)}
+                @sl-change="${this.controls.onSlice}"
+                min="0"
+                max="1"
+                step=".01"
+                label="Slice"
+                style="min-width: 8rem;"
+              ></sl-range>
+              <sl-radio-group
+                label="Slice Axis"
+                value=${axis}
+                @sl-change="${this.controls.onAxis}"
+              >
+                <sl-radio-button value="I">X</sl-radio-button>
+                <sl-radio-button value="J">Y</sl-radio-button>
+                <sl-radio-button value="K">Z</sl-radio-button>
+              </sl-radio-group>
+            `
+          : ''}
+        ${showScale
+          ? html`
+              <sl-radio-group
+                label="Image Scale"
+                value=${scale}
+                @sl-change="${this.controls.onScale}"
+              >
+                ${scaleOptions.map(
+                  (option) =>
+                    html`<sl-radio-button value=${option}>
+                      ${option}
+                    </sl-radio-button>`,
+                )}
+              </sl-radio-group>
+            `
+          : ''}
+        ${showComponentSelector
+          ? html`
+              <sl-tab-group
+                style="max-width: 18rem"
+                value=${this.controls.selectedComponent}
+                @sl-tab-show="${(e: CustomEvent) => {
+                  const component = Number(e.detail.name);
+                  this.controls.onSelectedComponent(component);
+                  // trigger re-render to update color map value
+                  this.selectedComponent = Number(e.detail.name);
+                }}"
+              >
+                ${components.map(
+                  (option) =>
+                    html`<sl-tab panel="${option}" slot="nav">
+                      Component ${option}
+                    </sl-tab>`,
+                )}
+              </sl-tab-group>
+            `
+          : ''}
+        ${this.hideColorUi
+          ? ''
+          : html`
         <sl-dropdown style="padding-top: .4rem; width: 100%">
           <sl-button slot="trigger" caret class="color-button">
             <sl-tooltip  content=${colorMap}>
@@ -157,14 +162,18 @@ export class ViewControlsShoelace extends LitElement {
             )}
           </sl-menu>
         </sl-dropdown>
-
-        <div style="padding-top: 0.4rem;">
-          ${this.view === '2d' ? 'Color Range' : 'Opacity and Color'}
-        </div>
-        <div
-          ${ref(this.transferFunctionContainerChanged)}
-          style=${`width: 100%; min-width: 12rem; height: ${tfEditorHeight};`}
-        ></div>
+        `}
+        ${this.hideTransferFunctionUi
+          ? ''
+          : html`
+              <div style="padding-top: 0.4rem;">
+                ${this.view === '2d' ? 'Color Range' : 'Opacity and Color'}
+              </div>
+              <div
+                ${ref(this.transferFunctionContainerChanged)}
+                style=${`width: 100%; min-width: 12rem; height: ${tfEditorHeight};`}
+              ></div>
+            `}
       </sl-card>
     `;
   }
