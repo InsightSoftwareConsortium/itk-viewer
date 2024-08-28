@@ -1,5 +1,5 @@
 import { LitElement, css, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { Ref, createRef, ref } from 'lit/directives/ref.js';
 import './itk-viewer-element.js';
 import { ItkViewer } from './itk-viewer-element.js';
@@ -16,6 +16,15 @@ export class ItkViewer3d extends LitElement {
   view: Ref<ItkView3d> = createRef();
   controls: Ref<ViewControlsShoelace> = createRef();
 
+  @property({ type: Boolean })
+  hideScaleUi: boolean = false;
+
+  @property({ type: Boolean })
+  hideColorUi: boolean = false;
+
+  @property({ type: Boolean })
+  hideTransferFunctionUi: boolean = false;
+
   getActor() {
     return this.viewer.value?.getActor();
   }
@@ -29,6 +38,9 @@ export class ItkViewer3d extends LitElement {
               <itk-view-controls-shoelace
                 view="3d"
                 ${ref(this.controls)}
+                ?hideScaleUi="${this.hideScaleUi}"
+                ?hideColorUi="${this.hideColorUi}"
+                ?hideTransferFunctionUi="${this.hideTransferFunctionUi}"
               ></itk-view-controls-shoelace>
             </div>
             <itk-view-3d ${ref(this.view)} class="fill">
