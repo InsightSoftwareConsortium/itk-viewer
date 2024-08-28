@@ -1,6 +1,6 @@
 {
   "name": "@itk-viewer/transfer-function-editor",
-  "version": "1.8.4",
+  "version": "1.8.5",
   "description": "Interface to interactively edit opacity transfer functions",
   "files": [
     "dist",

@@ -1,5 +1,14 @@
 # @itk-viewer/vtkjs
 
+## 0.4.6
+
+### Patch Changes
+
+- 41362e3: Add opacityPoints event to image actor
+- Updated dependencies [41362e3]
+  - @itk-viewer/transfer-function-editor@1.8.5
+  - @itk-viewer/viewer@0.6.2
+
 ## 0.4.5
 
 ### Patch Changes
