@@ -16,5 +16,12 @@ document.addEventListener('DOMContentLoaded', async function () {
     .getSnapshot()
     .context.viewports[0].getSnapshot()
     .context.views[0].getSnapshot().context.imageActor;
+
   imageActor.send({ type: 'colorMap', colorMap: '2hot', component: 0 });
+
+  imageActor.send({
+    type: 'colorRange',
+    range: [300, 1500],
+    component: 0,
+  });
 });

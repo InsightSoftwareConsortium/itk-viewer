@@ -3,7 +3,10 @@ import { ArrayPoint } from './utils';
 
 // if clampEnds is true, add points at ends with y = 0
 // else extend left and right points to 0 and 1 with left/right y value
-export const extendPoints = (points: [number, number][], clampEnds = false) => {
+export const extendPoints = (
+  points: (readonly [number, number])[],
+  clampEnds = false,
+) => {
   if (points.length === 0) {
     return [
       [0, 1],

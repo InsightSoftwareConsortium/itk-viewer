@@ -194,8 +194,7 @@ const createImplementation = () => {
       ) => {
         if (!actor) return; // setContainer not called yet.  Thats OK because setContainer event will trigger imageSnapshot.
         const actorProperty = actor.getProperty();
-        const { colorRanges, colorMaps, normalizedOpacityPoints, dataRanges } =
-          state.context;
+        const { colorRanges, colorMaps, opacityPoints } = state.context;
 
         colorMaps.forEach((colorMap, component) => {
           const colorFunc = actorProperty.getRGBTransferFunction(component);
@@ -216,9 +215,16 @@ const createImplementation = () => {
           ct.setMappingRange(...range);
         });
 
-        normalizedOpacityPoints.forEach((points, component) => {
+        opacityPoints.forEach((points, component) => {
+          const xValues = points.map((p) => p[0]);
+          const range = [Math.min(...xValues), Math.max(...xValues)];
+          const delta = range[1] - range[0];
+          const min = range[0];
+          const normalizedPoints = points.map(
+            ([x, y]) => [(x - min) / delta, y] as const,
+          );
+          const nodes = getNodes(range, normalizedPoints);
           const opacityFunc = actorProperty.getScalarOpacity(component);
-          const nodes = getNodes(dataRanges[component], points);
           opacityFunc.setNodes(nodes);
         });
 
