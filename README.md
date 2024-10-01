@@ -4,9 +4,7 @@
 
 _View and interact with multi-dimensional images, geometry, and point sets._
 
-The ITK-Viewer a **modern**, **elegant visualization library** to that enables **easier**, **faster**, and more **sustainable insights** into your data.
-
-ITK-Viewer makes it more _enjoyable_ and _seamless_ to add _beautiful visualizations_ to your software.
+![3D View](https://github.com/user-attachments/assets/86181dad-e1d5-4a70-86a6-762ec48f81ed)
 
 Rendering and user interface components can be flexibly combined and customized when integrated into web browser, terminal, and traditional desktop applications. Standard Web Components follow the [HTML First](https://html-first.com/) philosophy.
 
@@ -45,3 +43,5 @@ Then open `http://localhost:5173/` in browser
 Recipe that was followed to setup changesets in this repo:
 
 https://pnpm.io/using-changesets#releasing-changes
+
+![2D View](https://github.com/user-attachments/assets/4abb2b9a-697e-476d-b40a-d6ea556679d6)
