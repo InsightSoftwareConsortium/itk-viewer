@@ -3,14 +3,21 @@
 [![Build and test](https://github.com/InsightSoftwareConsortium/itk-viewer/actions/workflows/test.yml/badge.svg)](https://github.com/InsightSoftwareConsortium/itk-viewer/actions/workflows/test.yml)
 
 _View and interact with multi-dimensional images, geometry, and point sets._
+**Interactive visualization for multi-dimensional images, geometry, and point sets.**
 
 ![3D View](https://github.com/user-attachments/assets/86181dad-e1d5-4a70-86a6-762ec48f81ed)
 
-The ITK-Viewer is a **modern**, **elegant visualization library** that enables **easier**, **faster**, and more **sustainable insights** into your data.￼
-￼
-ITK-Viewer makes it more _enjoyable_ and _seamless_ to add _beautiful visualizations_ to your software.
+ITK-Viewer is a modern visualization library designed to provide efficient and insightful data visualization. It allows you to view and interact with multi-dimensional images, geometric data, and point sets, making it an essential tool for data analysis and software development.
 
-Rendering and user interface components can be flexibly combined and customized when integrated into web browser, terminal, and traditional desktop applications. Standard Web Components follow the [HTML First](https://html-first.com/) philosophy.
+### Features
+
+- **Elegant and Intuitive Interface**: Offers a user-friendly interface that enhances data exploration.
+- **Flexible Integration**: Components can be customized and integrated into web browsers, terminal applications, or traditional desktop software.
+- **HTML First Philosophy**: Utilizes standard Web Components in line with the [HTML First](https://html-first.com/) approach for seamless web development.
+- **Enhanced Productivity**: Streamlines the process of adding visualizations to your software, making it faster and more enjoyable.
+- **Sustainable Insights**: Facilitates a deeper understanding of your data through effective visualization techniques.
+
+By leveraging ITK-Viewer, developers and researchers can create beautiful and functional visualizations with ease, leading to faster insights and better outcomes.
 
 ## Development
 
