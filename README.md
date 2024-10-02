@@ -2,7 +2,6 @@
 
 [![Build and test](https://github.com/InsightSoftwareConsortium/itk-viewer/actions/workflows/test.yml/badge.svg)](https://github.com/InsightSoftwareConsortium/itk-viewer/actions/workflows/test.yml)
 
-_View and interact with multi-dimensional images, geometry, and point sets._
 **Interactive visualization for multi-dimensional images, geometry, and point sets.**
 
 ![3D View](https://github.com/user-attachments/assets/86181dad-e1d5-4a70-86a6-762ec48f81ed)
