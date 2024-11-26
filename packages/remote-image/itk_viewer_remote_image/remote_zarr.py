@@ -4,7 +4,6 @@
 
 from pathlib import Path
 
-from imjoy_rpc.hypha import connect_to_server
 import zarr
 from ngff_zarr import (
     detect_cli_io_backend,
@@ -47,9 +46,10 @@ class RemoteZarr:
         pass
 
     async def get_store(self, image_path):
-        print(f"get_store: {image_path}", flush=True)
+        print(f"image_path: {image_path}", flush=True)
 
         mapped_path = self.map_path(image_path)
+        print(f"mapped_path: {mapped_path}", flush=True)
 
         if mapped_path.find("://") == -1 and not Path(mapped_path).exists():
             print(f"File not found: {mapped_path}\n", flush=True)
@@ -57,11 +57,11 @@ class RemoteZarr:
 
         backend = detect_cli_io_backend([mapped_path])
         if backend is ConversionBackend.NGFF_ZARR:
-            return zarr.storage.DirectoryStore(mapped_path)
+            return zarr.storage.DirectoryStore(mapped_path, dimension_separator="/")
 
         # TODO: code below does not work yet
         image = cli_input_to_ngff_image(backend, [mapped_path])
-        multiscales = to_multiscales(image, method=Methods.DASK_IMAGE_GAUSSIAN)
+        multiscales = to_multiscales(image, method=Methods.ITKWASM_GAUSSIAN)
         store, chunk_store = _make_multiscale_store()
         to_ngff_zarr(store, multiscales, chunk_store=chunk_store)
 
@@ -69,15 +69,11 @@ class RemoteZarr:
 
     async def connect(
         self,
-        hypha_server_url,
+        server,
         map_path=lambda p: p,
         visibility="public",
         identifier="remote-zarr",
     ):
-        server = await connect_to_server(
-            {"name": "remote-zarr", "server_url": hypha_server_url}
-        )
-
         self.map_path = map_path
 
         await server.register_service(

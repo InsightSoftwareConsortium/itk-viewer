@@ -40,7 +40,7 @@ class VideoTransformTrack(MediaStreamTrack):
 
         frame = VideoFrame.from_image(img)
 
-        frame.pts = self.count 
+        frame.pts = self.count
         self.count+=1
         frame.time_base = fractions.Fraction(1, 1000)
         return frame
@@ -118,7 +118,7 @@ class Renderer:
         img = r.memory_redraw()
         self.render_time = time.time() - start_time
         return img
-    
+
     def get_render_time(self):
         return self.render_time
 
@@ -187,21 +187,14 @@ class Renderer:
 
     async def connect(
         self,
-        hypha_server_url,
+        server,
         load_image_into_agave_fn,
         visibility="public",
-        identifier="agave-renderer-rtc",
+        identifier=f"{RENDERER_SERVICE_ID}-rtc",
     ):
         self.load_image = functools.partial(load_image_into_agave_fn, self)
 
         service_id = identifier
-        client_id = service_id + "-client"
-        server = await connect_to_server(
-            {
-                "client_id": client_id,
-                "server_url": hypha_server_url,
-            }
-        )
 
         await server.register_service(
             {

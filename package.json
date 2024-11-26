@@ -11,7 +11,7 @@
     "lint": "pnpm prettier --check . && pnpm eslint .",
     "lint:fix": "pnpm prettier --write . && pnpm eslint --fix .",
     "setup-micromamba": "setup-micromamba --micromamba-binary-path ./micromamba/micromamba --micromamba-root-path ./micromamba --init-shell none --create-environment true --environment-file environment.yml --log-level info --run-command \"clean -fya\"",
-    "start-hypha": "pnpm setup-micromamba && ./micromamba/micromamba run -r micromamba -n itk-viewer hypha --host=127.0.0.1 --port=37580",
+    "start-hypha": "pnpm setup-micromamba && ./micromamba/micromamba run -r micromamba -n itk-viewer hypha --host=127.0.0.1 --port=9000 --startup-functions ./test/agave-startup.py:hypha_startup ./test/ome-zarr-startup.py:hypha_startup",
     "test": "pnpm test:downloadData && concurrently -n \"hypha,cypress\" --success first -k \"pnpm start-hypha\" \"pnpm cy:component\"",
     "test:downloadData": "node test/downloadData.mjs",
     "cy:watch": "cypress open --component -b chrome",
